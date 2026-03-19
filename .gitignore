@@ -1,16 +1,17 @@
-# Compiled class file
+# ============================================
+# .gitignore — agendamento-api
+# Guilherme Braga | github.com/engguilhermebraga
+# ============================================
+
+# Compilados Java
 *.class
-
-# Log file
 *.log
-
-# BlueJ files
 *.ctxt
-
-# Mobile Tools for Java (J2ME)
 .mtj.tmp/
+hs_err_pid*
+replay_pid*
 
-# Package Files #
+# Pacotes
 *.jar
 *.war
 *.nar
@@ -19,15 +20,8 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-# Maven
+# Maven (build)
 target/
-*.jar
-*.war
-*.class
 
 # IntelliJ IDEA
 .idea/
@@ -51,7 +45,11 @@ logs/
 Thumbs.db
 desktop.ini
 
-# Variáveis de ambiente — NUNCA sobe para o GitHub
+# Segredos — NUNCA sobe para o GitHub
 .env
+*.key
+*.pem
+*.p12
 application-prod.properties
 application-production.yml
+application-secret.properties
