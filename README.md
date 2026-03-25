@@ -237,6 +237,18 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão de Curso (TCC)** do 
 - FIELDING, Roy Thomas. *Architectural styles and the design of network-based software architectures*. 2000.
 - FOWLER, Martin. *Patterns of enterprise application architecture*. Boston: Addison-Wesley, 2002.
 - WALLS, Craig. *Spring Boot in action*. 2. ed. Shelter Island: Manning Publications, 2019.
+- WESTERMAN, George; BONNET, Didier; MCAFEE, Andrew.** _Liderando na Era Digital_.
+- RICHARDSON, Leonard; RUBY, Sam.** _RESTful Web Services_.
+- SOUZA, A. R. et al.** "A importância da automação de processos para a gestão organizacional". _Revista de Gestão e Tecnologia_
+- MARTIN, Robert C. (Uncle Bob).** _Arquitetura Limpa: O guia do artesão para estrutura e design de software_.
+- GAMMA, Erich et al. **Padrões de projeto: soluções reutilizáveis de software orientado a objetos**. Porto Alegre: Bookman, 2000.
+- MARTIN, Robert C. **Código limpo: habilidades práticas do Agile Software**. Rio de Janeiro: Alta Books, 2009.
+- SOMMERVILLE, Ian. **Engenharia de software**. 9. ed. São Paulo: Pearson Prentice Hall, 2011
+- LAUDON, Kenneth C.; LAUDON, Jane P. **Sistemas de informação gerenciais**. 11. ed. São Paulo: Pearson Prentice Hall, 2014.
+- TURBAN, Efraim; VOLONINO, Linda. **Tecnologia da informação para gestão: transformando os negócios na economia digital**. 8. ed. Porto Alegre: Bookman, 2013.
+- BOAGLIO, Fernando. **Spring Boot: acelere o desenvolvimento de microsserviços**. São Paulo: Casa do Código, 2017. (ou edição mais recente).
+- SMARTBEAR SOFTWARE. **OpenAPI Specification**. Version 3.0.3. 2020. Disponível em: [https://spec.openapis.org/oas/v3.0.3](https://spec.openapis.org/oas/v3.0.3). Acesso em: 24 mar. 2026.
+- 
 
 ---
 
