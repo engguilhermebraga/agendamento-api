@@ -36,6 +36,8 @@ public class Agendamento {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
+    @ToString.Exclude       // evita LazyInitializationException no toString()
+    @EqualsAndHashCode.Exclude  // evita queries desnecessárias no equals/hashCode
     private Cliente cliente;
 
     /**
@@ -44,6 +46,8 @@ public class Agendamento {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profissional_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Profissional profissional;
 
     /**
@@ -52,6 +56,8 @@ public class Agendamento {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servico_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Servico servico;
 
     /**
