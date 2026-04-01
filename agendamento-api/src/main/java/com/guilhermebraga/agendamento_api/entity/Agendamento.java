@@ -11,8 +11,14 @@ import java.time.LocalDateTime;
  * <p>
  * Relaciona Cliente, Profissional e Serviço em uma data/hora
  * específica, controlando o status pelo enum StatusAgendamento.
+ * <p>
+ * IMPORTANTE — Lombok + FetchType.LAZY:
+ * Os campos @ManyToOne com FetchType.LAZY precisam das anotações
  *
  * @author Guilherme Braga
+ * @ToString.Exclude e @EqualsAndHashCode.Exclude para evitar que
+ * o Lombok gere toString()/equals()/hashCode() que disparem queries
+ * fora de uma sessão JPA ativa (LazyInitializationException).
  */
 @Entity
 @Table(name = "agendamentos")
@@ -33,11 +39,14 @@ public class Agendamento {
      * Cliente que realizou o agendamento.
      * Relacionamento ManyToOne — um cliente pode ter vários agendamentos.
      * LAZY: o cliente só é carregado quando acessado explicitamente.
+     *
+     * @ToString.Exclude: evita LazyInitializationException no toString() gerado pelo Lombok.
+     * @EqualsAndHashCode.Exclude: evita queries desnecessárias no equals/hashCode.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
-    @ToString.Exclude       // evita LazyInitializationException no toString()
-    @EqualsAndHashCode.Exclude  // evita queries desnecessárias no equals/hashCode
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Cliente cliente;
 
     /**
@@ -68,9 +77,17 @@ public class Agendamento {
     private LocalDateTime dataHora;
 
     /**
+     * Data e hora de término calculada.
+     * Calculada automaticamente: dataHora + duracao do serviço em minutos.
+     * Usada na query de verificação de conflito de horário.
+     */
+    @Column(name = "data_hora_fim", nullable = false)
+    private LocalDateTime dataHoraFim;
+
+    /**
      * Status atual do agendamento.
      * Armazenado como String no banco para facilitar leitura.
-     * Valor padrão: AGENDADO.
+     * Valor padrão: AGENDADO (definido no @PrePersist).
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -87,9 +104,6 @@ public class Agendamento {
      */
     @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm;
-
-    @Column(name = "data_hora_fim", nullable = false)
-    private LocalDateTime dataHoraFim;
 
     /**
      * Executado antes do INSERT — define status inicial e datas.
