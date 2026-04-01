@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Fragment: navbar
+  Uso: <nav th:replace="~{layout/fragments :: navbar}"></nav>
+-->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/web/dashboard}">
+            <i class="bi bi-calendar-check-fill me-2"></i>Agendamento API
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto gap-1">
+                <li class="nav-item">
+                    <a class="nav-link px-3" th:href="@{/web/dashboard}">
+                        <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" th:href="@{/web/clientes}">
+                        <i class="bi bi-people me-1"></i>Clientes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" th:href="@{/web/profissionais}">
+                        <i class="bi bi-person-badge me-1"></i>Profissionais
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" th:href="@{/web/servicos}">
+                        <i class="bi bi-scissors me-1"></i>Serviços
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" th:href="@{/web/agendamentos}">
+                        <i class="bi bi-calendar3 me-1"></i>Agendamentos
+                    </a>
+                </li>
+                <li class="nav-item ms-2">
+                    <a class="btn btn-outline-light btn-sm" href="/swagger-ui.html" target="_blank">
+                        <i class="bi bi-code-slash me-1"></i>Swagger UI
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!--
+  Fragment: alertas (mensagens de sucesso/erro via flash attributes do redirect)
+  Uso: <div th:replace="~{layout/fragments :: alertas}"></div>
+-->
+<div th:fragment="alertas" class="mb-4">
+    <div th:if="${mensagemSucesso}"
+         class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2"
+         role="alert">
+        <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+        <span th:text="${mensagemSucesso}"></span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
+                aria-label="Fechar"></button>
+    </div>
+    <div th:if="${mensagemErro}"
+         class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2"
+         role="alert">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+        <span th:text="${mensagemErro}"></span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
+                aria-label="Fechar"></button>
+    </div>
+</div>
+
+<!--
+  Fragment: footer
+  Uso: <footer th:replace="~{layout/fragments :: rodape}"></footer>
+-->
+<footer th:fragment="rodape" class="footer mt-auto py-3 bg-light border-top">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span class="text-muted small">
+            Agendamento API &mdash; TCC UNDB 2026
+        </span>
+        <div class="d-flex gap-3">
+            <a href="/swagger-ui.html" target="_blank"
+               class="text-muted small text-decoration-none">
+                <i class="bi bi-code-slash me-1"></i>Swagger UI
+            </a>
+            <a href="/h2-console" target="_blank"
+               class="text-muted small text-decoration-none">
+                <i class="bi bi-database me-1"></i>H2 Console
+            </a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

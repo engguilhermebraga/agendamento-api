@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tituloPagina} + ' — Agendamento API'">Novo Agendamento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav th:replace="~{layout/fragments :: navbar}"></nav>
+
+<main class="container mt-4 mb-5">
+
+    <div th:replace="~{layout/fragments :: alertas}"></div>
+
+    <!-- Cabeçalho -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2>
+            <i class="bi bi-calendar-plus me-2 text-info"></i>
+            <span th:text="${tituloPagina}">Novo Agendamento</span>
+        </h2>
+        <a th:href="@{/web/agendamentos}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <!--
+                        th:object vincula AgendamentoRequest ao formulário.
+                        Os selects usam th:value para enviar os IDs ao controller.
+                        A validação @Future no DTO garante que dataHora seja futura.
+                    -->
+                    <form th:action="@{/web/agendamentos}"
+                          th:object="${agendamentoRequest}"
+                          method="post"
+                          novalidate>
+
+                        <div class="row g-3">
+
+                            <!-- Select: Cliente -->
+                            <div class="col-md-12">
+                                <label for="clienteId" class="form-label">
+                                    Cliente <span class="text-danger">*</span>
+                                </label>
+                                <!--
+                                    th:field="*{clienteId}" vincula ao Long clienteId do DTO.
+                                    th:each itera sobre a lista 'clientes' injetada pelo controller.
+                                    th:value define o valor enviado (ID do cliente).
+                                    th:text define o texto exibido na opção.
+                                    th:selected marca a opção como selecionada se o ID corresponder.
+                                -->
+                                <select id="clienteId" th:field="*{clienteId}"
+                                        class="form-select"
+                                        th:classappend="${#fields.hasErrors('clienteId')} ? 'is-invalid'">
+                                    <option value="">— Selecione um cliente —</option>
+                                    <option th:each="cliente : ${clientes}"
+                                            th:value="${cliente.id}"
+                                            th:text="${cliente.nome} + ' — CPF: ' + ${cliente.cpf}"
+                                            th:selected="${agendamentoRequest.clienteId == cliente.id}">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback"
+                                     th:if="${#fields.hasErrors('clienteId')}"
+                                     th:errors="*{clienteId}"></div>
+                            </div>
+
+                            <!-- Select: Profissional -->
+                            <div class="col-md-6">
+                                <label for="profissionalId" class="form-label">
+                                    Profissional <span class="text-danger">*</span>
+                                </label>
+                                <select id="profissionalId" th:field="*{profissionalId}"
+                                        class="form-select"
+                                        th:classappend="${#fields.hasErrors('profissionalId')} ? 'is-invalid'">
+                                    <option value="">— Selecione —</option>
+                                    <option th:each="profissional : ${profissionais}"
+                                            th:value="${profissional.id}"
+                                            th:text="${profissional.nome} + ' (' + ${profissional.especialidade} + ')'">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback"
+                                     th:if="${#fields.hasErrors('profissionalId')}"
+                                     th:errors="*{profissionalId}"></div>
+                            </div>
+
+                            <!-- Select: Serviço -->
+                            <div class="col-md-6">
+                                <label for="servicoId" class="form-label">
+                                    Serviço <span class="text-danger">*</span>
+                                </label>
+                                <select id="servicoId" th:field="*{servicoId}"
+                                        class="form-select"
+                                        th:classappend="${#fields.hasErrors('servicoId')} ? 'is-invalid'">
+                                    <option value="">— Selecione —</option>
+                                    <option th:each="servico : ${servicos}"
+                                            th:value="${servico.id}"
+                                            th:text="${servico.nome} + ' — ' + ${servico.duracaoMinutos} + ' min — R$ ' + ${servico.preco}">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback"
+                                     th:if="${#fields.hasErrors('servicoId')}"
+                                     th:errors="*{servicoId}"></div>
+                            </div>
+
+                            <!-- Data e Hora -->
+                            <div class="col-md-6">
+                                <label for="dataHora" class="form-label">
+                                    Data e hora <span class="text-danger">*</span>
+                                </label>
+                                <!--
+                                    input datetime-local envia o valor no formato
+                                    "yyyy-MM-ddTHH:mm" que o Spring converte para LocalDateTime.
+                                    A validação @Future no DTO rejeita datas passadas.
+                                -->
+                                <input type="datetime-local"
+                                       id="dataHora"
+                                       th:field="*{dataHora}"
+                                       class="form-control"
+                                       th:classappend="${#fields.hasErrors('dataHora')} ? 'is-invalid'">
+                                <div class="form-text">O agendamento deve ser para uma data futura.</div>
+                                <div class="invalid-feedback"
+                                     th:if="${#fields.hasErrors('dataHora')}"
+                                     th:errors="*{dataHora}"></div>
+                            </div>
+
+                        </div>
+
+                        <p class="text-muted small mt-3 mb-4">
+                            <span class="text-danger">*</span> Campos obrigatórios.
+                            O sistema verificará automaticamente conflitos de horário para o profissional selecionado.
+                        </p>
+
+                        <!-- Botões -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-info text-white px-4">
+                                <i class="bi bi-calendar-check me-1"></i>Confirmar agendamento
+                            </button>
+                            <a th:href="@{/web/agendamentos}" class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card informativo lateral -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle me-2 text-info"></i>Como funciona
+                    </h6>
+                    <ul class="list-unstyled mb-0 small text-muted">
+                        <li class="mb-2">
+                            <i class="bi bi-check2 text-success me-2"></i>
+                            Selecione o cliente, profissional e serviço
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check2 text-success me-2"></i>
+                            O sistema calcula o fim do atendimento automaticamente
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check2 text-success me-2"></i>
+                            Conflitos de horário são detectados em tempo real
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check2 text-success me-2"></i>
+                            O status inicial é sempre <strong>AGENDADO</strong>
+                        </li>
+                    </ul>
+                    <hr>
+                    <p class="small text-muted mb-0">
+                        <strong>Fluxo de status:</strong><br>
+                        AGENDADO → CONFIRMADO → CONCLUIDO<br>
+                        AGENDADO / CONFIRMADO → CANCELADO
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{layout/fragments :: rodape}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+/* ============================================================
+   Agendamento API — Estilos globais
+   Complementa o Bootstrap 5
+   ============================================================ */
+
+/* Layout principal com sticky footer */
+html, body {
+    height: 100%;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+main {
+    flex: 1 0 auto;
+}
+.footer {
+    flex-shrink: 0;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+}
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+/* Tabelas */
+.table th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    border-bottom-width: 1px;
+    white-space: nowrap;
+}
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.03);
+}
+
+/* Badge de status do agendamento */
+.badge-status {
+    font-size: 0.75rem;
+    padding: 0.35em 0.7em;
+    border-radius: 50rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.badge-agendado    { background-color: #fff3cd; color: #856404; }
+.badge-confirmado  { background-color: #cfe2ff; color: #084298; }
+.badge-concluido   { background-color: #d1e7dd; color: #0a3622; }
+.badge-cancelado   { background-color: #f8d7da; color: #58151c; }
+
+/* Botões de ação na tabela */
+.btn-action {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 0.4rem;
+    line-height: 1.4;
+}
+
+/* Formulários */
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #344767;
+    margin-bottom: 0.3rem;
+}
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border-color: #d2d6da;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.85rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+.form-control.is-invalid, .form-select.is-invalid {
+    border-color: #dc3545;
+}
+.invalid-feedback {
+    font-size: 0.8rem;
+}
+
+/* Cards de contador do dashboard */
+.stat-card {
+    border-radius: 0.75rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+}
+.stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+/* Texto auxiliar de tabela vazia */
+.empty-state {
+    padding: 3rem 1rem;
+    color: #adb5bd;
+}
+.empty-state i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+/* Cabeçalho de página */
+.page-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.page-header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #344767;
+    margin-bottom: 0;
+}

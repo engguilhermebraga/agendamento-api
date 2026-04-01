@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Agendamento API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav th:replace="~{layout/fragments :: navbar}"></nav>
+
+<main class="container mt-4 mb-5">
+
+    <div th:replace="~{layout/fragments :: alertas}"></div>
+
+    <!-- Cabeçalho -->
+    <div class="page-header">
+        <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+        <p class="text-muted mb-0 small">Visão geral do sistema de agendamentos.</p>
+    </div>
+
+    <!-- Cards de contagem -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="bi bi-people text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="fs-2 fw-bold lh-1" th:text="${totalClientes}">0</div>
+                        <div class="text-muted small mt-1">Clientes</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent pt-0 border-0 pb-3">
+                    <a th:href="@{/web/clientes}" class="btn btn-sm btn-outline-primary w-100">
+                        Gerenciar <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="bi bi-person-badge text-success"></i>
+                    </div>
+                    <div>
+                        <div class="fs-2 fw-bold lh-1" th:text="${totalProfissionais}">0</div>
+                        <div class="text-muted small mt-1">Profissionais</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent pt-0 border-0 pb-3">
+                    <a th:href="@{/web/profissionais}" class="btn btn-sm btn-outline-success w-100">
+                        Gerenciar <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-warning bg-opacity-10">
+                        <i class="bi bi-scissors text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="fs-2 fw-bold lh-1" th:text="${totalServicos}">0</div>
+                        <div class="text-muted small mt-1">Serviços</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent pt-0 border-0 pb-3">
+                    <a th:href="@{/web/servicos}" class="btn btn-sm btn-outline-warning w-100">
+                        Gerenciar <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-info bg-opacity-10">
+                        <i class="bi bi-calendar3 text-info"></i>
+                    </div>
+                    <div>
+                        <div class="fs-2 fw-bold lh-1" th:text="${totalAgendamentos}">0</div>
+                        <div class="text-muted small mt-1">Agendamentos</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent pt-0 border-0 pb-3">
+                    <a th:href="@{/web/agendamentos}" class="btn btn-sm btn-outline-info w-100">
+                        Gerenciar <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Ações rápidas
+        </div>
+        <div class="card-body d-flex flex-wrap gap-2">
+            <a th:href="@{/web/clientes/novo}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>Novo Cliente
+            </a>
+            <a th:href="@{/web/profissionais/novo}" class="btn btn-success">
+                <i class="bi bi-person-badge me-1"></i>Novo Profissional
+            </a>
+            <a th:href="@{/web/servicos/novo}" class="btn btn-warning">
+                <i class="bi bi-scissors me-1"></i>Novo Serviço
+            </a>
+            <a th:href="@{/web/agendamentos/novo}" class="btn btn-info text-white">
+                <i class="bi bi-calendar-plus me-1"></i>Novo Agendamento
+            </a>
+            <div class="vr mx-1"></div>
+            <a href="/swagger-ui.html" target="_blank" class="btn btn-outline-secondary">
+                <i class="bi bi-code-slash me-1"></i>Swagger UI
+            </a>
+            <a href="/h2-console" target="_blank" class="btn btn-outline-secondary">
+                <i class="bi bi-database me-1"></i>H2 Console
+            </a>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{layout/fragments :: rodape}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

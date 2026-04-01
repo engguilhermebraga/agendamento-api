@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tituloPagina} + ' — Agendamento API'">Serviço</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav th:replace="~{layout/fragments :: navbar}"></nav>
+
+<main class="container mt-4 mb-5">
+
+    <div th:replace="~{layout/fragments :: alertas}"></div>
+
+    <!-- Cabeçalho -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2>
+            <i class="bi bi-plus-circle me-2 text-warning" th:if="${acao == 'cadastro'}"></i>
+            <i class="bi bi-pencil-square me-2 text-warning" th:if="${acao == 'edicao'}"></i>
+            <span th:text="${tituloPagina}">Serviço</span>
+        </h2>
+        <a th:href="@{/web/servicos}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <form th:action="${acao == 'cadastro'}
+                              ? @{/web/servicos}
+                              : @{/web/servicos/{id}/editar(id=${servicoId})}"
+                  th:object="${servicoRequest}"
+                  method="post"
+                  novalidate>
+
+                <div class="row g-3">
+
+                    <!-- Nome do serviço -->
+                    <div class="col-12">
+                        <label for="nome" class="form-label">
+                            Nome do serviço <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="nome" th:field="*{nome}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                               placeholder="Ex: Corte de Cabelo Masculino">
+                        <div class="invalid-feedback"
+                             th:if="${#fields.hasErrors('nome')}"
+                             th:errors="*{nome}"></div>
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="col-12">
+                        <label for="descricao" class="form-label">
+                            Descrição
+                        </label>
+                        <textarea id="descricao" th:field="*{descricao}"
+                                  class="form-control"
+                                  th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'"
+                                  rows="3"
+                                  placeholder="Descreva o serviço oferecido (opcional)"></textarea>
+                        <div class="form-text">Máximo de 255 caracteres.</div>
+                        <div class="invalid-feedback"
+                             th:if="${#fields.hasErrors('descricao')}"
+                             th:errors="*{descricao}"></div>
+                    </div>
+
+                    <!-- Duração em minutos -->
+                    <div class="col-md-6">
+                        <label for="duracaoMinutos" class="form-label">
+                            Duração (minutos) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" id="duracaoMinutos" th:field="*{duracaoMinutos}"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('duracaoMinutos')} ? 'is-invalid'"
+                                   placeholder="Ex: 60" min="1" max="480">
+                            <span class="input-group-text">min</span>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('duracaoMinutos')}"
+                                 th:errors="*{duracaoMinutos}"></div>
+                        </div>
+                        <div class="form-text">Entre 1 e 480 minutos (8 horas).</div>
+                    </div>
+
+                    <!-- Preço -->
+                    <div class="col-md-6">
+                        <label for="preco" class="form-label">
+                            Preço (R$) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" id="preco" th:field="*{preco}"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('preco')} ? 'is-invalid'"
+                                   placeholder="Ex: 50.00"
+                                   step="0.01" min="0.01">
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('preco')}"
+                                 th:errors="*{preco}"></div>
+                        </div>
+                        <div class="form-text">Valor mínimo: R$ 0,01.</div>
+                    </div>
+
+                </div>
+
+                <p class="text-muted small mt-3 mb-4">
+                    <span class="text-danger">*</span> Campos obrigatórios
+                </p>
+
+                <!-- Botões -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning px-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        <span th:text="${acao == 'cadastro'} ? 'Cadastrar' : 'Salvar alterações'"></span>
+                    </button>
+                    <a th:href="@{/web/servicos}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{layout/fragments :: rodape}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
