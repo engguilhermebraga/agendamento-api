@@ -3,7 +3,7 @@ package com.guilhermebraga.agendamento_api.repository;
 import com.guilhermebraga.agendamento_api.entity.Agendamento;
 import com.guilhermebraga.agendamento_api.entity.StatusAgendamento;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repositoryS.JpaRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
