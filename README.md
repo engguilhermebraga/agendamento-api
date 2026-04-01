@@ -1,6 +1,6 @@
 # 📅 Agendamento API
 
-> API REST para Gestão de Agendamentos de Serviços desenvolvida como Trabalho de Conclusão de Curso (TCC) do Curso de Administração do Centro Universitário UNDB.
+> API REST para Gestão de Agendamentos de Serviços desenvolvida como Trabalho de Conclusão de Curso (TCC) do Curso de Engenharia de Software do Centro Universitário UNDB.
 
 ---
 
