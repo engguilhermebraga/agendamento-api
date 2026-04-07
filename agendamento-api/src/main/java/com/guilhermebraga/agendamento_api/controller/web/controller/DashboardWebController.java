@@ -1,4 +1,4 @@
-package com.guilhermebraga.agendamento_api.web.controller;
+package com.guilhermebraga.agendamento_api.controller.web.controller;
 
 import com.guilhermebraga.agendamento_api.service.AgendamentoService;
 import com.guilhermebraga.agendamento_api.service.ClienteService;
