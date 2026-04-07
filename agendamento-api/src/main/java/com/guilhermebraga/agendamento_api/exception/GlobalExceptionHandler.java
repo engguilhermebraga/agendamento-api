@@ -1,5 +1,9 @@
 package com.guilhermebraga.agendamento_api.exception;
 
+import com.guilhermebraga.agendamento_api.controller.AgendamentoController;
+import com.guilhermebraga.agendamento_api.controller.ClienteController;
+import com.guilhermebraga.agendamento_api.controller.ProfissionalController;
+import com.guilhermebraga.agendamento_api.controller.ServicoController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,12 +16,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Intercepta e trata todas as exceções lançadas na API,
- * retornando respostas padronizadas com o status HTTP adequado.
+ * Intercepta e trata exceções lançadas APENAS nos controllers REST da API.
+ * <p>
+ * O escopo é restrito via assignableTypes para evitar que o handler
+ * interfira no H2 Console, Swagger UI e outros servlets internos do Spring.
  *
  * @author Guilherme Braga
  */
-@RestControllerAdvice
+@RestControllerAdvice(assignableTypes = {
+        AgendamentoController.class,
+        ClienteController.class,
+        ProfissionalController.class,
+        ServicoController.class
+})
 public class GlobalExceptionHandler {
 
     /**
@@ -62,7 +73,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Captura qualquer exceção não tratada — retorna 500.
+     * Captura qualquer exceção não tratada nos controllers REST — retorna 500.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(
