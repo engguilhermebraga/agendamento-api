@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+    <div class="top-bar">
+        <h2>Agendamentos</h2>
+        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">Novo Agendamento</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Profissional</th>
+            <th>Servico</th>
+            <th>Data/Hora</th>
+            <th>Status</th>
+            <th>Acoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${agendamentos}">
+            <td th:text="${a.id}"></td>
+            <td th:text="${a.clienteNome}"></td>
+            <td>
+                <span th:text="${a.profissionalNome}"></span>
+                <br>
+                <small th:text="${a.profissionalEspecialidade}" style="color: #7f8c8d;"></small>
+            </td>
+            <td th:text="${a.servicoNome}"></td>
+            <td th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+            <td>
+                <span th:text="${a.status}"
+                      th:style="${a.status.name() == 'AGENDADO'} ? 'color: #3498db; font-weight: bold;' :
+                                ${a.status.name() == 'CONFIRMADO'} ? 'color: #27ae60; font-weight: bold;' :
+                                ${a.status.name() == 'CONCLUIDO'} ? 'color: #7f8c8d; font-weight: bold;' :
+                                'color: #e74c3c; font-weight: bold;'"></span>
+            </td>
+            <td class="actions">
+                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                   th:href="@{/web/agendamentos/{id}/editar(id=${a.id})}" class="btn btn-warning">Editar</a>
+                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                   th:href="@{/web/agendamentos/{id}/cancelar(id=${a.id})}" class="btn btn-danger"
+                   onclick="return confirm('Deseja realmente cancelar este agendamento?')">Cancelar</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(agendamentos)}">
+            <td colspan="7" style="text-align: center; padding: 2rem;">Nenhum agendamento cadastrado.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

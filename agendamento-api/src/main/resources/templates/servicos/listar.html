@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+    <div class="top-bar">
+        <h2>Servicos</h2>
+        <a th:href="@{/web/servicos/novo}" class="btn btn-success">Novo Servico</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Descricao</th>
+            <th>Duracao (min)</th>
+            <th>Preco (R$)</th>
+            <th>Acoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${servicos}">
+            <td th:text="${s.id}"></td>
+            <td th:text="${s.nome}"></td>
+            <td th:text="${s.descricao}"></td>
+            <td th:text="${s.duracaoMinutos}"></td>
+            <td th:text="${#numbers.formatDecimal(s.preco, 1, 2)}"></td>
+            <td class="actions">
+                <a th:href="@{/web/servicos/{id}/editar(id=${s.id})}" class="btn btn-warning">Editar</a>
+                <a th:href="@{/web/servicos/{id}/deletar(id=${s.id})}" class="btn btn-danger"
+                   onclick="return confirm('Deseja realmente remover este servico?')">Remover</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(servicos)}">
+            <td colspan="6" style="text-align: center; padding: 2rem;">Nenhum servico cadastrado.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

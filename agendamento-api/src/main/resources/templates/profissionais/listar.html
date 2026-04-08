@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+    <div class="top-bar">
+        <h2>Profissionais</h2>
+        <a th:href="@{/web/profissionais/novo}" class="btn btn-success">Novo Profissional</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Especialidade</th>
+            <th>E-mail</th>
+            <th>Telefone</th>
+            <th>Acoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${profissionais}">
+            <td th:text="${p.id}"></td>
+            <td th:text="${p.nome}"></td>
+            <td th:text="${p.especialidade}"></td>
+            <td th:text="${p.email}"></td>
+            <td th:text="${p.telefone}"></td>
+            <td class="actions">
+                <a th:href="@{/web/profissionais/{id}/editar(id=${p.id})}" class="btn btn-warning">Editar</a>
+                <a th:href="@{/web/profissionais/{id}/deletar(id=${p.id})}" class="btn btn-danger"
+                   onclick="return confirm('Deseja realmente remover este profissional?')">Remover</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(profissionais)}">
+            <td colspan="6" style="text-align: center; padding: 2rem;">Nenhum profissional cadastrado.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
