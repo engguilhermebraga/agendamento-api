@@ -22,10 +22,8 @@
 ## 📌 Sobre o Projeto
 
 O **Agendamento API** é um sistema de gestão de agendamentos de serviços desenvolvido como artefato técnico do TCC. O
-projeto demonstra a aplicação prática de conceitos como **arquitetura em camadas**, **padrões de projeto REST**, *
-*documentação OpenAPI 3.0** e **interface com.guilhermebraga.agendamento_api.controller.web server-side com Thymeleaf**,
-integrando
-backend e frontend em uma única
+projeto demonstra a aplicação prática de conceitos como **arquitetura em camadas**, **padrões de projeto REST**,
+**documentação OpenAPI 3.0** e **interface web server-side com Thymeleaf**, integrando backend e frontend em uma única
 aplicação Spring Boot.
 
 O sistema permite o gerenciamento completo do ciclo de vida de um agendamento — desde o cadastro de clientes,
@@ -60,7 +58,7 @@ src/main/java/com/guilhermebraga/agendamento_api/
 │
 ├── config/                    # Configurações globais (OpenAPI)
 ├── controller/                # Controllers REST — endpoints da API
-├── com.guilhermebraga.agendamento_api.controller.web/
+├── controller/web/
 │   └── controller/            # Controllers MVC — páginas Thymeleaf
 ├── service/                   # Regras de negócio
 ├── repository/                # Acesso ao banco via Spring Data JPA
@@ -96,14 +94,12 @@ Cliente HTTP → Controller REST → Service → Repository → Entity → Banco
 ### Fluxo de uma requisição Web (Thymeleaf)
 
 ```
-Navegador → Controller MVC (com.guilhermebraga.agendamento_api.controller.web/) → Service → Repository → Entity → Banco
+Navegador → Controller MVC (controller/web/) → Service → Repository → Entity → Banco
                     ↓
               Template HTML (Thymeleaf) → Resposta HTML renderizada
 ```
 
-> **Importante:** os Controllers REST (`controller/`) e os Controllers MVC (
-`com.guilhermebraga.agendamento_api.controller.web/controller/`) são **completamente
-separados**. Os REST respondem JSON; os MVC respondem páginas HTML. Eles compartilham a mesma camada de Service.
+> **Importante:** os Controllers REST (`controller/`) e os Controllers MVC (`controller/web/controller/`) são **completamente separados**. Os REST respondem JSON; os MVC respondem páginas HTML. Eles compartilham a mesma camada de Service.
 
 ---
 
@@ -177,18 +173,18 @@ Base URL: `http://localhost:8081/api/v1`
 
 Base URL: `http://localhost:8081`
 
-| Rota                                                                      | Descrição                              |
-|---------------------------------------------------------------------------|----------------------------------------|
-| `/`                                                                       | Dashboard principal                    |
-| `/com.guilhermebraga.agendamento_api.controller.web/clientes`             | Listagem de clientes                   |
-| `/com.guilhermebraga.agendamento_api.controller.web/clientes/novo`        | Formulário de cadastro de cliente      |
-| `/com.guilhermebraga.agendamento_api.controller.web/clientes/{id}/editar` | Formulário de edição de cliente        |
-| `/com.guilhermebraga.agendamento_api.controller.web/profissionais`        | Listagem de profissionais              |
-| `/com.guilhermebraga.agendamento_api.controller.web/profissionais/novo`   | Formulário de cadastro de profissional |
-| `/com.guilhermebraga.agendamento_api.controller.web/servicos`             | Listagem de serviços                   |
-| `/com.guilhermebraga.agendamento_api.controller.web/servicos/novo`        | Formulário de cadastro de serviço      |
-| `/com.guilhermebraga.agendamento_api.controller.web/agendamentos`         | Listagem de agendamentos               |
-| `/com.guilhermebraga.agendamento_api.controller.web/agendamentos/novo`    | Formulário de novo agendamento         |
+| Rota                            | Descrição                              |
+|---------------------------------|----------------------------------------|
+| `/web`                          | Dashboard principal                    |
+| `/web/clientes`                 | Listagem de clientes                   |
+| `/web/clientes/novo`            | Formulário de cadastro de cliente      |
+| `/web/clientes/{id}/editar`     | Formulário de edição de cliente        |
+| `/web/profissionais`            | Listagem de profissionais              |
+| `/web/profissionais/novo`       | Formulário de cadastro de profissional |
+| `/web/servicos`                 | Listagem de serviços                   |
+| `/web/servicos/novo`            | Formulário de cadastro de serviço      |
+| `/web/agendamentos`             | Listagem de agendamentos               |
+| `/web/agendamentos/novo`        | Formulário de novo agendamento         |
 
 ---
 

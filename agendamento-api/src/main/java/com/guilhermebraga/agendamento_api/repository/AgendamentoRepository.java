@@ -68,4 +68,27 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
             @Param("statusIgnorados") List<StatusAgendamento> statusIgnorados,
             @Param("agendamentoId") Long agendamentoId
     );
+
+    /**
+     * Busca agendamentos de um cliente específico, ordenados por data/hora.
+     */
+    List<Agendamento> findByClienteIdOrderByDataHoraDesc(Long clienteId);
+
+    /**
+     * Busca agendamentos ativos de um profissional em uma data específica.
+     * Usado para calcular horários disponíveis no portal.
+     */
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE a.profissional.id = :profissionalId
+            AND a.status NOT IN :statusIgnorados
+            AND a.dataHora >= :inicioDia
+            AND a.dataHora < :fimDia
+            """)
+    List<Agendamento> findByProfissionalIdAndData(
+            @Param("profissionalId") Long profissionalId,
+            @Param("inicioDia") LocalDateTime inicioDia,
+            @Param("fimDia") LocalDateTime fimDia,
+            @Param("statusIgnorados") List<StatusAgendamento> statusIgnorados
+    );
 }

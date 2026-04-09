@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><title>Escolher Profissional</title></head>
+<body>
+<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Escolher Profissional', menuAtivo='agendar'">
+    <div th:fragment="conteudoPortal">
+
+        <!-- Steps indicator -->
+        <div class="steps">
+            <div class="step completed">
+                <div class="step-number">1</div>
+                <div>Serviço</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step active">
+                <div class="step-number">2</div>
+                <div>Profissional</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Horário</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div>Confirmar</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Escolha o profissional</h2>
+            <p style="color: #888; margin-bottom: 5px;">
+                Serviço selecionado: <strong th:text="${novoAgendamento.servicoNome}">Serviço</strong>
+            </p>
+            <a th:href="@{/portal/agendar/servico}" style="color: #667eea; font-size: 0.85rem; text-decoration: none;">Alterar serviço</a>
+        </div>
+
+        <div class="grid grid-2" style="margin-top: 20px;">
+            <div th:each="profissional : ${profissionais}">
+                <form th:action="@{/portal/agendar/profissional}" method="post">
+                    <input type="hidden" name="profissionalId" th:value="${profissional.id}" />
+                    <button type="submit" class="service-card" style="width: 100%; text-align: left; font-family: inherit;">
+                        <h3 th:text="${profissional.nome}">Profissional</h3>
+                        <p class="description" th:text="${profissional.especialidade}">Especialidade</p>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

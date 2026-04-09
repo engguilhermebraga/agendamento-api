@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><title>Escolher Serviço</title></head>
+<body>
+<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Escolher Serviço', menuAtivo='agendar'">
+    <div th:fragment="conteudoPortal">
+
+        <!-- Steps indicator -->
+        <div class="steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div>Serviço</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Profissional</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Horário</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div>Confirmar</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Escolha o serviço desejado</h2>
+            <p style="color: #888; margin-bottom: 20px;">Selecione o serviço que deseja agendar.</p>
+
+            <div class="grid grid-2">
+                <div th:each="servico : ${servicos}">
+                    <form th:action="@{/portal/agendar/servico}" method="post">
+                        <input type="hidden" name="servicoId" th:value="${servico.id}" />
+                        <button type="submit" class="service-card" style="width: 100%; text-align: left; border: 2px solid transparent; font-family: inherit;">
+                            <h3 th:text="${servico.nome}">Serviço</h3>
+                            <p class="description" th:text="${servico.descricao}" th:if="${servico.descricao}">Descrição</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                <span class="duration" th:text="${servico.duracaoMinutos} + ' min'">30 min</span>
+                            </div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

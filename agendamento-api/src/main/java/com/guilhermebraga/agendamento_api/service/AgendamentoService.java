@@ -11,10 +11,14 @@ import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import com.guilhermebraga.agendamento_api.repository.ProfissionalRepository;
 import com.guilhermebraga.agendamento_api.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,6 +42,15 @@ public class AgendamentoService {
     private final ProfissionalRepository profissionalRepository;
     private final ServicoRepository servicoRepository;
     private final AgendamentoMapper agendamentoMapper;
+
+    @Value("${agendamento.cancelamento.antecedencia-horas:2}")
+    private int antecedenciaCancelamentoHoras;
+
+    @Value("${agendamento.horario.inicio:08:00}")
+    private String horarioInicio;
+
+    @Value("${agendamento.horario.fim:18:00}")
+    private String horarioFim;
 
     // Status que indicam agendamento inativo — ignorados na verificação de conflito
     private static final List<StatusAgendamento> STATUS_INATIVOS =
@@ -217,6 +230,153 @@ public class AgendamentoService {
 
         agendamento.setStatus(StatusAgendamento.CANCELADO);
         agendamentoRepository.save(agendamento);
+    }
+
+    // ----------------------------------------------------------------
+    // PORTAL — HORÁRIOS DISPONÍVEIS
+    // ----------------------------------------------------------------
+
+    /**
+     * Calcula os horários disponíveis de um profissional para um serviço em uma data.
+     * Gera slots a partir do horário de atendimento, remove os já ocupados.
+     */
+    @Transactional(readOnly = true)
+    public List<LocalTime> buscarHorariosDisponiveis(Long profissionalId, Long servicoId, LocalDate data) {
+
+        Profissional profissional = profissionalRepository.findById(profissionalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional", profissionalId));
+
+        Servico servico = servicoRepository.findById(servicoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Serviço", servicoId));
+
+        LocalTime inicio = LocalTime.parse(horarioInicio);
+        LocalTime fim = LocalTime.parse(horarioFim);
+        int duracaoMinutos = servico.getDuracaoMinutos();
+
+        // Busca agendamentos ativos do profissional nesse dia
+        LocalDateTime inicioDia = data.atStartOfDay();
+        LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
+        List<Agendamento> agendamentosDoDia = agendamentoRepository
+                .findByProfissionalIdAndData(profissionalId, inicioDia, fimDia, STATUS_INATIVOS);
+
+        // Gera todos os slots possíveis e remove os ocupados
+        List<LocalTime> slots = new ArrayList<>();
+        LocalTime slot = inicio;
+
+        while (slot.plusMinutes(duracaoMinutos).compareTo(fim) <= 0) {
+            LocalDateTime slotInicio = data.atTime(slot);
+            LocalDateTime slotFim = slotInicio.plusMinutes(duracaoMinutos);
+
+            boolean ocupado = agendamentosDoDia.stream().anyMatch(a ->
+                    a.getDataHora().isBefore(slotFim) && slotInicio.isBefore(a.getDataHoraFim())
+            );
+
+            // Se a data é hoje, ignora slots no passado
+            if (data.equals(LocalDate.now()) && slot.isBefore(LocalTime.now())) {
+                ocupado = true;
+            }
+
+            if (!ocupado) {
+                slots.add(slot);
+            }
+
+            slot = slot.plusMinutes(30); // slots de 30 em 30 minutos
+        }
+
+        return slots;
+    }
+
+    // ----------------------------------------------------------------
+    // PORTAL — LISTAR POR CLIENTE
+    // ----------------------------------------------------------------
+
+    /**
+     * Retorna os agendamentos de um cliente, ordenados por data desc.
+     */
+    @Transactional(readOnly = true)
+    public List<AgendamentoResponse> listarPorCliente(Long clienteId) {
+        return agendamentoRepository.findByClienteIdOrderByDataHoraDesc(clienteId)
+                .stream()
+                .map(agendamentoMapper::toResponse)
+                .toList();
+    }
+
+    // ----------------------------------------------------------------
+    // PORTAL — CANCELAMENTO PELO CLIENTE
+    // ----------------------------------------------------------------
+
+    /**
+     * Cancela um agendamento validando posse do cliente e antecedência mínima.
+     */
+    @Transactional
+    public void cancelarPeloCliente(Long agendamentoId, Long clienteId) {
+
+        Agendamento agendamento = buscarOuLancarExcecao(agendamentoId);
+
+        if (!agendamento.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Este agendamento não pertence ao cliente informado.");
+        }
+
+        if (agendamento.getStatus() == StatusAgendamento.CONCLUIDO) {
+            throw new BusinessException("Agendamentos concluídos não podem ser cancelados.");
+        }
+
+        if (agendamento.getStatus() == StatusAgendamento.CANCELADO) {
+            throw new BusinessException("Este agendamento já está cancelado.");
+        }
+
+        // Valida antecedência mínima
+        LocalDateTime limiteMin = agendamento.getDataHora().minusHours(antecedenciaCancelamentoHoras);
+        if (LocalDateTime.now().isAfter(limiteMin)) {
+            throw new BusinessException(
+                    "O cancelamento deve ser feito com pelo menos " + antecedenciaCancelamentoHoras +
+                            " hora(s) de antecedência.");
+        }
+
+        agendamento.setStatus(StatusAgendamento.CANCELADO);
+        agendamentoRepository.save(agendamento);
+    }
+
+    // ----------------------------------------------------------------
+    // PORTAL — CRIAR AGENDAMENTO PELO PORTAL
+    // ----------------------------------------------------------------
+
+    /**
+     * Cria um agendamento a partir dos dados do portal (IDs + dataHora).
+     */
+    @Transactional
+    public AgendamentoResponse criarPeloPortal(Long clienteId, Long profissionalId, Long servicoId, LocalDateTime dataHora) {
+
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente", clienteId));
+
+        Profissional profissional = profissionalRepository.findById(profissionalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional", profissionalId));
+
+        Servico servico = servicoRepository.findById(servicoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Serviço", servicoId));
+
+        LocalDateTime dataHoraFim = dataHora.plusMinutes(servico.getDuracaoMinutos());
+
+        List<Agendamento> conflitos = agendamentoRepository.findConflitosHorario(
+                profissional.getId(), dataHora, dataHoraFim, STATUS_INATIVOS);
+
+        if (!conflitos.isEmpty()) {
+            throw new BusinessException(
+                    "O profissional já possui um agendamento neste horário. " +
+                            "Por favor, escolha outro horário ou profissional.");
+        }
+
+        Agendamento agendamento = Agendamento.builder()
+                .cliente(cliente)
+                .profissional(profissional)
+                .servico(servico)
+                .dataHora(dataHora)
+                .dataHoraFim(dataHoraFim)
+                .status(StatusAgendamento.AGENDADO)
+                .build();
+
+        return agendamentoMapper.toResponse(agendamentoRepository.save(agendamento));
     }
 
     // ----------------------------------------------------------------
