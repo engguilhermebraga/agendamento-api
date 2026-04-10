@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Identificação | Portal de Agendamento</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-container { background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 440px; padding: 40px; }
+        .login-container h1 { text-align: center; color: #333; font-size: 1.6rem; margin-bottom: 8px; }
+        .login-container p.subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.95rem; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: #555; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+        .btn { display: block; width: 100%; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 500; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-link { background: none; color: #667eea; font-size: 0.9rem; margin-top: 15px; }
+        .btn-link:hover { text-decoration: underline; }
+        .divider { text-align: center; margin: 25px 0; color: #ccc; font-size: 0.85rem; position: relative; }
+        .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #ddd; }
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Portal de Agendamento</h1>
+        <p class="subtitle">Identifique-se para continuar</p>
+
+        <div class="alert alert-danger" th:if="${mensagemErro}" th:text="${mensagemErro}"></div>
+        <div class="alert alert-success" th:if="${mensagemSucesso}" th:text="${mensagemSucesso}"></div>
+
+        <!-- Identificação por e-mail -->
+        <form th:action="@{/portal/login}" method="post">
+            <div class="form-group">
+                <label for="email">Seu e-mail</label>
+                <input type="email" id="email" name="email" class="form-control"
+                       placeholder="exemplo@email.com" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+
+        <div class="divider">ou</div>
+
+        <a th:href="@{/portal/cadastro}" class="btn btn-link">Ainda não tem cadastro? Cadastre-se</a>
+    </div>
+</body>
+</html>

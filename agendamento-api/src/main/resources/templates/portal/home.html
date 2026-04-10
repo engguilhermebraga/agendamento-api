@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><title>Portal</title></head>
+<body>
+<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Início', menuAtivo='home'">
+    <div th:fragment="conteudoPortal">
+
+        <div class="card" style="text-align: center; padding: 50px 25px;">
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px;">Bem-vindo ao Portal de Agendamento</h2>
+            <p style="color: #666; font-size: 1.05rem; margin-bottom: 30px;">
+                Agende seus serviços de forma rápida e prática.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                <a th:href="@{/portal/servicos}" class="btn btn-outline" style="padding: 14px 30px; font-size: 1rem;">
+                    Ver Serviços
+                </a>
+                <a th:href="@{/portal/agendar/servico}" class="btn btn-primary" style="padding: 14px 30px; font-size: 1rem;">
+                    Agendar Agora
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-3" style="margin-top: 20px;">
+            <div class="card" style="text-align: center;">
+                <h3 style="font-size: 2rem; color: #667eea;" th:text="${totalServicos}">0</h3>
+                <p style="color: #888;">Serviços Disponíveis</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 style="font-size: 2rem; color: #667eea;" th:text="${totalProfissionais}">0</h3>
+                <p style="color: #888;">Profissionais</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 style="font-size: 2rem; color: #667eea;" th:text="${meusAgendamentos}">0</h3>
+                <p style="color: #888;">Meus Agendamentos</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

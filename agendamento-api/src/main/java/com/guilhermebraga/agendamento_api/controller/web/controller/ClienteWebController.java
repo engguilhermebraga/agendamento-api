@@ -1,4 +1,4 @@
 package com.guilhermebraga.agendamento_api.controller.web.controller;
 
-public class DashboardWebController {
+public class ClienteWebController {
 }

@@ -1,179 +1,54 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${tituloPagina} + ' — Agendamento API'">Agendamentos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
 <body>
-
-<nav th:replace="~{layout/fragments :: navbar}"></nav>
-
-<main class="container mt-4 mb-5">
-
-    <div th:replace="~{layout/fragments :: alertas}"></div>
-
-    <!-- Cabeçalho -->
-    <div class="page-header d-flex justify-content-between align-items-center">
-        <div>
-            <h2><i class="bi bi-calendar3 me-2 text-info"></i>Agendamentos</h2>
-            <p class="text-muted mb-0 small">
-                <span th:text="${agendamentos.size()}">0</span> agendamento(s) no total
-            </p>
-        </div>
-        <a th:href="@{/web/agendamentos/novo}" class="btn btn-info text-white">
-            <i class="bi bi-calendar-plus me-1"></i>Novo Agendamento
-        </a>
+<div th:fragment="conteudo">
+    <div class="top-bar">
+        <h2>Agendamentos</h2>
+        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">Novo Agendamento</a>
     </div>
-
-    <!-- Tabela -->
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="width:60px">#</th>
-                            <th>Cliente</th>
-                            <th>Profissional</th>
-                            <th>Serviço</th>
-                            <th>Data e Hora</th>
-                            <th>Duração</th>
-                            <th>Status</th>
-                            <th class="text-center" style="width:170px">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="agendamento : ${agendamentos}">
-                            <td class="text-muted" th:text="${agendamento.id}"></td>
-
-                            <!-- Cliente -->
-                            <td>
-                                <div class="fw-semibold" th:text="${agendamento.clienteNome}"></div>
-                                <div class="text-muted small">ID: <span th:text="${agendamento.clienteId}"></span></div>
-                            </td>
-
-                            <!-- Profissional -->
-                            <td>
-                                <div class="fw-semibold" th:text="${agendamento.profissionalNome}"></div>
-                                <div class="text-muted small" th:text="${agendamento.profissionalEspecialidade}"></div>
-                            </td>
-
-                            <!-- Serviço -->
-                            <td th:text="${agendamento.servicoNome}"></td>
-
-                            <!-- Data e Hora -->
-                            <td>
-                                <div class="fw-semibold"
-                                     th:text="${#temporals.format(agendamento.dataHora, 'dd/MM/yyyy')}"></div>
-                                <div class="text-muted small"
-                                     th:text="${#temporals.format(agendamento.dataHora, 'HH:mm')}"></div>
-                            </td>
-
-                            <!-- Duração -->
-                            <td>
-                                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">
-                                    <span th:text="${agendamento.servicoDuracaoMinutos} + ' min'"></span>
-                                </span>
-                            </td>
-
-                            <!-- Badge de Status -->
-                            <td>
-                                <!--
-                                    th:classappend aplica a classe CSS do badge conforme o valor do enum.
-                                    A classe 'badge-agendado', 'badge-confirmado', etc. é definida em style.css.
-                                -->
-                                <span class="badge-status"
-                                      th:classappend="${'badge-' + agendamento.status.name().toLowerCase()}"
-                                      th:text="${agendamento.status}">
-                                </span>
-                            </td>
-
-                            <!-- Ações -->
-                            <td class="text-center">
-                                <!--
-                                    Botão CONFIRMAR: visível apenas para agendamentos AGENDADO.
-                                    Envia um POST para /web/agendamentos/{id}/status?status=CONFIRMADO
-                                -->
-                                <form th:if="${agendamento.status.name() == 'AGENDADO'}"
-                                      th:action="@{/web/agendamentos/{id}/status(id=${agendamento.id})}"
-                                      method="post" class="d-inline">
-                                    <input type="hidden" name="status" value="CONFIRMADO">
-                                    <button type="submit" class="btn btn-action btn-outline-info me-1"
-                                            title="Confirmar agendamento">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                </form>
-
-                                <!--
-                                    Botão CONCLUIR: visível apenas para agendamentos CONFIRMADO.
-                                -->
-                                <form th:if="${agendamento.status.name() == 'CONFIRMADO'}"
-                                      th:action="@{/web/agendamentos/{id}/status(id=${agendamento.id})}"
-                                      method="post" class="d-inline">
-                                    <input type="hidden" name="status" value="CONCLUIDO">
-                                    <button type="submit" class="btn btn-action btn-outline-success me-1"
-                                            title="Marcar como concluído">
-                                        <i class="bi bi-check2-all"></i>
-                                    </button>
-                                </form>
-
-                                <!--
-                                    Botão CANCELAR: visível apenas para AGENDADO e CONFIRMADO.
-                                    Pede confirmação antes de cancelar.
-                                -->
-                                <form th:if="${agendamento.status.name() == 'AGENDADO' or agendamento.status.name() == 'CONFIRMADO'}"
-                                      th:action="@{/web/agendamentos/{id}/cancelar(id=${agendamento.id})}"
-                                      method="post" class="d-inline"
-                                      onsubmit="return confirm('Deseja cancelar este agendamento?')">
-                                    <button type="submit" class="btn btn-action btn-outline-danger"
-                                            title="Cancelar agendamento">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </form>
-
-                                <!-- Ícone de bloqueio para CONCLUIDO e CANCELADO (sem ações) -->
-                                <span th:if="${agendamento.status.name() == 'CONCLUIDO' or agendamento.status.name() == 'CANCELADO'}"
-                                      class="text-muted" title="Sem ações disponíveis">
-                                    <i class="bi bi-lock"></i>
-                                </span>
-                            </td>
-                        </tr>
-
-                        <!-- Estado vazio -->
-                        <tr th:if="${#lists.isEmpty(agendamentos)}">
-                            <td colspan="8">
-                                <div class="empty-state text-center">
-                                    <i class="bi bi-calendar3"></i>
-                                    <p class="mb-2">Nenhum agendamento registrado ainda.</p>
-                                    <a th:href="@{/web/agendamentos/novo}" class="btn btn-sm btn-info text-white">
-                                        <i class="bi bi-calendar-plus me-1"></i>Criar agendamento
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Legenda dos status -->
-    <div class="d-flex flex-wrap gap-2 mt-3">
-        <small class="text-muted me-1">Status:</small>
-        <span class="badge-status badge-agendado">AGENDADO</span>
-        <span class="badge-status badge-confirmado">CONFIRMADO</span>
-        <span class="badge-status badge-concluido">CONCLUIDO</span>
-        <span class="badge-status badge-cancelado">CANCELADO</span>
-    </div>
-
-</main>
-
-<footer th:replace="~{layout/fragments :: rodape}"></footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Profissional</th>
+            <th>Servico</th>
+            <th>Data/Hora</th>
+            <th>Status</th>
+            <th>Acoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${agendamentos}">
+            <td th:text="${a.id}"></td>
+            <td th:text="${a.clienteNome}"></td>
+            <td>
+                <span th:text="${a.profissionalNome}"></span>
+                <br>
+                <small th:text="${a.profissionalEspecialidade}" style="color: #7f8c8d;"></small>
+            </td>
+            <td th:text="${a.servicoNome}"></td>
+            <td th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+            <td>
+                <span th:text="${a.status}"
+                      th:style="${a.status.name() == 'AGENDADO'} ? 'color: #3498db; font-weight: bold;' :
+                                ${a.status.name() == 'CONFIRMADO'} ? 'color: #27ae60; font-weight: bold;' :
+                                ${a.status.name() == 'CONCLUIDO'} ? 'color: #7f8c8d; font-weight: bold;' :
+                                'color: #e74c3c; font-weight: bold;'"></span>
+            </td>
+            <td class="actions">
+                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                   th:href="@{/web/agendamentos/{id}/editar(id=${a.id})}" class="btn btn-warning">Editar</a>
+                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                   th:href="@{/web/agendamentos/{id}/cancelar(id=${a.id})}" class="btn btn-danger"
+                   onclick="return confirm('Deseja realmente cancelar este agendamento?')">Cancelar</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(agendamentos)}">
+            <td colspan="7" style="text-align: center; padding: 2rem;">Nenhum agendamento cadastrado.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

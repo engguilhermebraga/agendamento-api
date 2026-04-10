@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><title>Serviços</title></head>
+<body>
+<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Serviços', menuAtivo='servicos'">
+    <div th:fragment="conteudoPortal">
+
+        <div class="card">
+            <h2>Nossos Serviços</h2>
+            <p style="color: #888; margin-bottom: 20px;">Conheça todos os serviços disponíveis para agendamento.</p>
+        </div>
+
+        <div class="grid grid-2">
+            <div class="service-card" th:each="servico : ${servicos}">
+                <h3 th:text="${servico.nome}">Serviço</h3>
+                <p class="description" th:text="${servico.descricao}" th:if="${servico.descricao}">Descrição</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                    <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                    <span class="duration" th:text="${servico.duracaoMinutos} + ' min'">30 min</span>
+                </div>
+                <a th:href="@{/portal/agendar/servico(servicoId=${servico.id})}"
+                   class="btn btn-primary btn-sm" style="margin-top: 15px; display: block; text-align: center;">
+                    Agendar este serviço
+                </a>
+            </div>
+        </div>
+
+        <div class="card" th:if="${#lists.isEmpty(servicos)}" style="text-align: center; color: #888;">
+            <p>Nenhum serviço disponível no momento.</p>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
