@@ -263,7 +263,7 @@ public class AgendamentoService {
         List<LocalTime> slots = new ArrayList<>();
         LocalTime slot = inicio;
 
-        while (slot.plusMinutes(duracaoMinutos).compareTo(fim) <= 0) {
+        while (!slot.plusMinutes(duracaoMinutos).isAfter(fim)) {
             LocalDateTime slotInicio = data.atTime(slot);
             LocalDateTime slotFim = slotInicio.plusMinutes(duracaoMinutos);
 
