@@ -51,57 +51,12 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     List<Agendamento> findByStatus(StatusAgendamento status);
 
     /**
-     * Encontra agendamentos de um profissional dentro de um intervalo de tempo,
-     * filtrados por uma lista de status específicos.
-     * 
-     * Utiliza JPQL para detectar conflitos/sobreposições de horários,
-     * considerando dataHoraFim para verificar a disponibilidade.
-     * 
-     * @param profissionalId ID do profissional
-     * @param dataHoraInicio Data/hora de início do intervalo
-     * @param dataHoraFim Data/hora de fim do intervalo
-     * @param statusList Lista de status a filtrar (ex: CONFIRMADO, PENDENTE)
-     * @return Lista de agendamentos que se sobrepõem ao intervalo
-     */
-    @Query("SELECT a FROM Agendamento a " +
-           "WHERE a.profissional.id = :profissionalId " +
-           "AND a.dataHora < :dataHoraFim " +
-           "AND a.dataHoraFim > :dataHoraInicio " +
-           "AND a.status IN :statusList")
-    List<Agendamento> findByProfissionalIdAndData(
-            @Param("profissionalId") Long profissionalId,
-            @Param("dataHoraInicio") LocalDateTime dataHoraInicio,
-            @Param("dataHoraFim") LocalDateTime dataHoraFim,
-            @Param("statusList") List<StatusAgendamento> statusList
-    );
-
-    /**
      * Encontra agendamentos de um cliente ordenados por data/hora descendente.
-     * 
+     *
      * @param clienteId ID do cliente
      * @return Lista de agendamentos do cliente ordenada por data/hora (mais recente primeiro)
      */
     List<Agendamento> findByClienteIdOrderByDataHoraDesc(Long clienteId);
-
-    /**
-     * Verifica se existe um agendamento para um profissional em um intervalo específico.
-     * 
-     * @param profissionalId ID do profissional
-     * @param dataHora Data/hora do agendamento
-     * @param dataHoraFim Data/hora de fim do agendamento
-     * @return true se existe conflito, false caso contrário
-     */
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
-           "FROM Agendamento a " +
-           "WHERE a.profissional.id = :profissionalId " +
-           "AND a.dataHora < :dataHoraFim " +
-           "AND a.dataHoraFim > :dataHora " +
-           "AND a.status IN ('CONFIRMADO', 'PENDENTE')")
-    boolean existsConflict(
-            @Param("profissionalId") Long profissionalId,
-            @Param("dataHora") LocalDateTime dataHora,
-            @Param("dataHoraFim") LocalDateTime dataHoraFim
-    );
 
     /**
      * Encontra agendamentos dentro de um intervalo de datas.
@@ -119,16 +74,14 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     );
 
     /**
-     * Encontra conflitos de horário para um profissional em um intervalo de tempo.
-     * 
-     * Verifica se existe algum agendamento que se sobrepõe ao horário solicitado,
-     * levando em conta apenas agendamentos com status CONFIRMADO ou PENDENTE.
-     * 
+     * Encontra agendamentos de um profissional que se sobrepõem ao intervalo informado,
+     * filtrados pelos status fornecidos (deve receber os status ativos: AGENDADO, CONFIRMADO).
+     *
      * @param profissionalId ID do profissional
-     * @param dataHoraInicio Data/hora de início do agendamento desejado
-     * @param dataHoraFim Data/hora de fim do agendamento desejado
-     * @param statusList Lista de status a considerar (ex: CONFIRMADO, PENDENTE)
-     * @return Lista de agendamentos conflitantes
+     * @param dataHoraInicio Data/hora de início do intervalo
+     * @param dataHoraFim    Data/hora de fim do intervalo
+     * @param statusList     Status ativos a considerar (ex: AGENDADO, CONFIRMADO)
+     * @return Lista de agendamentos que se sobrepõem ao intervalo
      */
     @Query("SELECT a FROM Agendamento a " +
            "WHERE a.profissional.id = :profissionalId " +
@@ -143,16 +96,14 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     );
 
     /**
-     * Encontra conflitos de horário excluindo um agendamento específico.
-     * 
-     * Útil para validação ao atualizar um agendamento existente,
-     * evitando que o agendamento sendo editado seja considerado como conflito.
-     * 
-     * @param profissionalId ID do profissional
-     * @param dataHoraInicio Data/hora de início do agendamento desejado
-     * @param dataHoraFim Data/hora de fim do agendamento desejado
-     * @param statusList Lista de status a considerar (ex: CONFIRMADO, PENDENTE)
-     * @param agendamentoIdExcluir ID do agendamento a excluir da busca
+     * Igual a {@link #findConflitosHorario}, mas exclui um agendamento específico da busca.
+     * Usado ao atualizar um agendamento para que ele não conflite consigo mesmo.
+     *
+     * @param profissionalId       ID do profissional
+     * @param dataHoraInicio       Data/hora de início do intervalo
+     * @param dataHoraFim          Data/hora de fim do intervalo
+     * @param statusList           Status ativos a considerar (ex: AGENDADO, CONFIRMADO)
+     * @param agendamentoIdExcluir ID do agendamento a ignorar na busca
      * @return Lista de agendamentos conflitantes (excluindo o ID fornecido)
      */
     @Query("SELECT a FROM Agendamento a " +
