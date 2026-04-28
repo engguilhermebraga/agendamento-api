@@ -52,6 +52,12 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
+        <!-- ===== SPRING SECURITY (autenticação e autorização) ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- ===== SPRINGDOC — gera Swagger UI automaticamente ===== -->
         <!-- CORRIGIDO: versão 3.0.2 não existe — versão compatível é 2.8.6 -->
         <!-- Acesso: http://localhost:8081/swagger-ui.html -->
