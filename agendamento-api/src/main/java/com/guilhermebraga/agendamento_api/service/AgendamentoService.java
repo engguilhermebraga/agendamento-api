@@ -52,9 +52,9 @@ public class AgendamentoService {
     @Value("${agendamento.horario.fim:18:00}")
     private String horarioFim;
 
-    // Status que indicam agendamento inativo — ignorados na verificação de conflito
-    private static final List<StatusAgendamento> STATUS_INATIVOS =
-            List.of(StatusAgendamento.CANCELADO, StatusAgendamento.CONCLUIDO);
+    // Status ativos — únicos que bloqueiam horário e geram conflito
+    private static final List<StatusAgendamento> STATUS_ATIVOS =
+            List.of(StatusAgendamento.AGENDADO, StatusAgendamento.CONFIRMADO);
 
     // ----------------------------------------------------------------
     // CRIAR AGENDAMENTO
@@ -85,7 +85,7 @@ public class AgendamentoService {
                 profissional.getId(),
                 request.getDataHora(),
                 dataHoraFim,
-                STATUS_INATIVOS
+                STATUS_ATIVOS
         );
 
         if (!conflitos.isEmpty()) {
@@ -170,7 +170,7 @@ public class AgendamentoService {
                 profissional.getId(),
                 request.getDataHora(),
                 dataHoraFim,
-                STATUS_INATIVOS,
+                STATUS_ATIVOS,
                 id
         );
 
@@ -257,7 +257,7 @@ public class AgendamentoService {
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
         List<Agendamento> agendamentosDoDia = agendamentoRepository
-                .findByProfissionalIdAndData(profissionalId, inicioDia, fimDia, STATUS_INATIVOS);
+                .findConflitosHorario(profissionalId, inicioDia, fimDia, STATUS_ATIVOS);
 
         // Gera todos os slots possíveis e remove os ocupados
         List<LocalTime> slots = new ArrayList<>();
@@ -359,7 +359,7 @@ public class AgendamentoService {
         LocalDateTime dataHoraFim = dataHora.plusMinutes(servico.getDuracaoMinutos());
 
         List<Agendamento> conflitos = agendamentoRepository.findConflitosHorario(
-                profissional.getId(), dataHora, dataHoraFim, STATUS_INATIVOS);
+                profissional.getId(), dataHora, dataHoraFim, STATUS_ATIVOS);
 
         if (!conflitos.isEmpty()) {
             throw new BusinessException(
