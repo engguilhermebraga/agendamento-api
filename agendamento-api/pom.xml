@@ -58,6 +58,14 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- ===== JJWT (geração e validação de JSON Web Tokens) ===== -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.12.3</version>
+            <type>pom</type>
+        </dependency>
+
         <!-- ===== SPRINGDOC — gera Swagger UI automaticamente ===== -->
         <!-- CORRIGIDO: versão 3.0.2 não existe — versão compatível é 2.8.6 -->
         <!-- Acesso: http://localhost:8081/swagger-ui.html -->
