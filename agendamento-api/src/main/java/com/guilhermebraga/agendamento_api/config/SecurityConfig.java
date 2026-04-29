@@ -3,7 +3,6 @@ package com.guilhermebraga.agendamento_api.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -18,58 +17,112 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
+/**
+ * Configuração central de segurança da aplicação.
+ *
+ * Regras da API REST (/api/v1/**):
+ *   GET           → ROLE_USER ou ROLE_ADMIN
+ *   POST/PUT/DELETE/PATCH → apenas ROLE_ADMIN
+ *
+ * Caminhos públicos: Swagger UI, H2 Console, portal e views web.
+ * CSRF desabilitado (API stateless). CORS habilitado para localhost:3000.
+ *
+ * @author Guilherme Braga
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    // ----------------------------------------------------------------
+    // FILTER CHAIN — regras de autorização HTTP
+    // ----------------------------------------------------------------
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers
+                // Permite iframes no H2 Console (mesma origem)
+                .frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/**").hasRole("ADMIN")
+
+                // --- Swagger UI e OpenAPI ---
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**"
+                ).permitAll()
+
+                // --- H2 Console (somente perfil dev) ---
+                .requestMatchers("/h2-console/**").permitAll()
+
+                // --- Portal público e views Thymeleaf ---
+                .requestMatchers("/portal/**", "/web/**").permitAll()
+
+                // --- API REST: leitura → USER ou ADMIN ---
+                .requestMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("USER", "ADMIN")
+
+                // --- API REST: escrita → somente ADMIN ---
+                .requestMatchers(HttpMethod.POST,   "/api/v1/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/v1/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH,  "/api/v1/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/**").hasRole("ADMIN")
+
+                // Qualquer outra rota exige autenticação
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults());
+            // HTTP Basic para consumo via Swagger / clientes REST
+            .httpBasic(withDefaults());
 
         return http.build();
     }
 
+    // ----------------------------------------------------------------
+    // USUÁRIOS EM MEMÓRIA
+    // ----------------------------------------------------------------
+
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
         var admin = User.builder()
-            .username("admin")
-            .password(encoder.encode("admin123"))
-            .roles("ADMIN")
-            .build();
+                .username("admin")
+                .password(encoder.encode("admin123"))
+                .roles("ADMIN")
+                .build();
 
         var user = User.builder()
-            .username("user")
-            .password(encoder.encode("user123"))
-            .roles("USER")
-            .build();
+                .username("user")
+                .password(encoder.encode("user123"))
+                .roles("USER")
+                .build();
 
         return new InMemoryUserDetailsManager(admin, user);
     }
+
+    // ----------------------------------------------------------------
+    // PASSWORD ENCODER
+    // ----------------------------------------------------------------
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ----------------------------------------------------------------
+    // CORS — permite requisições do frontend em localhost:3000
+    // ----------------------------------------------------------------
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        var config = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
-        var source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }

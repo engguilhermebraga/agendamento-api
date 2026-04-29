@@ -106,11 +106,24 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ===== SPRING SECURITY (autenticação e autorização da API REST) ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- ===== TESTES (JUnit 5 + Mockito + MockMvc) ===== -->
         <!-- CORRIGIDO: as 3 dependências de teste inventadas substituídas pelo correto -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ===== SPRING SECURITY TEST (@WithMockUser, SecurityMockMvcRequestPostProcessors) ===== -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
 
