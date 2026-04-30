@@ -102,6 +102,41 @@ public class ClienteService {
     }
 
     /**
+     * Identifica um cliente pelo e-mail (autenticação simples do portal).
+     * Retorna o cliente se encontrado, ou null se não existir.
+     */
+    @Transactional(readOnly = true)
+    public Cliente autenticarPorEmail(String email) {
+        return clienteRepository.findByEmail(email).orElse(null);
+    }
+
+    /**
+     * Cadastra um novo cliente a partir dos dados básicos (usado no portal).
+     */
+    @Transactional
+    public Cliente criarPeloPortal(String nome, String email, String telefone, String cpf) {
+
+        if (clienteRepository.findByEmail(email).isPresent()) {
+            throw new BusinessException(
+                    "Já existe um cliente cadastrado com o e-mail: " + email);
+        }
+
+        if (clienteRepository.findByCpf(cpf).isPresent()) {
+            throw new BusinessException(
+                    "Já existe um cliente cadastrado com o CPF: " + cpf);
+        }
+
+        Cliente cliente = Cliente.builder()
+                .nome(nome)
+                .email(email)
+                .telefone(telefone)
+                .cpf(cpf)
+                .build();
+
+        return clienteRepository.save(cliente);
+    }
+
+    /**
      * Método auxiliar — busca o cliente ou lança ResourceNotFoundException.
      */
     private Cliente buscarOuLancarExcecao(Long id) {
