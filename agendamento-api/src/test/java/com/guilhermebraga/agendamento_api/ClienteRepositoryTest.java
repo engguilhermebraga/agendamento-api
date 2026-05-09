@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -24,12 +25,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   (existsByEmailAndIdNot, existsByCpfAndIdNot)
  *
  * Estratégia: {@code @SpringBootTest + @Transactional} — isolamento por
- * rollback automático ao fim de cada teste.
+ * rollback automático ao fim de cada teste. {@code @DirtiesContext} garante
+ * banco limpo no início — evita contaminação por testes que persistem dados
+ * via MockMvc (ex.: AgendamentoIntegrationTest, que não é @Transactional).
  *
  * @author Guilherme Braga
  */
 @SpringBootTest
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @DisplayName("ClienteRepository — testes da camada de persistência")
 class ClienteRepositoryTest {
 
