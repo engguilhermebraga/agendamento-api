@@ -13,12 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,16 +49,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Guilherme Braga
  */
 @SpringBootTest
-@AutoConfigureMockMvc
 @WithMockUser(roles = "ADMIN")
 @DisplayName("Integração — fluxo completo de agendamento (toda a stack)")
 class AgendamentoIntegrationTest {
 
     @Autowired
+    private WebApplicationContext context;
+
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Autowired
     private AgendamentoRepository agendamentoRepository;
@@ -73,6 +76,8 @@ class AgendamentoIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+
         // Ordem de limpeza respeita FKs: agendamento depende de cliente/profissional/servico
         agendamentoRepository.deleteAll();
         clienteRepository.deleteAll();
@@ -140,9 +145,9 @@ class AgendamentoIntegrationTest {
     @Test
     @DisplayName("máquina de estados: não deve permitir pular AGENDADO → CONCLUIDO direto")
     void naoDevePularEstadosDiretamente() throws Exception {
-        Long clienteId = criarCliente("Teste", "teste@email.com", "98988887777", "11122233344");
-        Long profissionalId = criarProfissional("Profi", "Especialidade X", "profi@email.com", "98999876543");
-        Long servicoId = criarServico("Serviço", "desc", 30, new BigDecimal("50.00"));
+        Long clienteId = criarCliente("Teste Cliente", "teste@email.com", "98988887777", "11122233344");
+        Long profissionalId = criarProfissional("Profissional X", "Especialidade X", "profi@email.com", "98999876543");
+        Long servicoId = criarServico("Serviço X", "desc", 30, new BigDecimal("50.00"));
         Long agendamentoId = criarAgendamento(clienteId, profissionalId, servicoId, amanhaAs10h);
 
         // AGENDADO → CONCLUIDO (pulando CONFIRMADO) deve falhar
@@ -158,9 +163,9 @@ class AgendamentoIntegrationTest {
     @Test
     @DisplayName("AGENDADO → CANCELADO via PATCH: deve cancelar com sucesso")
     void deveCancelarAgendamentoAgendado() throws Exception {
-        Long clienteId = criarCliente("Cancela", "cancela@email.com", "98988887777", "11122233344");
-        Long profissionalId = criarProfissional("Profi", "Especialidade", "profi@email.com", "98999876543");
-        Long servicoId = criarServico("Serviço", "desc", 30, new BigDecimal("50.00"));
+        Long clienteId = criarCliente("Cancela Cliente", "cancela@email.com", "98988887777", "11122233344");
+        Long profissionalId = criarProfissional("Profissional C", "Especialidade", "profi@email.com", "98999876543");
+        Long servicoId = criarServico("Serviço Cancelar", "desc", 30, new BigDecimal("50.00"));
         Long agendamentoId = criarAgendamento(clienteId, profissionalId, servicoId, amanhaAs10h);
 
         mockMvc.perform(patch("/api/v1/agendamentos/" + agendamentoId + "/status")
@@ -208,10 +213,10 @@ class AgendamentoIntegrationTest {
     @Test
     @DisplayName("conflito de horário: mesmo dataHora exato deve ser rejeitado")
     void deveDetectarConflitoComMesmoHorarioExato() throws Exception {
-        Long cliente1Id = criarCliente("C1", "c1@email.com", "98988880001", "11111111111");
-        Long cliente2Id = criarCliente("C2", "c2@email.com", "98988880002", "22222222222");
-        Long profissionalId = criarProfissional("Profi", "Fisio", "profi@email.com", "98999876543");
-        Long servicoId = criarServico("Servico", "desc", 60, new BigDecimal("100.00"));
+        Long cliente1Id = criarCliente("Cliente Um", "c1@email.com", "98988880001", "11111111111");
+        Long cliente2Id = criarCliente("Cliente Dois", "c2@email.com", "98988880002", "22222222222");
+        Long profissionalId = criarProfissional("Profissional Z", "Fisio", "profi@email.com", "98999876543");
+        Long servicoId = criarServico("Servico Z", "desc", 60, new BigDecimal("100.00"));
 
         criarAgendamento(cliente1Id, profissionalId, servicoId, amanhaAs10h);
 
@@ -231,10 +236,10 @@ class AgendamentoIntegrationTest {
     @Test
     @DisplayName("não há conflito quando agendamentos estão em horários separados")
     void deveAceitarAgendamentosEmHorariosSeparados() throws Exception {
-        Long cliente1Id = criarCliente("C1", "c1@email.com", "98988880001", "11111111111");
-        Long cliente2Id = criarCliente("C2", "c2@email.com", "98988880002", "22222222222");
-        Long profissionalId = criarProfissional("Profi", "Fisio", "profi@email.com", "98999876543");
-        Long servicoId = criarServico("Servico", "desc", 60, new BigDecimal("100.00"));
+        Long cliente1Id = criarCliente("Cliente Sep1", "c1@email.com", "98988880001", "11111111111");
+        Long cliente2Id = criarCliente("Cliente Sep2", "c2@email.com", "98988880002", "22222222222");
+        Long profissionalId = criarProfissional("Profissional Sep", "Fisio", "profi@email.com", "98999876543");
+        Long servicoId = criarServico("Servico Sep", "desc", 60, new BigDecimal("100.00"));
 
         // 10:00 - 11:00
         criarAgendamento(cliente1Id, profissionalId, servicoId, amanhaAs10h);
@@ -262,10 +267,10 @@ class AgendamentoIntegrationTest {
     @Test
     @DisplayName("conflito após cancelamento: cancelar libera horário para novo agendamento")
     void deveLiberarHorarioAposCancelamento() throws Exception {
-        Long cliente1Id = criarCliente("C1", "c1@email.com", "98988880001", "11111111111");
-        Long cliente2Id = criarCliente("C2", "c2@email.com", "98988880002", "22222222222");
-        Long profissionalId = criarProfissional("Profi", "Fisio", "profi@email.com", "98999876543");
-        Long servicoId = criarServico("Servico", "desc", 60, new BigDecimal("100.00"));
+        Long cliente1Id = criarCliente("Cliente Lib1", "c1@email.com", "98988880001", "11111111111");
+        Long cliente2Id = criarCliente("Cliente Lib2", "c2@email.com", "98988880002", "22222222222");
+        Long profissionalId = criarProfissional("Profissional Lib", "Fisio", "profi@email.com", "98999876543");
+        Long servicoId = criarServico("Servico Lib", "desc", 60, new BigDecimal("100.00"));
 
         Long primeiroId = criarAgendamento(cliente1Id, profissionalId, servicoId, amanhaAs10h);
 
