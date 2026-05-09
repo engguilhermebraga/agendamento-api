@@ -8,6 +8,7 @@ import com.guilhermebraga.agendamento_api.exception.ResourceNotFoundException;
 import com.guilhermebraga.agendamento_api.mapper.ClienteMapper;
 import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.List;
  * @author Guilherme Braga
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ClienteService {
 
@@ -31,21 +33,25 @@ public class ClienteService {
      */
     @Transactional
     public ClienteResponse criar(ClienteRequest request) {
+        log.info("Criando cliente: {}", request.getEmail());
 
         // Verifica duplicidade de e-mail
         if (clienteRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Tentativa de cadastro duplicado de cliente — e-mail já existe: {}", request.getEmail());
             throw new BusinessException(
                     "Já existe um cliente cadastrado com o e-mail: " + request.getEmail());
         }
 
         // Verifica duplicidade de CPF
         if (clienteRepository.findByCpf(request.getCpf()).isPresent()) {
+            log.warn("Tentativa de cadastro duplicado de cliente — CPF já existe: {}", request.getCpf());
             throw new BusinessException(
                     "Já existe um cliente cadastrado com o CPF: " + request.getCpf());
         }
 
         Cliente cliente = clienteMapper.toEntity(request);
         Cliente salvo = clienteRepository.save(cliente);
+        log.info("Cliente criado com sucesso: id={}, email={}", salvo.getId(), salvo.getEmail());
         return clienteMapper.toResponse(salvo);
     }
 
@@ -73,23 +79,28 @@ public class ClienteService {
      */
     @Transactional
     public ClienteResponse atualizar(Long id, ClienteRequest request) {
+        log.info("Atualizando cliente: id={}", id);
 
         Cliente cliente = buscarOuLancarExcecao(id);
 
         // Verifica se outro cliente já usa o novo e-mail
         if (clienteRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            log.warn("Atualização de cliente id={} bloqueada — e-mail em uso: {}", id, request.getEmail());
             throw new BusinessException(
                     "Já existe outro cliente com o e-mail: " + request.getEmail());
         }
 
         // Verifica se outro cliente já usa o novo CPF
         if (clienteRepository.existsByCpfAndIdNot(request.getCpf(), id)) {
+            log.warn("Atualização de cliente id={} bloqueada — CPF em uso: {}", id, request.getCpf());
             throw new BusinessException(
                     "Já existe outro cliente com o CPF: " + request.getCpf());
         }
 
         clienteMapper.updateEntityFromRequest(request, cliente);
-        return clienteMapper.toResponse(clienteRepository.save(cliente));
+        Cliente atualizado = clienteRepository.save(cliente);
+        log.info("Cliente atualizado: id={}", atualizado.getId());
+        return clienteMapper.toResponse(atualizado);
     }
 
     /**
@@ -97,8 +108,10 @@ public class ClienteService {
      */
     @Transactional
     public void deletar(Long id) {
+        log.info("Deletando cliente: id={}", id);
         buscarOuLancarExcecao(id);
         clienteRepository.deleteById(id);
+        log.info("Cliente deletado: id={}", id);
     }
 
     /**

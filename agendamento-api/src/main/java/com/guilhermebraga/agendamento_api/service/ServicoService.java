@@ -8,6 +8,7 @@ import com.guilhermebraga.agendamento_api.exception.ResourceNotFoundException;
 import com.guilhermebraga.agendamento_api.mapper.ServicoMapper;
 import com.guilhermebraga.agendamento_api.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.List;
  * @author Guilherme Braga
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ServicoService {
 
@@ -31,15 +33,18 @@ public class ServicoService {
      */
     @Transactional
     public ServicoResponse criar(ServicoRequest request) {
+        log.info("Criando serviço: {}", request.getNome());
 
         // Verifica duplicidade de nome
         if (servicoRepository.findByNome(request.getNome()).isPresent()) {
+            log.warn("Tentativa de cadastro duplicado de serviço — nome já existe: {}", request.getNome());
             throw new BusinessException(
                     "Já existe um serviço cadastrado com o nome: " + request.getNome());
         }
 
         Servico servico = servicoMapper.toEntity(request);
         Servico salvo = servicoRepository.save(servico);
+        log.info("Serviço criado com sucesso: id={}, nome={}", salvo.getId(), salvo.getNome());
         return servicoMapper.toResponse(salvo);
     }
 
@@ -67,17 +72,21 @@ public class ServicoService {
      */
     @Transactional
     public ServicoResponse atualizar(Long id, ServicoRequest request) {
+        log.info("Atualizando serviço: id={}", id);
 
         Servico servico = buscarOuLancarExcecao(id);
 
         // Verifica se outro serviço já usa o novo nome
         if (servicoRepository.existsByNomeAndIdNot(request.getNome(), id)) {
+            log.warn("Atualização de serviço id={} bloqueada — nome em uso: {}", id, request.getNome());
             throw new BusinessException(
                     "Já existe outro serviço com o nome: " + request.getNome());
         }
 
         servicoMapper.updateEntityFromRequest(request, servico);
-        return servicoMapper.toResponse(servicoRepository.save(servico));
+        Servico atualizado = servicoRepository.save(servico);
+        log.info("Serviço atualizado: id={}", atualizado.getId());
+        return servicoMapper.toResponse(atualizado);
     }
 
     /**
@@ -85,8 +94,10 @@ public class ServicoService {
      */
     @Transactional
     public void deletar(Long id) {
+        log.info("Deletando serviço: id={}", id);
         buscarOuLancarExcecao(id);
         servicoRepository.deleteById(id);
+        log.info("Serviço deletado: id={}", id);
     }
 
     /**

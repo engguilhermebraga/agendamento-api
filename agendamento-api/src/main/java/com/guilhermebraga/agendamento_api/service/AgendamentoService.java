@@ -11,6 +11,7 @@ import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import com.guilhermebraga.agendamento_api.repository.ProfissionalRepository;
 import com.guilhermebraga.agendamento_api.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ import java.util.List;
  * @author Guilherme Braga
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AgendamentoService {
 
@@ -65,6 +67,7 @@ public class AgendamentoService {
      */
     @Transactional
     public AgendamentoResponse criar(AgendamentoRequest request) {
+        log.info("Criando agendamento para cliente: {}", request.getClienteId());
 
         // Busca as entidades relacionadas — lança 404 se não existirem
         Cliente cliente = clienteRepository.findById(request.getClienteId())
@@ -89,6 +92,7 @@ public class AgendamentoService {
         );
 
         if (!conflitos.isEmpty()) {
+            log.warn("Conflito de horário detectado: profissional {}", profissional.getId());
             throw new BusinessException(
                     "O profissional já possui um agendamento neste horário. " +
                             "Por favor, escolha outro horário ou profissional.");
@@ -96,7 +100,10 @@ public class AgendamentoService {
 
         // Monta e persiste o agendamento
         Agendamento agendamento = agendamentoMapper.toEntity(request, cliente, profissional, servico);
-        return agendamentoMapper.toResponse(agendamentoRepository.save(agendamento));
+        Agendamento salvo = agendamentoRepository.save(agendamento);
+        log.info("Agendamento criado com sucesso: id={}, cliente={}, profissional={}, dataHora={}",
+                salvo.getId(), cliente.getId(), profissional.getId(), salvo.getDataHora());
+        return agendamentoMapper.toResponse(salvo);
     }
 
     // ----------------------------------------------------------------
@@ -136,52 +143,63 @@ public class AgendamentoService {
      */
     @Transactional
     public AgendamentoResponse atualizar(Long id, AgendamentoRequest request) {
+        log.info("Atualizando agendamento: id={}", id);
+        try {
+            Agendamento agendamento = buscarOuLancarExcecao(id);
 
-        Agendamento agendamento = buscarOuLancarExcecao(id);
+            // Agendamentos concluídos são imutáveis
+            if (agendamento.getStatus() == StatusAgendamento.CONCLUIDO) {
+                throw new BusinessException(
+                        "Agendamentos concluídos não podem ser alterados.");
+            }
 
-        // Agendamentos concluídos são imutáveis
-        if (agendamento.getStatus() == StatusAgendamento.CONCLUIDO) {
-            throw new BusinessException(
-                    "Agendamentos concluídos não podem ser alterados.");
+            // Agendamentos cancelados não podem ser reativados
+            if (agendamento.getStatus() == StatusAgendamento.CANCELADO) {
+                throw new BusinessException(
+                        "Agendamentos cancelados não podem ser alterados.");
+            }
+
+            // Busca as entidades relacionadas
+            Cliente cliente = clienteRepository.findById(request.getClienteId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Cliente", request.getClienteId()));
+
+            Profissional profissional = profissionalRepository.findById(request.getProfissionalId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Profissional", request.getProfissionalId()));
+
+            Servico servico = servicoRepository.findById(request.getServicoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Serviço", request.getServicoId()));
+
+            // Calcula o novo horário de término
+            LocalDateTime dataHoraFim = request.getDataHora()
+                    .plusMinutes(servico.getDuracaoMinutos());
+
+            // Verifica conflito ignorando o próprio agendamento
+            List<Agendamento> conflitos = agendamentoRepository.findConflitosHorarioExcluindoId(
+                    profissional.getId(),
+                    request.getDataHora(),
+                    dataHoraFim,
+                    STATUS_ATIVOS,
+                    id
+            );
+
+            if (!conflitos.isEmpty()) {
+                log.warn("Conflito de horário detectado: profissional {}", profissional.getId());
+                throw new BusinessException(
+                        "O profissional já possui um agendamento neste horário. " +
+                                "Por favor, escolha outro horário ou profissional.");
+            }
+
+            agendamentoMapper.updateEntityFromRequest(request, agendamento, cliente, profissional, servico);
+            Agendamento atualizado = agendamentoRepository.save(agendamento);
+            log.info("Agendamento atualizado: id={}", atualizado.getId());
+            return agendamentoMapper.toResponse(atualizado);
+        } catch (BusinessException | ResourceNotFoundException e) {
+            // Erros de regra de negócio — apenas propagamos (já logados em WARN)
+            throw e;
+        } catch (Exception e) {
+            log.error("Erro ao atualizar agendamento", e);
+            throw e;
         }
-
-        // Agendamentos cancelados não podem ser reativados
-        if (agendamento.getStatus() == StatusAgendamento.CANCELADO) {
-            throw new BusinessException(
-                    "Agendamentos cancelados não podem ser alterados.");
-        }
-
-        // Busca as entidades relacionadas
-        Cliente cliente = clienteRepository.findById(request.getClienteId())
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente", request.getClienteId()));
-
-        Profissional profissional = profissionalRepository.findById(request.getProfissionalId())
-                .orElseThrow(() -> new ResourceNotFoundException("Profissional", request.getProfissionalId()));
-
-        Servico servico = servicoRepository.findById(request.getServicoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Serviço", request.getServicoId()));
-
-        // Calcula o novo horário de término
-        LocalDateTime dataHoraFim = request.getDataHora()
-                .plusMinutes(servico.getDuracaoMinutos());
-
-        // Verifica conflito ignorando o próprio agendamento
-        List<Agendamento> conflitos = agendamentoRepository.findConflitosHorarioExcluindoId(
-                profissional.getId(),
-                request.getDataHora(),
-                dataHoraFim,
-                STATUS_ATIVOS,
-                id
-        );
-
-        if (!conflitos.isEmpty()) {
-            throw new BusinessException(
-                    "O profissional já possui um agendamento neste horário. " +
-                            "Por favor, escolha outro horário ou profissional.");
-        }
-
-        agendamentoMapper.updateEntityFromRequest(request, agendamento, cliente, profissional, servico);
-        return agendamentoMapper.toResponse(agendamentoRepository.save(agendamento));
     }
 
     // ----------------------------------------------------------------
@@ -194,6 +212,7 @@ public class AgendamentoService {
      */
     @Transactional
     public AgendamentoResponse atualizarStatus(Long id, StatusAgendamento novoStatus) {
+        log.info("Atualizando status do agendamento id={} para {}", id, novoStatus);
 
         Agendamento agendamento = buscarOuLancarExcecao(id);
         StatusAgendamento statusAtual = agendamento.getStatus();
@@ -202,7 +221,9 @@ public class AgendamentoService {
         validarTransicaoStatus(statusAtual, novoStatus);
 
         agendamento.setStatus(novoStatus);
-        return agendamentoMapper.toResponse(agendamentoRepository.save(agendamento));
+        Agendamento salvo = agendamentoRepository.save(agendamento);
+        log.info("Status do agendamento id={} alterado: {} → {}", id, statusAtual, novoStatus);
+        return agendamentoMapper.toResponse(salvo);
     }
 
     // ----------------------------------------------------------------
@@ -215,6 +236,7 @@ public class AgendamentoService {
      */
     @Transactional
     public void cancelar(Long id) {
+        log.info("Cancelando agendamento: id={}", id);
 
         Agendamento agendamento = buscarOuLancarExcecao(id);
 
@@ -230,6 +252,7 @@ public class AgendamentoService {
 
         agendamento.setStatus(StatusAgendamento.CANCELADO);
         agendamentoRepository.save(agendamento);
+        log.info("Agendamento cancelado: id={}", id);
     }
 
     // ----------------------------------------------------------------
@@ -310,10 +333,13 @@ public class AgendamentoService {
      */
     @Transactional
     public void cancelarPeloCliente(Long agendamentoId, Long clienteId) {
+        log.info("Cancelamento solicitado pelo cliente: agendamentoId={}, clienteId={}", agendamentoId, clienteId);
 
         Agendamento agendamento = buscarOuLancarExcecao(agendamentoId);
 
         if (!agendamento.getCliente().getId().equals(clienteId)) {
+            log.warn("Tentativa de cancelar agendamento de outro cliente: agendamentoId={}, clienteId={}",
+                    agendamentoId, clienteId);
             throw new BusinessException("Este agendamento não pertence ao cliente informado.");
         }
 
@@ -346,6 +372,7 @@ public class AgendamentoService {
      */
     @Transactional
     public AgendamentoResponse criarPeloPortal(Long clienteId, Long profissionalId, Long servicoId, LocalDateTime dataHora) {
+        log.info("Criando agendamento via portal para cliente: {}", clienteId);
 
         Cliente cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente", clienteId));
@@ -362,6 +389,7 @@ public class AgendamentoService {
                 profissional.getId(), dataHora, dataHoraFim, STATUS_ATIVOS);
 
         if (!conflitos.isEmpty()) {
+            log.warn("Conflito de horário detectado: profissional {}", profissional.getId());
             throw new BusinessException(
                     "O profissional já possui um agendamento neste horário. " +
                             "Por favor, escolha outro horário ou profissional.");
