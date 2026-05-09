@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><title>Meus Agendamentos</title></head>
+<body>
+<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Meus Agendamentos', menuAtivo='meus-agendamentos'">
+    <div th:fragment="conteudoPortal">
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin-bottom: 0;">Meus Agendamentos</h2>
+                <a th:href="@{/portal/agendar/servico}" class="btn btn-primary btn-sm">Novo Agendamento</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(agendamentos)}" style="text-align: center; color: #888; padding: 30px;">
+                <p>Você ainda não possui agendamentos.</p>
+                <a th:href="@{/portal/agendar/servico}" class="btn btn-primary" style="margin-top: 15px;">Agendar Agora</a>
+            </div>
+
+            <table th:if="${!#lists.isEmpty(agendamentos)}">
+                <thead>
+                    <tr>
+                        <th>Serviço</th>
+                        <th>Profissional</th>
+                        <th>Data/Hora</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ag : ${agendamentos}">
+                        <td th:text="${ag.servicoNome}">Serviço</td>
+                        <td>
+                            <span th:text="${ag.profissionalNome}">Profissional</span><br/>
+                            <small style="color: #888;" th:text="${ag.profissionalEspecialidade}">Especialidade</small>
+                        </td>
+                        <td th:text="${#temporals.format(ag.dataHora, 'dd/MM/yyyy HH:mm')}">01/01/2026 08:00</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${ag.status.name() == 'AGENDADO' ? 'badge-agendado' :
+                                                    ag.status.name() == 'CONFIRMADO' ? 'badge-confirmado' :
+                                                    ag.status.name() == 'CONCLUIDO' ? 'badge-concluido' :
+                                                    'badge-cancelado'}"
+                                  th:text="${ag.status}">AGENDADO</span>
+                        </td>
+                        <td>
+                            <a th:if="${ag.status.name() == 'AGENDADO' or ag.status.name() == 'CONFIRMADO'}"
+                               th:href="@{/portal/meus-agendamentos/{id}/cancelar(id=${ag.id})}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Tem certeza que deseja cancelar este agendamento?')">
+                                Cancelar
+                            </a>
+                            <span th:if="${ag.status.name() != 'AGENDADO' and ag.status.name() != 'CONFIRMADO'}"
+                                  style="color: #ccc;">—</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

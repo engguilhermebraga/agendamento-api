@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><title>Confirmar Agendamento</title></head>
+<body>
+<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Confirmar Agendamento', menuAtivo='agendar'">
+    <div th:fragment="conteudoPortal">
+
+        <!-- Steps indicator -->
+        <div class="steps">
+            <div class="step completed">
+                <div class="step-number">1</div>
+                <div>Serviço</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step completed">
+                <div class="step-number">2</div>
+                <div>Profissional</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step completed">
+                <div class="step-number">3</div>
+                <div>Horário</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step active">
+                <div class="step-number">4</div>
+                <div>Confirmar</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Revise e confirme seu agendamento</h2>
+
+            <div style="margin-top: 20px;">
+                <div class="summary-item">
+                    <span class="summary-label">Serviço</span>
+                    <span class="summary-value" th:text="${novoAgendamento.servicoNome}">Serviço</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Profissional</span>
+                    <span class="summary-value" th:text="${novoAgendamento.profissionalNome}">Profissional</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Data</span>
+                    <span class="summary-value" th:text="${#temporals.format(novoAgendamento.data, 'dd/MM/yyyy')}">01/01/2026</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Horário</span>
+                    <span class="summary-value" th:text="${#temporals.format(novoAgendamento.horario, 'HH:mm')}">08:00</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <a th:href="@{/portal/agendar/horario}" class="btn btn-secondary">Voltar</a>
+                <form th:action="@{/portal/agendar/confirmar}" method="post" style="flex: 1;">
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Confirmar Agendamento</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+    <h2>Dashboard</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 1rem;">
+        <div style="background: #3498db; color: #fff; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: bold;" th:text="${totalClientes}">0</div>
+            <div>Clientes</div>
+            <a th:href="@{/web/clientes}" style="color: #ecf0f1; font-size: 0.85rem;">Ver todos</a>
+        </div>
+        <div style="background: #27ae60; color: #fff; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: bold;" th:text="${totalProfissionais}">0</div>
+            <div>Profissionais</div>
+            <a th:href="@{/web/profissionais}" style="color: #ecf0f1; font-size: 0.85rem;">Ver todos</a>
+        </div>
+        <div style="background: #f39c12; color: #fff; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: bold;" th:text="${totalServicos}">0</div>
+            <div>Servicos</div>
+            <a th:href="@{/web/servicos}" style="color: #ecf0f1; font-size: 0.85rem;">Ver todos</a>
+        </div>
+        <div style="background: #e74c3c; color: #fff; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: bold;" th:text="${totalAgendamentos}">0</div>
+            <div>Agendamentos</div>
+            <a th:href="@{/web/agendamentos}" style="color: #ecf0f1; font-size: 0.85rem;">Ver todos</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -9,63 +9,114 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Repositório de acesso aos dados da entidade Agendamento.
- *
- * @author Guilherme Braga
+ * Repositório para a entidade Agendamento.
+ * Fornece operações de persistência e consultas customizadas.
  */
 @Repository
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
     /**
-     * Verifica conflito de horário para um profissional.
-     * <p>
-     * Busca agendamentos ativos do profissional cujo intervalo
-     * [dataHora, dataHoraFim] se sobrepõe ao horário solicitado.
-     * <p>
-     * A lógica de término é calculada no Service antes de chamar
-     * este método, passando dataHoraFim já calculada.
-     * <p>
-     * Dois intervalos [A, B] e [C, D] se sobrepõem quando: A < D e B > C
-     *
-     * @param profissionalId  ID do profissional
-     * @param dataHoraInicio  início do novo agendamento
-     * @param dataHoraFim     fim do novo agendamento (calculado no Service)
-     * @param statusIgnorados status a ignorar (CANCELADO e CONCLUIDO)
-     * @return lista de agendamentos conflitantes
+     * Encontra agendamentos por ID do cliente.
+     * 
+     * @param clienteId ID do cliente
+     * @return Lista de agendamentos do cliente
      */
-    @Query("""
-            SELECT a FROM Agendamento a
-            WHERE a.profissional.id = :profissionalId
-            AND a.status NOT IN :statusIgnorados
-            AND a.dataHora < :dataHoraFim
-            AND :dataHoraInicio < a.dataHoraFim
-            """)
+    List<Agendamento> findByClienteId(Long clienteId);
+
+    /**
+     * Encontra agendamentos por ID do profissional.
+     * 
+     * @param profissionalId ID do profissional
+     * @return Lista de agendamentos do profissional
+     */
+    List<Agendamento> findByProfissionalId(Long profissionalId);
+
+    /**
+     * Encontra agendamentos por ID do serviço.
+     * 
+     * @param servicoId ID do serviço
+     * @return Lista de agendamentos do serviço
+     */
+    List<Agendamento> findByServicoId(Long servicoId);
+
+    /**
+     * Encontra agendamentos por status.
+     * 
+     * @param status Status do agendamento
+     * @return Lista de agendamentos com o status fornecido
+     */
+    List<Agendamento> findByStatus(StatusAgendamento status);
+
+    /**
+     * Encontra agendamentos de um cliente ordenados por data/hora descendente.
+     *
+     * @param clienteId ID do cliente
+     * @return Lista de agendamentos do cliente ordenada por data/hora (mais recente primeiro)
+     */
+    List<Agendamento> findByClienteIdOrderByDataHoraDesc(Long clienteId);
+
+    /**
+     * Encontra agendamentos dentro de um intervalo de datas.
+     * 
+     * @param dataInicio Data/hora de início
+     * @param dataFim Data/hora de fim
+     * @return Lista de agendamentos no intervalo
+     */
+    @Query("SELECT a FROM Agendamento a " +
+           "WHERE a.dataHora BETWEEN :dataInicio AND :dataFim " +
+           "ORDER BY a.dataHora ASC")
+    List<Agendamento> findByDataInterval(
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
+    );
+
+    /**
+     * Encontra agendamentos de um profissional que se sobrepõem ao intervalo informado,
+     * filtrados pelos status fornecidos (deve receber os status ativos: AGENDADO, CONFIRMADO).
+     *
+     * @param profissionalId ID do profissional
+     * @param dataHoraInicio Data/hora de início do intervalo
+     * @param dataHoraFim    Data/hora de fim do intervalo
+     * @param statusList     Status ativos a considerar (ex: AGENDADO, CONFIRMADO)
+     * @return Lista de agendamentos que se sobrepõem ao intervalo
+     */
+    @Query("SELECT a FROM Agendamento a " +
+           "WHERE a.profissional.id = :profissionalId " +
+           "AND a.dataHora < :dataHoraFim " +
+           "AND a.dataHoraFim > :dataHoraInicio " +
+           "AND a.status IN :statusList")
     List<Agendamento> findConflitosHorario(
             @Param("profissionalId") Long profissionalId,
             @Param("dataHoraInicio") LocalDateTime dataHoraInicio,
             @Param("dataHoraFim") LocalDateTime dataHoraFim,
-            @Param("statusIgnorados") List<StatusAgendamento> statusIgnorados
+            @Param("statusList") List<StatusAgendamento> statusList
     );
 
     /**
-     * Verifica conflito de horário excluindo o próprio agendamento.
-     * Usado na validação do fluxo de atualização (PUT).
+     * Igual a {@link #findConflitosHorario}, mas exclui um agendamento específico da busca.
+     * Usado ao atualizar um agendamento para que ele não conflite consigo mesmo.
+     *
+     * @param profissionalId       ID do profissional
+     * @param dataHoraInicio       Data/hora de início do intervalo
+     * @param dataHoraFim          Data/hora de fim do intervalo
+     * @param statusList           Status ativos a considerar (ex: AGENDADO, CONFIRMADO)
+     * @param agendamentoIdExcluir ID do agendamento a ignorar na busca
+     * @return Lista de agendamentos conflitantes (excluindo o ID fornecido)
      */
-    @Query("""
-            SELECT a FROM Agendamento a
-            WHERE a.profissional.id = :profissionalId
-            AND a.id <> :agendamentoId
-            AND a.status NOT IN :statusIgnorados
-            AND a.dataHora < :dataHoraFim
-            AND :dataHoraInicio < a.dataHoraFim
-            """)
+    @Query("SELECT a FROM Agendamento a " +
+           "WHERE a.profissional.id = :profissionalId " +
+           "AND a.dataHora < :dataHoraFim " +
+           "AND a.dataHoraFim > :dataHoraInicio " +
+           "AND a.status IN :statusList " +
+           "AND a.id != :agendamentoIdExcluir")
     List<Agendamento> findConflitosHorarioExcluindoId(
             @Param("profissionalId") Long profissionalId,
             @Param("dataHoraInicio") LocalDateTime dataHoraInicio,
             @Param("dataHoraFim") LocalDateTime dataHoraFim,
-            @Param("statusIgnorados") List<StatusAgendamento> statusIgnorados,
-            @Param("agendamentoId") Long agendamentoId
+            @Param("statusList") List<StatusAgendamento> statusList,
+            @Param("agendamentoIdExcluir") Long agendamentoIdExcluir
     );
 }

@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
  * - buscarPorId(): retorno com sucesso e ResourceNotFoundException
  * - listarTodos(): lista com resultados e lista vazia
  * - atualizar(): atualização com sucesso, imutabilidade de CONCLUIDO/CANCELADO,
- *   conflito de horário na atualização, entidades inexistentes
+ * conflito de horário na atualização, entidades inexistentes
  * - atualizarStatus(): todas as transições válidas e inválidas da máquina de estados
  * - cancelar(): cancelamento com sucesso, bloqueio para CONCLUIDO/CANCELADO, ID inexistente
  *
