@@ -4,6 +4,8 @@ import com.guilhermebraga.agendamento_api.dto.response.AgendamentoResponse;
 import com.guilhermebraga.agendamento_api.entity.StatusAgendamento;
 import com.guilhermebraga.agendamento_api.service.AgendamentoService;
 import com.guilhermebraga.agendamento_api.service.ClienteService;
+import com.guilhermebraga.agendamento_api.service.ProfissionalService;
+import com.guilhermebraga.agendamento_api.service.ServicoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -32,6 +34,8 @@ public class DashboardWebController {
 
     private final AgendamentoService agendamentoService;
     private final ClienteService clienteService;
+    private final ProfissionalService profissionalService;
+    private final ServicoService servicoService;
 
     @GetMapping("")
     public String index(Model model) {
@@ -59,12 +63,14 @@ public class DashboardWebController {
                 .map(AgendamentoResponse::getClienteId)
                 .collect(Collectors.toSet());
 
-        model.addAttribute("titulo",            "Dashboard");
-        model.addAttribute("totalAgendamentos", todos.size());
-        model.addAttribute("agendamentosHoje",  agendamentosHoje);
-        model.addAttribute("proximos7Dias",     proximos7Dias);
-        model.addAttribute("clientesAtivos",    clientesAtivosIds.size());
-        model.addAttribute("totalClientes",     clienteService.listarTodos().size());
+        model.addAttribute("titulo",               "Dashboard");
+        model.addAttribute("totalAgendamentos",    todos.size());
+        model.addAttribute("agendamentosHoje",     agendamentosHoje);
+        model.addAttribute("proximos7Dias",        proximos7Dias);
+        model.addAttribute("clientesAtivos",       clientesAtivosIds.size());
+        model.addAttribute("totalClientes",        clienteService.listarTodos().size());
+        model.addAttribute("totalProfissionais",   profissionalService.listarTodos().size());
+        model.addAttribute("totalServicos",        servicoService.listarTodos().size());
 
         return "dashboard/index";
     }
