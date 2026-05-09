@@ -20,7 +20,7 @@
     <description>API REST para Gestão de Agendamentos — TCC UNDB</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
@@ -104,12 +104,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- ===== SPRING SECURITY (autenticação e autorização da API REST) ===== -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
         <!-- ===== TESTES (JUnit 5 + Mockito + MockMvc) ===== -->
