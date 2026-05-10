@@ -2,20 +2,45 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
 <body>
 <div th:fragment="conteudo">
+
     <div class="top-bar">
         <h2>Agendamentos</h2>
-        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">Novo Agendamento</a>
+        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">+ Novo Agendamento</a>
     </div>
+
+    <!-- Filtros -->
+    <div class="form-card" style="max-width:none; margin-bottom:1rem;">
+        <form method="get" th:action="@{/web/agendamentos/listar}" style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
+            <div class="form-group" style="margin-bottom:0; flex:1; min-width:160px;">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${statusList}"
+                            th:value="${s}"
+                            th:text="${s}"
+                            th:selected="${s == statusSelecionado}"></option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0; flex:1; min-width:160px;">
+                <label for="data">Data</label>
+                <input type="date" id="data" name="data"
+                       th:value="${dataSelecionada}">
+            </div>
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <a th:href="@{/web/agendamentos/listar}" class="btn btn-warning">Limpar</a>
+        </form>
+    </div>
+
     <table>
         <thead>
         <tr>
             <th>ID</th>
             <th>Cliente</th>
             <th>Profissional</th>
-            <th>Servico</th>
+            <th>Serviço</th>
             <th>Data/Hora</th>
             <th>Status</th>
-            <th>Acoes</th>
+            <th>Ações</th>
         </tr>
         </thead>
         <tbody>
@@ -23,32 +48,55 @@
             <td th:text="${a.id}"></td>
             <td th:text="${a.clienteNome}"></td>
             <td>
-                <span th:text="${a.profissionalNome}"></span>
-                <br>
-                <small th:text="${a.profissionalEspecialidade}" style="color: #7f8c8d;"></small>
+                <span th:text="${a.profissionalNome}"></span><br>
+                <small th:text="${a.profissionalEspecialidade}" style="color:#7f8c8d;"></small>
             </td>
             <td th:text="${a.servicoNome}"></td>
             <td th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
             <td>
                 <span th:text="${a.status}"
-                      th:style="${a.status.name() == 'AGENDADO'} ? 'color: #3498db; font-weight: bold;' :
-                                ${a.status.name() == 'CONFIRMADO'} ? 'color: #27ae60; font-weight: bold;' :
-                                ${a.status.name() == 'CONCLUIDO'} ? 'color: #7f8c8d; font-weight: bold;' :
-                                'color: #e74c3c; font-weight: bold;'"></span>
+                      th:style="${a.status.name() == 'AGENDADO'}   ? 'color:#3498db; font-weight:bold;' :
+                                ${a.status.name() == 'CONFIRMADO'} ? 'color:#27ae60; font-weight:bold;' :
+                                ${a.status.name() == 'CONCLUIDO'}  ? 'color:#7f8c8d; font-weight:bold;' :
+                                'color:#e74c3c; font-weight:bold;'"></span>
             </td>
             <td class="actions">
+                <!-- Editar -->
                 <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                   th:href="@{/web/agendamentos/{id}/editar(id=${a.id})}" class="btn btn-warning">Editar</a>
-                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                   th:href="@{/web/agendamentos/{id}/cancelar(id=${a.id})}" class="btn btn-danger"
-                   onclick="return confirm('Deseja realmente cancelar este agendamento?')">Cancelar</a>
+                   th:href="@{/web/agendamentos/editar/{id}(id=${a.id})}"
+                   class="btn btn-warning">Editar</a>
+
+                <!-- Avançar status: AGENDADO → CONFIRMADO → CONCLUIDO -->
+                <form th:if="${a.status.name() == 'AGENDADO'}"
+                      th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
+                      method="post" style="display:inline;">
+                    <input type="hidden" name="novoStatus" value="CONFIRMADO">
+                    <button type="submit" class="btn btn-success">Confirmar</button>
+                </form>
+                <form th:if="${a.status.name() == 'CONFIRMADO'}"
+                      th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
+                      method="post" style="display:inline;">
+                    <input type="hidden" name="novoStatus" value="CONCLUIDO">
+                    <button type="submit" class="btn btn-primary">Concluir</button>
+                </form>
+
+                <!-- Cancelar -->
+                <form th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                      th:action="@{/web/agendamentos/cancelar/{id}(id=${a.id})}"
+                      method="post" style="display:inline;"
+                      onsubmit="return confirm('Deseja realmente cancelar este agendamento?')">
+                    <button type="submit" class="btn btn-danger">Cancelar</button>
+                </form>
             </td>
         </tr>
         <tr th:if="${#lists.isEmpty(agendamentos)}">
-            <td colspan="7" style="text-align: center; padding: 2rem;">Nenhum agendamento cadastrado.</td>
+            <td colspan="7" style="text-align:center; padding:2rem; color:#7f8c8d;">
+                Nenhum agendamento encontrado.
+            </td>
         </tr>
         </tbody>
     </table>
+
 </div>
 </body>
 </html>

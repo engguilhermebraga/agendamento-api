@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
+<body>
+<section>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h2>Passo 2 de 3 — Profissional, Data e Horário</h2>
+            <span style="background:#667eea; color:#fff; padding:4px 12px; border-radius:14px; font-size:0.8rem;">
+                Etapa 2/3
+            </span>
+        </div>
+
+        <div class="alert alert-info" style="margin-bottom:18px;">
+            <strong>Serviço selecionado:</strong>
+            <span th:text="${wizard.servicoNome}"></span> —
+            <span th:text="${wizard.servicoDuracaoMinutos} + ' min'"></span> —
+            R$ <span th:text="${#numbers.formatDecimal(wizard.servicoPreco, 1, 'COMMA', 2, 'POINT')}"></span>
+        </div>
+
+        <form method="post" th:action="@{/portal/step3}">
+
+            <div class="form-group">
+                <label for="profissionalId">Profissional</label>
+                <select id="profissionalId" name="profissionalId" class="form-control" required>
+                    <option value="">— Selecione um profissional —</option>
+                    <option th:each="p : ${profissionais}"
+                            th:value="${p.id}"
+                            th:text="${p.nome} + ' — ' + ${p.especialidade}"
+                            th:selected="${wizard.profissionalId != null and p.id == wizard.profissionalId}"></option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="data">Data</label>
+                <input type="date" id="data" name="data" class="form-control" required
+                       th:min="${dataMinima}"
+                       th:value="${wizard.data}">
+            </div>
+
+            <div class="form-group">
+                <label for="hora">Horário</label>
+                <input type="time" id="hora" name="hora" class="form-control" required
+                       th:value="${wizard.hora}">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; gap:10px; margin-top:20px;">
+                <a th:href="@{/portal/step1}" class="btn btn-secondary">&larr; Voltar</a>
+                <button type="submit" class="btn btn-primary">Avançar &rarr;</button>
+            </div>
+        </form>
+    </div>
+
+</section>
+</body>
+</html>

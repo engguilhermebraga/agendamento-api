@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+
+    <div class="top-bar">
+        <h2>Dashboard</h2>
+        <span class="text-muted" style="font-size:0.9rem; color:#7f8c8d;">Visão geral do sistema de agendamentos</span>
+    </div>
+
+    <!-- Cards de contagem principal -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+
+        <div class="form-card" style="max-width:none; display:flex; align-items:center; gap:1rem;">
+            <div style="font-size:2rem; color:#3498db;">&#128100;</div>
+            <div>
+                <div style="font-size:2rem; font-weight:bold; line-height:1;" th:text="${totalClientes}">0</div>
+                <div style="color:#7f8c8d; font-size:0.85rem; margin-top:4px;">Total de Clientes</div>
+                <a th:href="@{/web/clientes}" class="btn btn-primary" style="margin-top:0.5rem; font-size:0.8rem; padding:0.25rem 0.75rem;">Gerenciar</a>
+            </div>
+        </div>
+
+        <div class="form-card" style="max-width:none; display:flex; align-items:center; gap:1rem;">
+            <div style="font-size:2rem; color:#27ae60;">&#128203;</div>
+            <div>
+                <div style="font-size:2rem; font-weight:bold; line-height:1;" th:text="${totalProfissionais}">0</div>
+                <div style="color:#7f8c8d; font-size:0.85rem; margin-top:4px;">Profissionais</div>
+                <a th:href="@{/web/profissionais}" class="btn btn-success" style="margin-top:0.5rem; font-size:0.8rem; padding:0.25rem 0.75rem;">Gerenciar</a>
+            </div>
+        </div>
+
+        <div class="form-card" style="max-width:none; display:flex; align-items:center; gap:1rem;">
+            <div style="font-size:2rem; color:#f39c12;">&#9988;</div>
+            <div>
+                <div style="font-size:2rem; font-weight:bold; line-height:1;" th:text="${totalServicos}">0</div>
+                <div style="color:#7f8c8d; font-size:0.85rem; margin-top:4px;">Serviços</div>
+                <a th:href="@{/web/servicos}" class="btn btn-warning" style="margin-top:0.5rem; font-size:0.8rem; padding:0.25rem 0.75rem;">Gerenciar</a>
+            </div>
+        </div>
+
+        <div class="form-card" style="max-width:none; display:flex; align-items:center; gap:1rem;">
+            <div style="font-size:2rem; color:#8e44ad;">&#128197;</div>
+            <div>
+                <div style="font-size:2rem; font-weight:bold; line-height:1;" th:text="${totalAgendamentos}">0</div>
+                <div style="color:#7f8c8d; font-size:0.85rem; margin-top:4px;">Total Agendamentos</div>
+                <a th:href="@{/web/agendamentos/listar}" class="btn btn-primary" style="margin-top:0.5rem; font-size:0.8rem; padding:0.25rem 0.75rem; background:#8e44ad;">Gerenciar</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Cards de métricas do dia -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+
+        <div class="form-card" style="max-width:none; text-align:center;">
+            <div style="font-size:1.8rem; font-weight:bold; color:#3498db;" th:text="${agendamentosHoje}">0</div>
+            <div style="color:#7f8c8d; font-size:0.9rem; margin-top:4px;">Agendamentos Hoje</div>
+        </div>
+
+        <div class="form-card" style="max-width:none; text-align:center;">
+            <div style="font-size:1.8rem; font-weight:bold; color:#27ae60;" th:text="${proximos7Dias}">0</div>
+            <div style="color:#7f8c8d; font-size:0.9rem; margin-top:4px;">Próximos 7 Dias</div>
+        </div>
+
+        <div class="form-card" style="max-width:none; text-align:center;">
+            <div style="font-size:1.8rem; font-weight:bold; color:#e74c3c;" th:text="${clientesAtivos}">0</div>
+            <div style="color:#7f8c8d; font-size:0.9rem; margin-top:4px;">Clientes com Agend. Ativos</div>
+        </div>
+
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="form-card" style="max-width:none;">
+        <h3 style="margin-bottom:1rem; font-size:1rem; color:#2c3e50;">&#9889; Ações Rápidas</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <a th:href="@{/web/clientes/novo}" class="btn btn-primary">+ Novo Cliente</a>
+            <a th:href="@{/web/profissionais/novo}" class="btn btn-success">+ Novo Profissional</a>
+            <a th:href="@{/web/servicos/novo}" class="btn btn-warning">+ Novo Serviço</a>
+            <a th:href="@{/web/agendamentos/novo}" class="btn btn-primary" style="background:#8e44ad;">+ Novo Agendamento</a>
+            <a th:href="@{/web/agendamentos/listar}" class="btn btn-primary" style="background:#34495e;">Ver Agendamentos</a>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

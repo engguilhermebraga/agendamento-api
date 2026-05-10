@@ -1,6 +1,7 @@
 package com.guilhermebraga.agendamento_api;
 
 import com.guilhermebraga.agendamento_api.entity.Cliente;
+import com.guilhermebraga.agendamento_api.repository.AgendamentoRepository;
 import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,8 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * — checagens de existência usadas em validação de duplicidade
  *   (existsByEmailAndIdNot, existsByCpfAndIdNot)
  *
- * Estratégia: {@code @SpringBootTest + @Transactional} — isolamento por
- * rollback automático ao fim de cada teste.
+ * Estratégia: {@code @SpringBootTest + @Transactional} — a transação envolve
+ * o @BeforeEach + o método de teste e é revertida no final, garantindo
+ * isolamento entre métodos. O @BeforeEach também limpa explicitamente
+ * quaisquer dados comitados por outras classes (ex.: AgendamentoIntegrationTest,
+ * que não é @Transactional), evitando contaminação no banco H2 compartilhado.
  *
  * @author Guilherme Braga
  */
@@ -36,11 +40,20 @@ class ClienteRepositoryTest {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
     private Cliente joao;
     private Cliente maria;
 
     @BeforeEach
     void setUp() {
+        // Remove dados comitados por outras classes antes de criar os fixtures.
+        // A ordem importa: agendamentos referenciam clientes (FK), então
+        // devem ser removidos primeiro.
+        agendamentoRepository.deleteAll();
+        clienteRepository.deleteAll();
+
         joao = clienteRepository.save(Cliente.builder()
                 .nome("João da Silva")
                 .email("joao@email.com")

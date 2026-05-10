@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
+<body>
+<section>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h2>Passo 3 de 3 — Confirmar Agendamento</h2>
+            <span style="background:#28a745; color:#fff; padding:4px 12px; border-radius:14px; font-size:0.8rem;">
+                Etapa 3/3
+            </span>
+        </div>
+        <p style="color:#666; margin-bottom:18px;">Revise os dados e clique em <strong>Confirmar</strong> para finalizar.</p>
+
+        <div style="background:#f7f8fc; border-radius:10px; padding:18px; margin-bottom:18px;">
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
+                <span style="color:#666; font-weight:500;">Serviço</span>
+                <span th:text="${wizard.servicoNome}"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
+                <span style="color:#666; font-weight:500;">Duração</span>
+                <span th:text="${wizard.servicoDuracaoMinutos} + ' minutos'"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
+                <span style="color:#666; font-weight:500;">Valor</span>
+                <span style="color:#28a745; font-weight:600;"
+                      th:text="'R$ ' + ${#numbers.formatDecimal(wizard.servicoPreco, 1, 'COMMA', 2, 'POINT')}"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
+                <span style="color:#666; font-weight:500;">Profissional</span>
+                <span>
+                    <span th:text="${wizard.profissionalNome}"></span>
+                    <small style="color:#999;" th:text="'(' + ${wizard.profissionalEspecialidade} + ')'"></small>
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
+                <span style="color:#666; font-weight:500;">Data</span>
+                <span th:text="${#temporals.format(wizard.data, 'dd/MM/yyyy')}"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0;">
+                <span style="color:#666; font-weight:500;">Horário</span>
+                <span th:text="${#temporals.format(wizard.hora, 'HH:mm')}"></span>
+            </div>
+
+        </div>
+
+        <form method="post" th:action="@{/portal/finalizar}">
+            <div style="display:flex; justify-content:space-between; gap:10px;">
+                <a th:href="@{/portal/step1}" class="btn btn-secondary">&larr; Recomeçar</a>
+                <button type="submit" class="btn btn-success">Confirmar Agendamento &check;</button>
+            </div>
+        </form>
+    </div>
+
+</section>
+</body>
+</html>
