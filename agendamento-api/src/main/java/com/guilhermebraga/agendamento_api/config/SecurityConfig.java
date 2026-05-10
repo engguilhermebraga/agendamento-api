@@ -48,8 +48,8 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
 
-                // --- Páginas públicas e dashboard ---
-                .requestMatchers("/", "/dashboard", "/portal/**", "/web/**").permitAll()
+                // --- Páginas públicas, dashboard e handler de erros ---
+                .requestMatchers("/", "/dashboard", "/dashboard/**", "/error", "/portal/**", "/web/**").permitAll()
 
                 // --- Recursos estáticos ---
                 .requestMatchers(
