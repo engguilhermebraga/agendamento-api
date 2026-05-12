@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * Wizard de agendamento do portal do cliente, em 3 etapas.
+ * Wizard de agendamento do portal do cliente, em 4 etapas.
  *
  * O {@link WizardForm} é mantido em sessão via {@code @SessionAttributes}
  * enquanto o cliente avança pelas etapas — assim os dados das etapas anteriores
@@ -31,7 +31,7 @@ import java.time.LocalTime;
  *   Step 1 (GET  /portal/step1): seleciona serviço
  *   Step 2 (POST /portal/step2): salva serviço, exibe form de profissional + data/hora
  *   Step 3 (POST /portal/step3): salva data/hora, exibe resumo para confirmação
- *   POST /portal/finalizar:      cria o agendamento e limpa a sessão
+ *   Step 4 (POST /portal/step4): cria o agendamento, limpa a sessão, exibe sucesso
  *
  * Pré-requisito: cliente identificado em sessão ({@code clienteLogado}).
  *
@@ -129,7 +129,47 @@ public class PortalClienteController {
     }
 
     // ----------------------------------------------------------------
-    // FINALIZAR — cria o agendamento e limpa a sessão
+    // STEP 4 — Sucesso: cria o agendamento e exibe confirmação
+    // ----------------------------------------------------------------
+    @PostMapping("/step4")
+    public String step4(@ModelAttribute("wizard") WizardForm wizard,
+                        HttpSession session, SessionStatus sessionStatus,
+                        Model model, RedirectAttributes redirectAttributes) {
+        if (clienteNaoLogado(session)) return "redirect:/portal";
+
+        if (wizard.getServicoId() == null || wizard.getProfissionalId() == null
+                || wizard.getData() == null || wizard.getHora() == null) {
+            redirectAttributes.addFlashAttribute("mensagemErro",
+                    "Dados incompletos. Por favor, refaça o agendamento.");
+            return "redirect:/portal/step1";
+        }
+
+        Cliente cliente = (Cliente) session.getAttribute("clienteLogado");
+        try {
+            LocalDateTime dataHora = LocalDateTime.of(wizard.getData(), wizard.getHora());
+            agendamentoService.criarPeloPortal(
+                    cliente.getId(),
+                    wizard.getProfissionalId(),
+                    wizard.getServicoId(),
+                    dataHora
+            );
+            log.info("Agendamento criado via wizard — cliente={}, profissional={}, dataHora={}",
+                    cliente.getId(), wizard.getProfissionalId(), dataHora);
+
+            model.addAttribute("titulo", "Agendamento Confirmado!");
+            model.addAttribute("menuAtivo", "agendar");
+            model.addAttribute("wizardFinalizado", wizard);
+            sessionStatus.setComplete(); // remove o "wizard" da sessão HTTP
+            return "portal/wizard/step4";
+        } catch (Exception e) {
+            log.warn("Erro ao criar agendamento via wizard: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("mensagemErro", e.getMessage());
+            return "redirect:/portal/step1";
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // FINALIZAR (mantido por compatibilidade — redireciona para step4)
     // ----------------------------------------------------------------
     @PostMapping("/finalizar")
     public String finalizar(@ModelAttribute("wizard") WizardForm wizard,
@@ -153,9 +193,8 @@ public class PortalClienteController {
                     wizard.getServicoId(),
                     dataHora
             );
-            sessionStatus.setComplete(); // remove o "wizard" da sessão
-            redirectAttributes.addFlashAttribute("mensagemSucesso",
-                    "Agendamento criado com sucesso!");
+            sessionStatus.setComplete();
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Agendamento criado com sucesso!");
             return "redirect:/portal/meus-agendamentos";
         } catch (Exception e) {
             log.warn("Erro ao finalizar agendamento via wizard: {}", e.getMessage());

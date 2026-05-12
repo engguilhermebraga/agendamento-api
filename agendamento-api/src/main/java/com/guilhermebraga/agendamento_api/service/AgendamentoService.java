@@ -92,7 +92,8 @@ public class AgendamentoService {
         );
 
         if (!conflitos.isEmpty()) {
-            log.warn("Conflito de horário detectado: profissional {}", profissional.getId());
+            log.warn("Conflito ao criar agendamento: profissional {} já tem horário ocupado em {}",
+                    profissional.getId(), request.getDataHora());
             throw new BusinessException(
                     "O profissional já possui um agendamento neste horário. " +
                             "Por favor, escolha outro horário ou profissional.");
@@ -183,7 +184,8 @@ public class AgendamentoService {
             );
 
             if (!conflitos.isEmpty()) {
-                log.warn("Conflito de horário detectado: profissional {}", profissional.getId());
+                log.warn("Conflito ao atualizar agendamento id={}: profissional {} já tem horário ocupado em {}",
+                        id, profissional.getId(), request.getDataHora());
                 throw new BusinessException(
                         "O profissional já possui um agendamento neste horário. " +
                                 "Por favor, escolha outro horário ou profissional.");
@@ -389,7 +391,8 @@ public class AgendamentoService {
                 profissional.getId(), dataHora, dataHoraFim, STATUS_ATIVOS);
 
         if (!conflitos.isEmpty()) {
-            log.warn("Conflito de horário detectado: profissional {}", profissional.getId());
+            log.warn("Conflito ao criar agendamento via portal: profissional {} já tem horário ocupado em {}",
+                    profissional.getId(), dataHora);
             throw new BusinessException(
                     "O profissional já possui um agendamento neste horário. " +
                             "Por favor, escolha outro horário ou profissional.");

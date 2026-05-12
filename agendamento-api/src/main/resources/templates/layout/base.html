@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR" th:fragment="html(conteudo)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,7 +53,7 @@
 <div class="container">
     <div th:if="${mensagemSucesso}" class="alert alert-success" th:text="${mensagemSucesso}"></div>
     <div th:if="${mensagemErro}" class="alert alert-danger" th:text="${mensagemErro}"></div>
-    <div th:replace="~{:: conteudo}"></div>
+    <div th:replace="${conteudo}"></div>
 </div>
 
 </body>
