@@ -1,12 +1,3 @@
-================================================================================
-TRABALHO DE CONCLUSÃO DE CURSO — UNDB 2026
-Autor: Guilherme Braga
-
-4 RESULTADOS E DISCUSSÃO
-================================================================================
-
-[Formatação ABNT NBR 14724:2011 — Times New Roman 12 — Espaçamento 1,5 —
- Margens: 3 cm superior/esquerda, 2 cm inferior/direita — Texto justificado]
 
 ────────────────────────────────────────────────────────────────────────────────
 4.1 VISÃO GERAL DO SISTEMA DESENVOLVIDO
@@ -388,12 +379,3 @@ THYMELEAF. Thymeleaf — Using Thymeleaf. Versão 3.1. Thymeleaf Project, 2023.
 Disponível em: https://www.thymeleaf.org/doc/tutorials/3.1/usingthymeleaf.html.
 Acesso em: 10 mar. 2026.
 
-================================================================================
-Notas de formatação para Word/LaTeX:
-  - Títulos de capítulo (4, 4.1 etc.): MAIÚSCULAS, negrito, sem recuo
-  - Corpo do texto: recuo de 1,25 cm na primeira linha
-  - Espaçamento entre linhas: 1,5
-  - Espaçamento entre parágrafos: 0
-  - Tabelas: centralizar, fonte 10, legenda acima em negrito
-  - Referências: espaçamento simples, separadas por linha em branco
-================================================================================
