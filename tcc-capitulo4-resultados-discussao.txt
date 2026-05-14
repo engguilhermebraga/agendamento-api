@@ -1,0 +1,399 @@
+================================================================================
+TRABALHO DE CONCLUSÃO DE CURSO — UNDB 2026
+Autor: Guilherme Braga
+
+4 RESULTADOS E DISCUSSÃO
+================================================================================
+
+[Formatação ABNT NBR 14724:2011 — Times New Roman 12 — Espaçamento 1,5 —
+ Margens: 3 cm superior/esquerda, 2 cm inferior/direita — Texto justificado]
+
+────────────────────────────────────────────────────────────────────────────────
+4.1 VISÃO GERAL DO SISTEMA DESENVOLVIDO
+────────────────────────────────────────────────────────────────────────────────
+
+O presente trabalho resultou no desenvolvimento de um sistema de agendamento
+de serviços implementado como uma aplicação web full-stack, denominada
+Agendamento API. O sistema foi construído sobre o ecossistema Spring Boot 4.0.5
+e contempla dois módulos principais: uma API RESTful destinada à integração com
+sistemas externos e um painel web administrativo voltado à gestão interna do
+estabelecimento, além de um portal de autoatendimento para os clientes.
+
+O projeto totalizou 52 classes Java distribuídas em camadas bem definidas, 27
+templates HTML com Thymeleaf 3.x e 138 testes automatizados com cobertura de
+unidade, integração e repositório, todos aprovados sem falhas na execução final.
+A base de código reflete os princípios da Arquitetura em Camadas (FOWLER, 2002)
+e do Domain-Driven Design (EVANS, 2003), separando claramente as
+responsabilidades entre controladores, serviços, repositórios e mapeadores.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.2 ARQUITETURA E ESTRUTURA DE PACOTES
+────────────────────────────────────────────────────────────────────────────────
+
+A aplicação segue o padrão arquitetural em camadas (Layered Architecture),
+amplamente adotado em sistemas corporativos Java EE e recomendado pela
+documentação oficial do Spring Framework (SPRING, 2024). A estrutura de pacotes
+é organizada da seguinte forma:
+
+   controller/     — Controladores REST (API pública) e MVC (interface web e
+                     portal do cliente)
+   service/        — Regras de negócio e orquestração dos fluxos principais
+   repository/     — Acesso a dados via Spring Data JPA
+   entity/         — Entidades JPA mapeadas para as tabelas do banco
+   dto/            — Objetos de transferência de dados (Request, Response e Form)
+   mapper/         — Conversão entre entidades e DTOs
+   config/         — Configurações de segurança, OpenAPI e dados iniciais
+   exception/      — Exceções de domínio e handler global de erros
+   security/       — Provedor de tokens JWT
+
+Essa separação garante a independência entre as camadas, facilita a
+testabilidade e permite a substituição de implementações sem impacto nas demais
+camadas, alinhando-se ao Princípio da Responsabilidade Única (SRP) definido
+por Martin (2017) no contexto da Arquitetura Limpa.
+
+As entidades de domínio modeladas foram: Cliente, Profissional, Servico e
+Agendamento, sendo que esta última possui um enumerado StatusAgendamento com os
+estados AGENDADO, CONFIRMADO, CONCLUIDO e CANCELADO, representando o ciclo de
+vida completo de um atendimento.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.3 API REST — IMPLEMENTAÇÃO E ENDPOINTS
+────────────────────────────────────────────────────────────────────────────────
+
+A API REST foi projetada seguindo os princípios da Representational State
+Transfer (REST) definidos por Fielding (2000) em sua dissertação de doutorado.
+Foram implementados quatro recursos principais, todos sob o prefixo /api/v1/:
+
+   Tabela 1 — Endpoints da API REST
+
+   ┌─────────────────────────────────┬────────┬──────────────────────────────┐
+   │ Endpoint                        │ Método │ Descrição                    │
+   ├─────────────────────────────────┼────────┼──────────────────────────────┤
+   │ /api/v1/clientes                │ GET    │ Lista todos os clientes       │
+   │ /api/v1/clientes                │ POST   │ Cadastra novo cliente         │
+   │ /api/v1/clientes/{id}           │ GET    │ Busca cliente por ID          │
+   │ /api/v1/clientes/{id}           │ PUT    │ Atualiza cliente              │
+   │ /api/v1/clientes/{id}           │ DELETE │ Remove cliente                │
+   │ /api/v1/profissionais           │ GET    │ Lista profissionais           │
+   │ /api/v1/profissionais           │ POST   │ Cadastra profissional         │
+   │ /api/v1/profissionais/{id}      │ GET    │ Busca profissional por ID     │
+   │ /api/v1/profissionais/{id}      │ PUT    │ Atualiza profissional         │
+   │ /api/v1/profissionais/{id}      │ DELETE │ Remove profissional           │
+   │ /api/v1/servicos                │ GET    │ Lista serviços                │
+   │ /api/v1/servicos                │ POST   │ Cadastra serviço              │
+   │ /api/v1/servicos/{id}           │ GET    │ Busca serviço por ID          │
+   │ /api/v1/servicos/{id}           │ PUT    │ Atualiza serviço              │
+   │ /api/v1/servicos/{id}           │ DELETE │ Remove serviço                │
+   │ /api/v1/agendamentos            │ GET    │ Lista agendamentos            │
+   │ /api/v1/agendamentos            │ POST   │ Cria agendamento              │
+   │ /api/v1/agendamentos/{id}       │ GET    │ Busca agendamento por ID      │
+   │ /api/v1/agendamentos/{id}       │ PUT    │ Atualiza agendamento          │
+   │ /api/v1/agendamentos/{id}       │ DELETE │ Remove agendamento            │
+   │ /api/v1/agendamentos/{id}/status│ PATCH  │ Atualiza status               │
+   │ /api/v1/auth/login              │ POST   │ Autenticação e emissão de JWT │
+   └─────────────────────────────────┴────────┴──────────────────────────────┘
+
+   Fonte: elaborado pelo autor (2026)
+
+A documentação interativa da API foi gerada automaticamente pela biblioteca
+SpringDoc OpenAPI 2.8.6, acessível na URL /swagger-ui.html durante a execução
+da aplicação. Essa abordagem está alinhada com a especificação OpenAPI 3.0,
+padrão amplamente adotado pela indústria para documentação de APIs REST
+(OPENAPI INITIATIVE, 2021).
+
+As regras de negócio implementadas no AgendamentoService incluem:
+(a) verificação de conflito de horário por profissional, impedindo que dois
+    agendamentos coexistam no mesmo intervalo de tempo;
+(b) validação do fluxo de transições de status, restringindo as mudanças aos
+    caminhos AGENDADO→CONFIRMADO, AGENDADO→CANCELADO, CONFIRMADO→CONCLUIDO e
+    CONFIRMADO→CANCELADO;
+(c) cálculo automático do horário de término com base na duração do serviço;
+(d) restrição de cancelamento pelo cliente com antecedência mínima configurável
+    (padrão: 2 horas).
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.4 SEGURANÇA DA APLICAÇÃO
+────────────────────────────────────────────────────────────────────────────────
+
+A segurança foi implementada com Spring Security 7.x, aplicando dois mecanismos
+complementares: autenticação HTTP Basic para a interface web administrativa e
+autenticação por token JWT (JSON Web Token) para os consumidores da API REST.
+
+Os tokens JWT são emitidos pelo endpoint /api/v1/auth/login mediante credenciais
+válidas e validados em cada requisição subsequente pelo JwtTokenProvider. A
+biblioteca utilizada foi a jjwt 0.12.3 (IO JSONWEBTOKEN, 2024), que fornece
+suporte nativo à especificação RFC 7519.
+
+O modelo de controle de acesso adota dois papéis (roles):
+   • ROLE_USER  — acesso somente leitura (GET em /api/v1/**)
+   • ROLE_ADMIN — acesso completo (todos os métodos em /api/v1/**)
+
+Os recursos públicos — dashboard, Swagger UI, H2 Console, portal do cliente e
+recursos estáticos — são acessíveis sem autenticação, garantindo que o fluxo
+de autoatendimento do cliente não exija credenciais do sistema administrativo.
+A desativação do CSRF foi necessária para suportar clientes REST sem estado,
+prática recomendada pelo próprio Spring Security Reference para APIs sem sessão
+(SPRING SECURITY, 2024).
+
+O CORS foi configurado para permitir requisições originadas em
+http://localhost:3000, antecipando a integração futura com interfaces frontend
+desacopladas como aplicações React ou Vue.js.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.5 INTERFACE ADMINISTRATIVA (DASHBOARD)
+────────────────────────────────────────────────────────────────────────────────
+
+O painel administrativo foi desenvolvido com Spring MVC e Thymeleaf 3.x,
+adotando o padrão de layout de fragmentos parametrizados (Thymeleaf Layout
+Dialect via th:fragment com parâmetros), que promove a reutilização de
+componentes de interface sem depender de bibliotecas externas de layout
+(THYMELEAF, 2024).
+
+O DashboardWebController computa, em tempo real, as seguintes métricas:
+   • Total de agendamentos no sistema;
+   • Agendamentos do dia corrente;
+   • Agendamentos nos próximos 7 dias;
+   • Clientes com agendamentos ativos (status AGENDADO ou CONFIRMADO);
+   • Totais de clientes, profissionais e serviços cadastrados.
+
+As telas administrativas contemplam CRUD completo para Clientes, Profissionais,
+Serviços e Agendamentos, incluindo filtros por status e data na listagem de
+agendamentos, formulários de criação e edição, e ações de mudança de status e
+cancelamento diretamente na listagem.
+
+A biblioteca Bootstrap Icons foi integrada às telas do portal do cliente,
+enquanto o painel administrativo mantém folha de estilo própria, evitando
+dependências externas de CDN no módulo de gerenciamento.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.6 PORTAL DO CLIENTE — WIZARD DE AGENDAMENTO
+────────────────────────────────────────────────────────────────────────────────
+
+O portal de autoatendimento do cliente foi implementado como um wizard de
+quatro etapas, mantendo o estado entre as requisições HTTP por meio da anotação
+@SessionAttributes("wizard") do Spring MVC (SPRING, 2024). Essa abordagem
+elimina a necessidade de campos ocultos no formulário ou parâmetros de URL
+para transportar dados entre etapas, mantendo a experiência do usuário fluida
+e a implementação do servidor simples.
+
+O fluxo do wizard é:
+
+   Etapa 1 (GET /portal/step1)  — Seleção do serviço desejado
+   Etapa 2 (POST /portal/step2) — Seleção do profissional, data e horário
+   Etapa 3 (POST /portal/step3) — Revisão dos dados antes da confirmação
+   Etapa 4 (POST /portal/step4) — Criação do agendamento e exibição do sucesso
+
+O objeto de sessão WizardForm implementa Serializable e armazena os dados
+acumulados ao longo das etapas: identificadores e nomes de serviço e
+profissional, data e hora escolhidos. Ao finalizar, SessionStatus.setComplete()
+é chamado para limpar o objeto da sessão HTTP, evitando persistência
+desnecessária de dados sensíveis.
+
+A interface do portal foi construída com Bootstrap 5.3.3 e Bootstrap Icons
+1.11.3, ambos carregados via CDN, proporcionando responsividade nativa e
+componentes acessíveis. O layout centralizado em portal/layout.html expõe um
+breadcrumb dinâmico acionado pelo atributo de modelo breadcrumbs
+(List<Map<String,String>>), permitindo que cada controller configure a
+navegação sem alterar o template base.
+
+Adicionalmente, o PortalClienteController realiza a identificação do cliente
+por e-mail ou CPF antes de iniciar o fluxo de agendamento, verificando se o
+cliente já possui cadastro ou redirecionando para o cadastro rápido.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.7 TESTES AUTOMATIZADOS
+────────────────────────────────────────────────────────────────────────────────
+
+A estratégia de testes adotou a pirâmide de testes de Cohn (2009), cobrindo
+três níveis: unitário, integração com MockMvc e integração de ponta a ponta
+com toda a stack Spring.
+
+   Tabela 2 — Distribuição dos testes automatizados por suíte
+
+   ┌──────────────────────────────────────────────────────┬────────┬─────────┐
+   │ Suíte de Testes                                      │ Nível  │  Casos  │
+   ├──────────────────────────────────────────────────────┼────────┼─────────┤
+   │ AgendamentoServiceTest                               │ Unit.  │   39    │
+   │   └─ criar (7), buscarPorId (3), cancelar (6),      │        │         │
+   │      listarTodos (3), atualizar (10),                │        │         │
+   │      atualizarStatus permitidas (4) e proibidas (6) │        │         │
+   │ ClienteServiceTest                                   │ Unit.  │   12    │
+   │ AgendamentoRepositoryTest                            │ Repos. │   13    │
+   │   └─ findConflitosHorario — cenários de overlap     │        │         │
+   │ ClienteRepositoryTest                                │ Repos. │   17    │
+   │ AgendamentoControllerTest                            │ Integr.│   17    │
+   │ AgendamentoIntegrationTest (toda a stack)            │ Integr.│    8    │
+   │ ClienteControllerTest                                │ Integr.│   11    │
+   │ ProfissionalControllerTest                           │ Integr.│   10    │
+   │ ServicoControllerTest                                │ Integr.│   10    │
+   │ AgendamentoApiApplicationTests (contexto Spring)     │ Integr.│    1    │
+   ├──────────────────────────────────────────────────────┼────────┼─────────┤
+   │ TOTAL                                                │        │  138    │
+   └──────────────────────────────────────────────────────┴────────┴─────────┘
+
+   Fonte: elaborado pelo autor (2026)
+
+Todos os 138 casos de teste foram executados com êxito, sem falhas ou erros,
+conforme evidenciado pelo relatório de build Maven:
+"Tests run: 138, Failures: 0, Errors: 0, Skipped: 0 — BUILD SUCCESS".
+
+Os testes de serviço utilizam Mockito para isolar as dependências externas,
+permitindo verificar o comportamento das regras de negócio sem acesso ao banco
+de dados (Freeman; PRYCE, 2009). Os testes de repositório empregam o banco H2
+em memória com a anotação @Transactional, garantindo isolamento entre casos de
+teste por rollback automático ao final de cada método. Os testes de controller
+com MockMvc exercitam toda a cadeia de filtros do Spring Security, validando
+tanto os casos de sucesso quanto os cenários de acesso não autorizado (HTTP 401)
+e recursos inexistentes (HTTP 404).
+
+Um desafio relevante durante o desenvolvimento dos testes foi o comportamento
+do banco H2 configurado com DB_CLOSE_DELAY=-1, que mantém os dados entre
+recarregamentos do ApplicationContext e pode causar poluição de dados entre
+suítes. A solução adotada foi a limpeza explícita e ordenada das tabelas no
+método @BeforeEach dos testes de repositório, respeitando as restrições de
+chave estrangeira (agendamentos antes de clientes), em conformidade com as
+boas práticas descritas por Koskela (2013) em Developer Testing.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.8 DISCUSSÃO DOS RESULTADOS
+────────────────────────────────────────────────────────────────────────────────
+
+Os resultados obtidos demonstram que o sistema atendeu plenamente aos objetivos
+estabelecidos no projeto. A separação entre API REST e interface web possibilita
+o uso do backend como um serviço independente, viabilizando futura integração
+com aplicações móveis ou frontends SPA (Single Page Applications) sem
+modificações na camada de serviço.
+
+A adoção do Spring Boot 4.0.5, versão mais recente da plataforma ao momento do
+desenvolvimento (lançada em março de 2025, sobre Jakarta EE 11 e Spring
+Framework 7), posicionou o projeto sobre uma base tecnológica atual e suportada.
+Essa escolha implicou a migração do namespace javax.* para jakarta.*, conforme
+exigido pela especificação Jakarta EE 10+ (JAKARTA EE, 2022).
+
+O padrão de fragmentos parametrizados do Thymeleaf (th:fragment com parâmetros
+explícitos) mostrou-se superior à abordagem de variáveis locais (th:with com
+:: *), pois elimina acoplamento implícito entre o layout e os templates filhos.
+Esse padrão, documentado na especificação Thymeleaf 3.1 (THYMELEAF, 2023), foi
+adotado em todos os templates após identificar incompatibilidades com o template
+engine ao utilizar o seletor de fragmento curinga.
+
+A implementação do wizard de agendamento com @SessionAttributes demonstrou a
+capacidade do Spring MVC de gerenciar conversações multi-passo sem camadas
+adicionais de infraestrutura, reduzindo a complexidade em comparação com
+soluções baseadas em frameworks de fluxo como Spring Web Flow.
+
+Do ponto de vista de segurança, a combinação de HTTP Basic para o painel
+administrativo e JWT para a API REST mostrou-se adequada ao escopo do projeto.
+No entanto, para um ambiente de produção, recomenda-se a implementação de
+refresh tokens, rotação de segredos e armazenamento de credenciais em serviços
+de cofre (vault), aspectos que excedem o escopo deste trabalho.
+
+
+────────────────────────────────────────────────────────────────────────────────
+4.9 LIMITAÇÕES E TRABALHOS FUTUROS
+────────────────────────────────────────────────────────────────────────────────
+
+As principais limitações identificadas no sistema desenvolvido são:
+
+a) Banco de dados em memória (H2): adequado para demonstração e testes, porém
+   inadequado para produção. A aplicação já possui o driver MySQL no classpath,
+   e a migração requer apenas a atualização das propriedades de conexão;
+
+b) Ausência de notificações: o sistema não envia confirmações por e-mail ou SMS
+   ao cliente após o agendamento. A integração com o Spring Mail ou serviços
+   de mensageria (AWS SES, SendGrid) é prevista como evolução;
+
+c) Autenticação simplificada do portal: o cliente é identificado por e-mail sem
+   senha, um mecanismo adequado para demonstração, mas insuficiente para
+   ambientes com requisitos de privacidade mais rigorosos;
+
+d) Ausência de paginação: a listagem de entidades retorna todos os registros
+   sem paginação, o que pode comprometer o desempenho com grandes volumes de
+   dados. A adoção de Pageable do Spring Data JPA é recomendada.
+
+Como trabalhos futuros, sugere-se: (i) migração para banco relacional em
+produção (MySQL/PostgreSQL); (ii) implementação de relatórios gerenciais com
+exportação em PDF; (iii) desenvolvimento de aplicação mobile com Flutter
+consumindo a API REST; (iv) adição de testes de contrato (consumer-driven
+contract testing) com Pact; e (v) containerização com Docker e pipeline de
+CI/CD completo.
+
+
+================================================================================
+REFERÊNCIAS
+================================================================================
+
+[Formatadas conforme ABNT NBR 6023:2018]
+
+BECK, Kent. Test Driven Development: By Example. Boston: Addison-Wesley, 2002.
+319 p. ISBN 978-0-321-14653-3.
+
+COHN, Mike. Succeeding with Agile: Software Development Using Scrum. Boston:
+Addison-Wesley, 2009. 504 p. ISBN 978-0-321-57900-9.
+
+EVANS, Eric. Domain-Driven Design: Tackling Complexity in the Heart of
+Software. Boston: Addison-Wesley, 2003. 560 p. ISBN 978-0-321-12521-7.
+
+FIELDING, Roy Thomas. Architectural Styles and the Design of Network-based
+Software Architectures. 2000. 180 f. Tese (Doutorado em Ciência da Computação)
+— University of California, Irvine, 2000. Disponível em:
+https://ics.uci.edu/~fielding/pubs/dissertation/top.htm. Acesso em: 10 mar. 2026.
+
+FOWLER, Martin. Patterns of Enterprise Application Architecture. Boston:
+Addison-Wesley, 2002. 560 p. ISBN 978-0-321-12742-6.
+
+FREEMAN, Steve; PRYCE, Nat. Growing Object-Oriented Software, Guided by Tests.
+Boston: Addison-Wesley, 2009. 384 p. ISBN 978-0-321-50362-6.
+
+GAMMA, Erich et al. Design Patterns: Elements of Reusable Object-Oriented
+Software. Boston: Addison-Wesley, 1994. 395 p. ISBN 978-0-201-63361-0.
+
+IO JSONWEBTOKEN. jjwt: Java JWT — JSON Web Token support for the JVM. Versão
+0.12.3. GitHub, 2024. Disponível em: https://github.com/jwtk/jjwt.
+Acesso em: 10 mar. 2026.
+
+JAKARTA EE. Jakarta EE 10 Specification. Eclipse Foundation, 2022. Disponível
+em: https://jakarta.ee/specifications. Acesso em: 10 mar. 2026.
+
+KOSKELA, Lasse. Effective Unit Testing: A Guide for Java Developers. Shelter
+Island: Manning Publications, 2013. 272 p. ISBN 978-1-935182-58-6.
+
+MARTIN, Robert C. Clean Architecture: A Craftsman's Guide to Software
+Structure and Design. Boston: Prentice Hall, 2017. 432 p. ISBN 978-0-13-468599-1.
+
+OPENAPI INITIATIVE. OpenAPI Specification v3.1.0. Linux Foundation, 2021.
+Disponível em: https://spec.openapis.org/oas/v3.1.0. Acesso em: 10 mar. 2026.
+
+SPRING. Spring Framework Reference Documentation. VMware, 2024. Disponível em:
+https://docs.spring.io/spring-framework/reference. Acesso em: 10 mar. 2026.
+
+SPRING BOOT. Spring Boot Reference Documentation. VMware, 2024. Disponível em:
+https://docs.spring.io/spring-boot/docs/4.0.5/reference/html.
+Acesso em: 10 mar. 2026.
+
+SPRING SECURITY. Spring Security Reference. VMware, 2024. Disponível em:
+https://docs.spring.io/spring-security/reference. Acesso em: 10 mar. 2026.
+
+SPRINGDOC. SpringDoc OpenAPI for Spring Boot. Versão 2.8.6. GitHub, 2024.
+Disponível em: https://springdoc.org. Acesso em: 10 mar. 2026.
+
+THYMELEAF. Thymeleaf — Using Thymeleaf. Versão 3.1. Thymeleaf Project, 2023.
+Disponível em: https://www.thymeleaf.org/doc/tutorials/3.1/usingthymeleaf.html.
+Acesso em: 10 mar. 2026.
+
+================================================================================
+Notas de formatação para Word/LaTeX:
+  - Títulos de capítulo (4, 4.1 etc.): MAIÚSCULAS, negrito, sem recuo
+  - Corpo do texto: recuo de 1,25 cm na primeira linha
+  - Espaçamento entre linhas: 1,5
+  - Espaçamento entre parágrafos: 0
+  - Tabelas: centralizar, fonte 10, legenda acima em negrito
+  - Referências: espaçamento simples, separadas por linha em branco
+================================================================================
