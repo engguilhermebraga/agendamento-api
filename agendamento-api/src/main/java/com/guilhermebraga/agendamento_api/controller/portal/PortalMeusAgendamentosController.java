@@ -29,6 +29,7 @@ public class PortalMeusAgendamentosController {
         Cliente cliente = (Cliente) session.getAttribute("clienteLogado");
         if (cliente == null) return "redirect:/portal";
 
+        model.addAttribute("titulo", "Meus Agendamentos");
         model.addAttribute("agendamentos", agendamentoService.listarPorCliente(cliente.getId()));
         model.addAttribute("menuAtivo", "meus-agendamentos");
         return "portal/meus-agendamentos";
