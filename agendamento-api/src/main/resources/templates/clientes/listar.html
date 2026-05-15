@@ -2,39 +2,155 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
 <body>
 <div th:fragment="conteudo">
-    <div class="top-bar">
-        <h2>Clientes</h2>
-        <a th:href="@{/web/clientes/novo}" class="btn btn-success">Novo Cliente</a>
+
+    <!-- Cabeçalho da página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Clientes</h2>
+            <p class="text-muted mb-0 small">
+                <span th:text="${#lists.size(clientes)}">0</span> cliente(s) cadastrado(s)
+            </p>
+        </div>
+        <a th:href="@{/web/clientes/novo}" class="btn btn-success">
+            <i class="bi bi-person-plus-fill me-1"></i>Novo Cliente
+        </a>
     </div>
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>E-mail</th>
-            <th>Telefone</th>
-            <th>CPF</th>
-            <th>Acoes</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="c : ${clientes}">
-            <td th:text="${c.id}"></td>
-            <td th:text="${c.nome}"></td>
-            <td th:text="${c.email}"></td>
-            <td th:text="${c.telefone}"></td>
-            <td th:text="${c.cpf}"></td>
-            <td class="actions">
-                <a th:href="@{/web/clientes/{id}/editar(id=${c.id})}" class="btn btn-warning">Editar</a>
-                <a th:href="@{/web/clientes/{id}/deletar(id=${c.id})}" class="btn btn-danger"
-                   onclick="return confirm('Deseja realmente remover este cliente?')">Remover</a>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(clientes)}">
-            <td colspan="6" style="text-align: center; padding: 2rem;">Nenhum cliente cadastrado.</td>
-        </tr>
-        </tbody>
-    </table>
+
+    <!-- Barra de busca -->
+    <div class="card mb-3 p-3">
+        <input type="text" id="searchInput" class="form-control"
+               placeholder="Buscar por nome, e-mail ou telefone..."
+               oninput="filtrarTabela(this.value)">
+    </div>
+
+    <!-- Tabela -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tabelaClientes">
+                <thead class="table-light">
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th class="text-center" style="width:140px;">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${clientes}">
+                    <td class="text-muted small fw-semibold" th:text="${c.id}"></td>
+                    <td>
+                        <a th:href="@{/web/clientes/{id}(id=${c.id})}"
+                           class="text-decoration-none fw-semibold"
+                           th:text="${c.nome}">Nome</a>
+                    </td>
+                    <td class="small" th:text="${c.email}"></td>
+                    <td class="small" th:text="${c.telefone}"></td>
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a th:href="@{/web/clientes/{id}(id=${c.id})}"
+                               class="btn btn-outline-info btn-sm"
+                               title="Ver detalhes">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:href="@{/web/clientes/{id}/editar(id=${c.id})}"
+                               class="btn btn-outline-warning btn-sm"
+                               title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm"
+                                    title="Deletar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalDeletar"
+                                    th:attr="data-id=${c.id}, data-nome=${c.nome}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(clientes)}" id="emptyRow">
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-people display-6 d-block mb-2"></i>
+                        Nenhum cliente cadastrado.
+                        <div class="mt-2">
+                            <a th:href="@{/web/clientes/novo}" class="btn btn-success btn-sm">
+                                <i class="bi bi-person-plus me-1"></i>Cadastrar primeiro cliente
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mensagem sem resultados na busca -->
+    <div id="noResults" class="text-center py-4 text-muted d-none">
+        <i class="bi bi-search me-1"></i>Nenhum resultado encontrado para a busca.
+    </div>
+
+    <!-- ── Modal de confirmação de exclusão ─────────────────────── -->
+    <div class="modal fade" id="modalDeletar" tabindex="-1"
+         aria-labelledby="modalDeletarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="modalDeletarLabel">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        Confirmar exclusão
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="alert alert-warning d-flex gap-2 align-items-start mb-3">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                        <div>
+                            <strong>Atenção:</strong> Deletar este cliente também removerá
+                            <strong>todos os seus agendamentos</strong>. Esta ação não pode ser desfeita.
+                        </div>
+                    </div>
+                    <p class="mb-1 text-muted small">Cliente a ser excluído:</p>
+                    <p class="fw-semibold fs-6 mb-0" id="modalClienteNome"></p>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancelar
+                    </button>
+                    <form id="formDeletar" method="post">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Confirmar exclusão
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    document.getElementById('modalDeletar').addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        document.getElementById('modalClienteNome').textContent = btn.getAttribute('data-nome');
+        document.getElementById('formDeletar').action = '/web/clientes/' + btn.getAttribute('data-id') + '/deletar';
+    });
+
+    function filtrarTabela(query) {
+        const rows = document.querySelectorAll('#tabelaClientes tbody tr:not(#emptyRow)');
+        const q = query.trim().toLowerCase();
+        let visiveis = 0;
+        rows.forEach(function (row) {
+            const match = row.textContent.toLowerCase().includes(q);
+            row.style.display = match ? '' : 'none';
+            if (match) visiveis++;
+        });
+        document.getElementById('noResults').classList.toggle('d-none', q === '' || visiveis > 0);
+    }
+</script>
 </body>
 </html>
