@@ -3,17 +3,27 @@
 <body>
 <div th:fragment="conteudo">
 
-    <div class="top-bar">
-        <h2>Agendamentos</h2>
-        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">+ Novo Agendamento</a>
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Agendamentos</h2>
+            <p class="text-muted mb-0 small">
+                <span th:text="${#lists.size(agendamentos)}">0</span> resultado(s)
+            </p>
+        </div>
+        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">
+            <i class="bi bi-calendar-plus-fill me-1"></i>Novo Agendamento
+        </a>
     </div>
 
     <!-- Filtros -->
-    <div class="form-card" style="max-width:none; margin-bottom:1rem;">
-        <form method="get" th:action="@{/web/agendamentos/listar}" style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
-            <div class="form-group" style="margin-bottom:0; flex:1; min-width:160px;">
-                <label for="status">Status</label>
-                <select id="status" name="status">
+    <div class="card mb-4 p-3">
+        <form method="get" th:action="@{/web/agendamentos/listar}"
+              class="row g-2 align-items-end">
+
+            <div class="col-sm-6 col-md-3">
+                <label for="status" class="form-label small text-muted mb-1">Status</label>
+                <select id="status" name="status" class="form-select form-select-sm">
                     <option value="">Todos</option>
                     <option th:each="s : ${statusList}"
                             th:value="${s}"
@@ -21,78 +31,134 @@
                             th:selected="${s == statusSelecionado}"></option>
                 </select>
             </div>
-            <div class="form-group" style="margin-bottom:0; flex:1; min-width:160px;">
-                <label for="data">Data</label>
-                <input type="date" id="data" name="data"
-                       th:value="${dataSelecionada}">
+
+            <div class="col-sm-6 col-md-3">
+                <label for="dataInicio" class="form-label small text-muted mb-1">De</label>
+                <input type="date" id="dataInicio" name="dataInicio"
+                       class="form-control form-control-sm"
+                       th:value="${dataInicio}">
             </div>
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-            <a th:href="@{/web/agendamentos/listar}" class="btn btn-warning">Limpar</a>
+
+            <div class="col-sm-6 col-md-3">
+                <label for="dataFim" class="form-label small text-muted mb-1">Até</label>
+                <input type="date" id="dataFim" name="dataFim"
+                       class="form-control form-control-sm"
+                       th:value="${dataFim}">
+            </div>
+
+            <div class="col-sm-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-funnel-fill me-1"></i>Filtrar
+                </button>
+                <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary btn-sm"
+                   title="Limpar filtros">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+
         </form>
     </div>
 
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Profissional</th>
-            <th>Serviço</th>
-            <th>Data/Hora</th>
-            <th>Status</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="a : ${agendamentos}">
-            <td th:text="${a.id}"></td>
-            <td th:text="${a.clienteNome}"></td>
-            <td>
-                <span th:text="${a.profissionalNome}"></span><br>
-                <small th:text="${a.profissionalEspecialidade}" style="color:#7f8c8d;"></small>
-            </td>
-            <td th:text="${a.servicoNome}"></td>
-            <td th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
-            <td>
-                <span th:text="${a.status}"
-                      th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}"></span>
-            </td>
-            <td class="actions">
-                <!-- Editar -->
-                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                   th:href="@{/web/agendamentos/editar/{id}(id=${a.id})}"
-                   class="btn btn-warning">Editar</a>
+    <!-- Tabela -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Cliente</th>
+                    <th>Profissional</th>
+                    <th>Serviço</th>
+                    <th class="text-nowrap">Data/Hora</th>
+                    <th>Status</th>
+                    <th class="text-center" style="width:180px;">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${agendamentos}">
+                    <td class="text-muted small fw-semibold" th:text="${a.id}"></td>
 
-                <!-- Avançar status: AGENDADO → CONFIRMADO → CONCLUIDO -->
-                <form th:if="${a.status.name() == 'AGENDADO'}"
-                      th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
-                      method="post" style="display:inline;">
-                    <input type="hidden" name="novoStatus" value="CONFIRMADO">
-                    <button type="submit" class="btn btn-success">Confirmar</button>
-                </form>
-                <form th:if="${a.status.name() == 'CONFIRMADO'}"
-                      th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
-                      method="post" style="display:inline;">
-                    <input type="hidden" name="novoStatus" value="CONCLUIDO">
-                    <button type="submit" class="btn btn-primary">Concluir</button>
-                </form>
+                    <td>
+                        <span class="fw-semibold d-block" th:text="${a.clienteNome}"></span>
+                    </td>
 
-                <!-- Cancelar -->
-                <form th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                      th:action="@{/web/agendamentos/cancelar/{id}(id=${a.id})}"
-                      method="post" style="display:inline;"
-                      onsubmit="return confirm('Deseja realmente cancelar este agendamento?')">
-                    <button type="submit" class="btn btn-danger">Cancelar</button>
-                </form>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(agendamentos)}">
-            <td colspan="7" style="text-align:center; padding:2rem; color:#7f8c8d;">
-                Nenhum agendamento encontrado.
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                    <td>
+                        <span class="d-block" th:text="${a.profissionalNome}"></span>
+                        <small class="text-muted" th:text="${a.profissionalEspecialidade}"></small>
+                    </td>
+
+                    <td class="small" th:text="${a.servicoNome}"></td>
+
+                    <td class="small text-nowrap"
+                        th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+
+                    <td>
+                        <span th:text="${a.status}"
+                              th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}"></span>
+                    </td>
+
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center flex-wrap">
+
+                            <!-- Editar -->
+                            <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                               th:href="@{/web/agendamentos/editar/{id}(id=${a.id})}"
+                               class="btn btn-outline-warning btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <!-- Confirmar: AGENDADO → CONFIRMADO -->
+                            <form th:if="${a.status.name() == 'AGENDADO'}"
+                                  th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
+                                  method="post" class="d-inline">
+                                <input type="hidden" name="novoStatus" value="CONFIRMADO">
+                                <button type="submit" class="btn btn-outline-success btn-sm"
+                                        title="Confirmar agendamento">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+
+                            <!-- Concluir: CONFIRMADO → CONCLUIDO -->
+                            <form th:if="${a.status.name() == 'CONFIRMADO'}"
+                                  th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
+                                  method="post" class="d-inline">
+                                <input type="hidden" name="novoStatus" value="CONCLUIDO">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm"
+                                        title="Marcar como concluído">
+                                    <i class="bi bi-check2-all"></i>
+                                </button>
+                            </form>
+
+                            <!-- Cancelar -->
+                            <form th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                                  th:action="@{/web/agendamentos/cancelar/{id}(id=${a.id})}"
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                        title="Cancelar agendamento"
+                                        onclick="return confirm('Cancelar este agendamento?')">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(agendamentos)}">
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x d-block mb-2" style="font-size:2rem;"></i>
+                        Nenhum agendamento encontrado.
+                        <div class="mt-2">
+                            <a th:href="@{/web/agendamentos/novo}" class="btn btn-success btn-sm">
+                                <i class="bi bi-calendar-plus me-1"></i>Criar agendamento
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
 </body>

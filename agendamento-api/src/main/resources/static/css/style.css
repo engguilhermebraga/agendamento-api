@@ -261,10 +261,10 @@ main { flex: 1; }
   font-weight: 600;
   letter-spacing: 0.04em;
 }
-.badge-agendado   { background-color: #fff3cd; color: #856404; }
-.badge-confirmado { background-color: #cfe2ff; color: #084298; }
-.badge-concluido  { background-color: #d1e7dd; color: #0a3622; }
-.badge-cancelado  { background-color: #f8d7da; color: #58151c; }
+.badge-agendado   { background-color: #fff3cd; color: #664d03; }  /* amarelo  */
+.badge-confirmado { background-color: #d1e7dd; color: #0a3622; }  /* verde    */
+.badge-concluido  { background-color: #e9ecef; color: #495057; }  /* cinza    */
+.badge-cancelado  { background-color: #f8d7da; color: #58151c; }  /* vermelho */
 
 
 /* ── 11. PAGE HEADER ─────────────────────────────────────────── */
