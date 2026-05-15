@@ -55,10 +55,7 @@
             <td th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
             <td>
                 <span th:text="${a.status}"
-                      th:style="${a.status.name() == 'AGENDADO'}   ? 'color:#3498db; font-weight:bold;' :
-                                ${a.status.name() == 'CONFIRMADO'} ? 'color:#27ae60; font-weight:bold;' :
-                                ${a.status.name() == 'CONCLUIDO'}  ? 'color:#7f8c8d; font-weight:bold;' :
-                                'color:#e74c3c; font-weight:bold;'"></span>
+                      th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}"></span>
             </td>
             <td class="actions">
                 <!-- Editar -->
