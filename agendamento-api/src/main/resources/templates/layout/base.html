@@ -12,94 +12,24 @@
     <!-- Estilos próprios da aplicação -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body>
 
-<!-- ═══════════════════════════════════════════════════════════
-     NAVBAR — Painel Administrativo
-     ═══════════════════════════════════════════════════════════ -->
-<nav class="navbar navbar-expand-lg admin-navbar navbar-dark">
-    <div class="container-xl">
+<div class="navbar">
+    <h1>Agendamento API</h1>
+    <nav>
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/web/clientes}">Clientes</a>
+        <a th:href="@{/web/profissionais}">Profissionais</a>
+        <a th:href="@{/web/servicos}">Servicos</a>
+        <a th:href="@{/web/agendamentos/listar}">Agendamentos</a>
+    </nav>
+</div>
 
-        <a class="navbar-brand" th:href="@{/dashboard}">
-            <i class="bi bi-grid-fill me-2"></i>Agendamento API
-        </a>
-
-        <button class="navbar-toggler border-0" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navbarAdmin"
-                aria-controls="navbarAdmin" aria-expanded="false"
-                aria-label="Alternar menu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarAdmin">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
-                <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
-                       th:href="@{/dashboard}"
-                       th:classappend="${menuAtivo == 'dashboard' ? ' active' : ''}">
-                        <i class="bi bi-speedometer2 me-1"></i>Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
-                       th:href="@{/web/clientes}"
-                       th:classappend="${menuAtivo == 'clientes' ? ' active' : ''}">
-                        <i class="bi bi-people-fill me-1"></i>Clientes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
-                       th:href="@{/web/profissionais}"
-                       th:classappend="${menuAtivo == 'profissionais' ? ' active' : ''}">
-                        <i class="bi bi-person-badge-fill me-1"></i>Profissionais
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
-                       th:href="@{/web/servicos}"
-                       th:classappend="${menuAtivo == 'servicos' ? ' active' : ''}">
-                        <i class="bi bi-scissors me-1"></i>Serviços
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
-                       th:href="@{/web/agendamentos/listar}"
-                       th:classappend="${menuAtivo == 'agendamentos' ? ' active' : ''}">
-                        <i class="bi bi-calendar3 me-1"></i>Agendamentos
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- ═══════════════════════════════════════════════════════════
-     MAIN CONTENT
-     ═══════════════════════════════════════════════════════════ -->
-<main class="flex-grow-1">
-    <div class="container-xl py-4">
-
-        <!-- Alertas de flash -->
-        <div th:replace="~{fragments :: alert}"></div>
-
-        <!-- Conteúdo injetado pela página -->
-        <div th:replace="${conteudo}"></div>
-
-    </div>
-</main>
-
-<!-- ═══════════════════════════════════════════════════════════
-     FOOTER
-     ═══════════════════════════════════════════════════════════ -->
-<footer class="site-footer">
-    <div class="container-xl text-center">
-        <p class="mb-0 small">
-            <i class="bi bi-grid me-1"></i>
-            &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
-            Agendamento API &mdash; TCC UNDB &mdash; Guilherme Braga
-        </p>
-    </div>
-</footer>
+<div class="container">
+    <div th:if="${mensagemSucesso}" class="alert alert-success" th:text="${mensagemSucesso}"></div>
+    <div th:if="${mensagemErro}" class="alert alert-danger" th:text="${mensagemErro}"></div>
+    <div th:replace="${conteudo}"></div>
+</div>
 
 <!-- Bootstrap 5 Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

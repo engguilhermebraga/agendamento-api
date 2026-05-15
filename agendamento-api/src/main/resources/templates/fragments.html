@@ -2,62 +2,65 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <!--
     fragments.html — Biblioteca de fragmentos Thymeleaf reutilizáveis.
-    Todos os estilos vivem em /css/style.css — este arquivo não contém CSS.
 
     Uso:
-      navbar     : th:replace="~{fragments :: navbar}"
-      footer     : th:replace="~{fragments :: footer}"
-      alert      : th:replace="~{fragments :: alert}"
-      form-field : th:replace="~{fragments :: form-field('text','id','Label','name',${val},'Placeholder',true)}"
+      navbar    : th:replace="~{fragments :: navbar}"
+      footer    : th:replace="~{fragments :: footer}"
+      alert     : th:replace="~{fragments :: alert}"
+      form-field: th:replace="~{fragments :: form-field('text','id','Label','name',${val},'Placeholder',true)}"
 
     Parâmetros de form-field:
       type        — tipo do input (text | email | password | tel | number | date | datetime-local)
-      fieldId     — atributo id/for
+      fieldId     — atributo id do input
       label       — texto do <label>
       name        — atributo name do input
       value       — valor inicial (pode ser null)
-      placeholder — texto placeholder
-      required    — true | false
+      placeholder — texto de placeholder
+      required    — boolean (true = campo obrigatório)
 -->
 <body>
 
 <!-- ═══════════════════════════════════════════════════════════
-     NAVBAR — portal (gradiente primário)
-     Variável de contexto: menuAtivo (string)
+     NAVBAR
+     Depende: Bootstrap 5, Bootstrap Icons, variável menuAtivo
      ═══════════════════════════════════════════════════════════ -->
 <nav th:fragment="navbar"
-     class="navbar navbar-expand-lg portal-navbar navbar-dark">
+     class="navbar navbar-expand-lg navbar-dark shadow-sm"
+     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container-xl">
 
-        <a class="navbar-brand" th:href="@{/portal}">
+        <!-- Logo -->
+        <a class="navbar-brand fw-semibold" th:href="@{/portal}">
             <i class="bi bi-calendar-check-fill me-2"></i>Agendamento
         </a>
 
+        <!-- Toggler mobile -->
         <button class="navbar-toggler border-0" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navFragMain"
-                aria-controls="navFragMain" aria-expanded="false"
+                data-bs-toggle="collapse" data-bs-target="#navMain"
+                aria-controls="navMain" aria-expanded="false"
                 aria-label="Alternar menu">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navFragMain">
+        <div class="collapse navbar-collapse" id="navMain">
+            <!-- Links principais -->
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
                 <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
+                    <a class="nav-link px-3 py-2 rounded"
                        th:href="@{/portal}"
                        th:classappend="${menuAtivo == 'home' ? ' active' : ''}">
                         <i class="bi bi-speedometer2 me-1"></i>Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
+                    <a class="nav-link px-3 py-2 rounded"
                        th:href="@{/web/clientes}"
                        th:classappend="${menuAtivo == 'clientes' ? ' active' : ''}">
                         <i class="bi bi-people-fill me-1"></i>Clientes
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-3 py-2"
+                    <a class="nav-link px-3 py-2 rounded"
                        th:href="@{/portal/meus-agendamentos}"
                        th:classappend="${menuAtivo == 'meus-agendamentos' ? ' active' : ''}">
                         <i class="bi bi-calendar3 me-1"></i>Agendamentos
@@ -65,6 +68,7 @@
                 </li>
             </ul>
 
+            <!-- Usuário logado -->
             <div class="d-flex align-items-center gap-2" th:if="${session.clienteLogado != null}">
                 <span class="text-white-50 small">
                     <i class="bi bi-person-circle me-1"></i>
@@ -82,9 +86,11 @@
 <!-- ═══════════════════════════════════════════════════════════
      FOOTER
      ═══════════════════════════════════════════════════════════ -->
-<footer th:fragment="footer" class="site-footer">
+<footer th:fragment="footer"
+        class="mt-auto py-3"
+        style="background:#2d3748;">
     <div class="container-xl text-center">
-        <p class="mb-0 small">
+        <p class="mb-0 small" style="color:rgba(255,255,255,0.55);">
             <i class="bi bi-calendar-check me-1"></i>
             &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
             Sistema de Agendamento &mdash; TCC UNDB &mdash; Guilherme Braga
@@ -94,9 +100,9 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     ALERT — success / error / info (dismiss automático Bootstrap)
-     Variáveis: mensagemSucesso | mensagemErro | mensagemInfo
+     ALERT — sucesso, erro e info a partir de atributos de model
      Uso: th:replace="~{fragments :: alert}"
+     Variáveis: mensagemSucesso | mensagemErro | mensagemInfo
      ═══════════════════════════════════════════════════════════ -->
 <div th:fragment="alert">
 
@@ -125,24 +131,31 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     FORM-FIELD — input reutilizável com label e feedback
-     Parâmetros (posicionais):
-       1. type        — tipo HTML do input
-       2. fieldId     — id do elemento (usado também no for do label)
-       3. label       — texto do rótulo
-       4. name        — atributo name
-       5. value       — valor atual (null = vazio)
-       6. placeholder — texto de ajuda
-       7. required    — true | false
+     FORM-FIELD — input reutilizável com label e validação
+     Parâmetros (todos obrigatórios na chamada):
+       type        — tipo HTML do input
+       fieldId     — id do elemento
+       label       — texto do rótulo
+       name        — name do input
+       value       — valor atual (pode ser null)
+       placeholder — placeholder
+       required    — true | false
 
-     Exemplo:
+     Exemplos de uso:
        <div th:replace="~{fragments :: form-field(
-             'email','email','E-mail','email',${c.email},'ex@ex.com',true)}"></div>
+           'text','nome','Nome Completo','nome',${cliente.nome},'Ex: João Silva',true)}"></div>
+
+       <div th:replace="~{fragments :: form-field(
+           'email','email','E-mail','email',${cliente.email},'email@exemplo.com',true)}"></div>
+
+       <div th:replace="~{fragments :: form-field(
+           'tel','telefone','Telefone','telefone',${cliente.telefone},'(00) 00000-0000',false)}"></div>
      ═══════════════════════════════════════════════════════════ -->
 <div th:fragment="form-field(type, fieldId, label, name, value, placeholder, required)"
      class="mb-3">
 
-    <label th:for="${fieldId}" class="form-label">
+    <label th:for="${fieldId}"
+           class="form-label fw-semibold small text-secondary">
         <span th:text="${label}">Campo</span>
         <span th:if="${required}" class="text-danger ms-1" aria-hidden="true">*</span>
     </label>
@@ -156,6 +169,7 @@
            class="form-control"
            th:attr="aria-required=${required}"/>
 
+    <!-- Área reservada para mensagens de validação (ativada via JS ou Bean Validation) -->
     <div th:id="${fieldId + '-feedback'}" class="invalid-feedback"></div>
 
 </div>
