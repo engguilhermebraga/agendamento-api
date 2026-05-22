@@ -67,7 +67,7 @@ public class ProfissionalWebController {
         return "redirect:/web/profissionais";
     }
 
-    @GetMapping("/{id}/deletar")
+    @PostMapping("/{id}/deletar")
     public String deletar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             profissionalService.deletar(id);

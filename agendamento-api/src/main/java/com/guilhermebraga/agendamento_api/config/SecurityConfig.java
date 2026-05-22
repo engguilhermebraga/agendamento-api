@@ -1,5 +1,6 @@
 package com.guilhermebraga.agendamento_api.config;
 
+import com.guilhermebraga.agendamento_api.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,14 +26,16 @@ import static org.springframework.security.config.Customizer.withDefaults;
 /**
  * Configuração central de segurança da aplicação.
  *
- * Regras da API REST (/api/v1/**):
+ * Autenticação suportada:
+ *   1. JWT Bearer token  — para a API REST (/api/v1/**)
+ *   2. HTTP Basic auth   — alternativa para Swagger UI e testes
+ *
+ * Regras de autorização da API REST:
  *   GET           → ROLE_USER ou ROLE_ADMIN
  *   POST/PUT/PATCH/DELETE → apenas ROLE_ADMIN
  *
- * Caminhos públicos: dashboard, Swagger UI, H2 Console, portal, views web,
+ * Caminhos públicos: dashboard, portal, views web (/web/**), Swagger UI,
  * recursos estáticos e endpoint de login JWT.
- *
- * CSRF desabilitado. CORS habilitado para localhost:3000.
  *
  * @author Guilherme Braga
  */
@@ -40,7 +44,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter jwtFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -81,6 +86,8 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
             )
+            // JWT filter runs before the Basic auth filter so Bearer tokens are validated first
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .httpBasic(withDefaults());
 
         return http.build();
