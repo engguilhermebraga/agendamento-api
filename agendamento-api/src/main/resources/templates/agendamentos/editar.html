@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-0">Editar Agendamento <span class="text-muted small">#<span th:text="${agendamentoId}"></span></span></h2>
+            <p class="text-muted small mb-0">
+                Status atual:
+                <span th:text="${statusAtual}"
+                      th:class="${'badge badge-status badge-' + statusAtual.name().toLowerCase()}">AGENDADO</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Alerta: agendamento bloqueado -->
+    <div th:if="${bloqueado}"
+         class="alert alert-warning d-flex align-items-start gap-2 mb-4" role="alert">
+        <i class="bi bi-lock-fill flex-shrink-0 mt-1"></i>
+        <div>
+            <strong>Edição bloqueada.</strong>
+            Agendamentos com status <strong th:text="${statusAtual}"></strong> não podem ser editados.
+            <div class="mt-1 small text-muted">
+                Apenas agendamentos com status <em>AGENDADO</em> ou <em>CONFIRMADO</em> podem ser alterados.
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+
+        <!-- Formulário somente leitura quando bloqueado -->
+        <form th:action="@{/web/agendamentos/atualizar/{id}(id=${agendamentoId})}"
+              method="post" th:object="${agendamento}" novalidate>
+
+            <!-- Cliente -->
+            <div class="mb-3">
+                <label for="clienteId" class="form-label">Cliente</label>
+                <select id="clienteId" name="clienteId" class="form-select"
+                        required th:disabled="${bloqueado}">
+                    <option value="">Selecione um cliente...</option>
+                    <option th:each="c : ${clientes}"
+                            th:value="${c.id}"
+                            th:text="${c.nome} + ' — ' + ${c.email}"
+                            th:selected="${c.id == agendamento.clienteId}"></option>
+                </select>
+            </div>
+
+            <!-- Profissional -->
+            <div class="mb-3">
+                <label for="profissionalId" class="form-label">Profissional</label>
+                <select id="profissionalId" name="profissionalId" class="form-select"
+                        required th:disabled="${bloqueado}">
+                    <option value="">Selecione um profissional...</option>
+                    <option th:each="p : ${profissionais}"
+                            th:value="${p.id}"
+                            th:text="${p.nome} + ' — ' + ${p.especialidade}"
+                            th:selected="${p.id == agendamento.profissionalId}"></option>
+                </select>
+            </div>
+
+            <!-- Serviço -->
+            <div class="mb-3">
+                <label for="servicoId" class="form-label">Serviço</label>
+                <select id="servicoId" name="servicoId" class="form-select"
+                        required th:disabled="${bloqueado}"
+                        onchange="atualizarInfoServico(this)">
+                    <option value="">Selecione um serviço...</option>
+                    <option th:each="s : ${servicos}"
+                            th:value="${s.id}"
+                            th:text="${s.nome}"
+                            th:attr="data-preco=${s.preco}, data-duracao=${s.duracaoMinutos}"
+                            th:selected="${s.id == agendamento.servicoId}"></option>
+                </select>
+                <div id="infoServico" class="mt-2 d-none">
+                    <span class="badge bg-light text-dark border me-2">
+                        <i class="bi bi-clock me-1"></i><span id="duracaoServico"></span> min
+                    </span>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-tag me-1"></i>R$ <span id="precoServico"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Data e Hora -->
+            <div class="mb-3">
+                <label for="dataHora" class="form-label">Data e Hora</label>
+                <input type="datetime-local" id="dataHora" name="dataHora"
+                       class="form-control" required
+                       th:disabled="${bloqueado}"
+                       th:value="${agendamento.dataHora != null}
+                                  ? ${#temporals.format(agendamento.dataHora, 'yyyy-MM-dd''T''HH:mm')}
+                                  : ''">
+            </div>
+
+            <!-- Status -->
+            <div class="mb-4">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" name="status" class="form-select"
+                        th:disabled="${bloqueado}">
+                    <option th:each="s : ${statusList}"
+                            th:value="${s}"
+                            th:text="${s}"
+                            th:selected="${s == agendamento.status}"></option>
+                </select>
+                <div class="form-text">
+                    Fluxo: AGENDADO → CONFIRMADO → CONCLUIDO. Cancelado é estado final.
+                </div>
+            </div>
+
+            <!--
+                Campos ocultos para enviar os valores quando o formulário está disabled.
+                Selects e inputs com th:disabled não enviam valor no POST.
+            -->
+            <th:block th:if="${bloqueado}">
+                <input type="hidden" name="clienteId"     th:value="${agendamento.clienteId}">
+                <input type="hidden" name="profissionalId" th:value="${agendamento.profissionalId}">
+                <input type="hidden" name="servicoId"     th:value="${agendamento.servicoId}">
+                <input type="hidden" name="dataHora"
+                       th:value="${agendamento.dataHora != null}
+                                  ? ${#temporals.format(agendamento.dataHora, 'yyyy-MM-dd''T''HH:mm')}
+                                  : ''">
+                <input type="hidden" name="status"        th:value="${agendamento.status}">
+            </th:block>
+
+            <!-- Rodapé -->
+            <div class="d-flex gap-2">
+                <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Voltar
+                </a>
+                <button type="submit" class="btn btn-primary"
+                        th:disabled="${bloqueado}"
+                        th:classappend="${bloqueado} ? ' disabled'">
+                    <i class="bi bi-floppy-fill me-1"></i>Salvar Alterações
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+    function atualizarInfoServico(select) {
+        const opt = select.options[select.selectedIndex];
+        const info = document.getElementById('infoServico');
+        if (opt.value) {
+            document.getElementById('duracaoServico').textContent = opt.getAttribute('data-duracao');
+            document.getElementById('precoServico').textContent = parseFloat(opt.getAttribute('data-preco')).toFixed(2).replace('.', ',');
+            info.classList.remove('d-none');
+        } else {
+            info.classList.add('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const sel = document.getElementById('servicoId');
+        if (sel && sel.value) atualizarInfoServico(sel);
+    });
+</script>
+</body>
+</html>

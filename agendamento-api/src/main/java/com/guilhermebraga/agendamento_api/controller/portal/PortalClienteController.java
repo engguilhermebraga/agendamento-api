@@ -147,15 +147,16 @@ public class PortalClienteController {
         Cliente cliente = (Cliente) session.getAttribute("clienteLogado");
         try {
             LocalDateTime dataHora = LocalDateTime.of(wizard.getData(), wizard.getHora());
-            agendamentoService.criarPeloPortal(
+            var agendamentoCriado = agendamentoService.criarPeloPortal(
                     cliente.getId(),
                     wizard.getProfissionalId(),
                     wizard.getServicoId(),
                     dataHora
             );
-            log.info("Agendamento criado via wizard — cliente={}, profissional={}, dataHora={}",
-                    cliente.getId(), wizard.getProfissionalId(), dataHora);
+            log.info("Agendamento criado via wizard — id={}, cliente={}, profissional={}, dataHora={}",
+                    agendamentoCriado.getId(), cliente.getId(), wizard.getProfissionalId(), dataHora);
 
+            model.addAttribute("agendamentoId", agendamentoCriado.getId());
             model.addAttribute("titulo", "Agendamento Confirmado!");
             model.addAttribute("menuAtivo", "agendar");
             model.addAttribute("wizardFinalizado", wizard);

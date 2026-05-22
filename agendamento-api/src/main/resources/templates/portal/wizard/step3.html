@@ -3,57 +3,106 @@
 <body>
 <section>
 
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <h2>Passo 3 de 3 — Confirmar Agendamento</h2>
-            <span style="background:#28a745; color:#fff; padding:4px 12px; border-radius:14px; font-size:0.8rem;">
-                Etapa 3/3
-            </span>
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
         </div>
-        <p style="color:#666; margin-bottom:18px;">Revise os dados e clique em <strong>Confirmar</strong> para finalizar.</p>
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Data e Hora</div>
+        </div>
+        <div class="step active">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+            <div>Confirmar</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Concluído</div>
+        </div>
+    </div>
 
-        <div style="background:#f7f8fc; border-radius:10px; padding:18px; margin-bottom:18px;">
+    <div class="card p-4">
+        <h4 class="mb-1">Confirmar Agendamento</h4>
+        <p class="text-muted small mb-4">Revise os dados antes de confirmar. Após a confirmação o agendamento será criado.</p>
 
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
-                <span style="color:#666; font-weight:500;">Serviço</span>
-                <span th:text="${wizard.servicoNome}"></span>
+        <!-- Resumo -->
+        <div class="mb-4" style="background:var(--clr-bg); border-radius:var(--rad-lg); overflow:hidden;">
+
+            <div class="summary-item px-3">
+                <span class="summary-label">
+                    <i class="bi bi-scissors me-2 text-muted"></i>Serviço
+                </span>
+                <span class="summary-value" th:text="${wizard.servicoNome}">—</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
-                <span style="color:#666; font-weight:500;">Duração</span>
-                <span th:text="${wizard.servicoDuracaoMinutos} + ' minutos'"></span>
+            <div class="summary-item px-3">
+                <span class="summary-label">
+                    <i class="bi bi-clock me-2 text-muted"></i>Duração
+                </span>
+                <span class="summary-value"
+                      th:text="${wizard.servicoDuracaoMinutos} + ' minutos'">—</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
-                <span style="color:#666; font-weight:500;">Valor</span>
-                <span style="color:#28a745; font-weight:600;"
-                      th:text="'R$ ' + ${#numbers.formatDecimal(wizard.servicoPreco, 1, 'COMMA', 2, 'POINT')}"></span>
+            <div class="summary-item px-3">
+                <span class="summary-label">
+                    <i class="bi bi-tag me-2 text-muted"></i>Valor
+                </span>
+                <span class="summary-value fw-semibold"
+                      style="color:var(--clr-success);"
+                      th:text="'R$ ' + ${#numbers.formatDecimal(wizard.servicoPreco, 1, 'POINT', 2, 'COMMA')}">—</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
-                <span style="color:#666; font-weight:500;">Profissional</span>
-                <span>
-                    <span th:text="${wizard.profissionalNome}"></span>
-                    <small style="color:#999;" th:text="'(' + ${wizard.profissionalEspecialidade} + ')'"></small>
+            <div class="summary-item px-3">
+                <span class="summary-label">
+                    <i class="bi bi-person-badge me-2 text-muted"></i>Profissional
+                </span>
+                <span class="summary-value">
+                    <span th:text="${wizard.profissionalNome}">—</span>
+                    <small class="text-muted ms-1"
+                           th:text="'(' + ${wizard.profissionalEspecialidade} + ')'"></small>
                 </span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e6e8ee;">
-                <span style="color:#666; font-weight:500;">Data</span>
-                <span th:text="${#temporals.format(wizard.data, 'dd/MM/yyyy')}"></span>
+            <div class="summary-item px-3">
+                <span class="summary-label">
+                    <i class="bi bi-calendar3 me-2 text-muted"></i>Data
+                </span>
+                <span class="summary-value"
+                      th:text="${#temporals.format(wizard.data, 'dd/MM/yyyy (EEEE)', new java.util.Locale('pt','BR'))}">—</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; padding:10px 0;">
-                <span style="color:#666; font-weight:500;">Horário</span>
-                <span th:text="${#temporals.format(wizard.hora, 'HH:mm')}"></span>
+            <div class="summary-item px-3" style="border-bottom:none;">
+                <span class="summary-label">
+                    <i class="bi bi-clock-history me-2 text-muted"></i>Horário
+                </span>
+                <span class="summary-value fw-semibold"
+                      th:text="${#temporals.format(wizard.hora, 'HH:mm')}">—</span>
             </div>
 
         </div>
 
+        <!-- Aviso -->
+        <div class="alert alert-info d-flex gap-2 py-2 mb-4">
+            <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+            <span class="small">
+                Ao confirmar, o agendamento será criado com status <strong>AGENDADO</strong>.
+                Você pode acompanhá-lo em <em>Meus Agendamentos</em>.
+            </span>
+        </div>
+
         <form method="post" th:action="@{/portal/step4}">
-            <div style="display:flex; justify-content:space-between; gap:10px;">
-                <a th:href="@{/portal/step1}" class="btn btn-secondary">&larr; Recomeçar</a>
-                <button type="submit" class="btn btn-success">Confirmar Agendamento &check;</button>
+            <div class="d-flex justify-content-between">
+                <a th:href="@{/portal/step1}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Recomeçar
+                </a>
+                <button type="submit" class="btn btn-portal px-4">
+                    <i class="bi bi-calendar-check me-1"></i>Confirmar Agendamento
+                </button>
             </div>
         </form>
     </div>

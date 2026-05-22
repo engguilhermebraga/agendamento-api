@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -63,6 +65,24 @@ public class DashboardWebController {
                 .map(AgendamentoResponse::getClienteId)
                 .collect(Collectors.toSet());
 
+        // Distribuição por status — mapa ordenado com todos os status
+        Map<String, Long> porStatus = new LinkedHashMap<>();
+        for (StatusAgendamento s : StatusAgendamento.values()) {
+            porStatus.put(s.name(), 0L);
+        }
+        todos.stream()
+                .collect(Collectors.groupingBy(a -> a.getStatus().name(), Collectors.counting()))
+                .forEach(porStatus::put);
+
+        // Próximos 3 agendamentos futuros (AGENDADO ou CONFIRMADO), em ordem cronológica
+        List<AgendamentoResponse> proximosAgendamentos = todos.stream()
+                .filter(a -> a.getStatus() == StatusAgendamento.AGENDADO
+                          || a.getStatus() == StatusAgendamento.CONFIRMADO)
+                .filter(a -> !a.getDataHora().isBefore(inicioHoje))
+                .sorted((a, b) -> a.getDataHora().compareTo(b.getDataHora()))
+                .limit(3)
+                .toList();
+
         model.addAttribute("titulo",               "Dashboard");
         model.addAttribute("totalAgendamentos",    todos.size());
         model.addAttribute("agendamentosHoje",     agendamentosHoje);
@@ -71,6 +91,8 @@ public class DashboardWebController {
         model.addAttribute("totalClientes",        clienteService.listarTodos().size());
         model.addAttribute("totalProfissionais",   profissionalService.listarTodos().size());
         model.addAttribute("totalServicos",        servicoService.listarTodos().size());
+        model.addAttribute("porStatus",            porStatus);
+        model.addAttribute("proximosAgendamentos", proximosAgendamentos);
 
         return "dashboard/index";
     }
