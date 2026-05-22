@@ -267,6 +267,7 @@ main { flex: 1; }
 .badge-cancelado  { background-color: #f8d7da; color: #58151c; }  /* vermelho */
 
 
+
 /* ── 11. PAGE HEADER ─────────────────────────────────────────── */
 .page-header {
   margin-bottom: var(--sp-lg);
