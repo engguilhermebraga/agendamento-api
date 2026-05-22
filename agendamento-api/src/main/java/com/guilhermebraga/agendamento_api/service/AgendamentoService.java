@@ -258,6 +258,22 @@ public class AgendamentoService {
     }
 
     // ----------------------------------------------------------------
+    // EXCLUSÃO FÍSICA
+    // ----------------------------------------------------------------
+
+    /**
+     * Remove permanentemente um agendamento do banco de dados.
+     * Diferente de cancelar(), esta operação é irreversível.
+     */
+    @Transactional
+    public void deletar(Long id) {
+        log.info("Deletando agendamento permanentemente: id={}", id);
+        Agendamento agendamento = buscarOuLancarExcecao(id);
+        agendamentoRepository.delete(agendamento);
+        log.info("Agendamento id={} removido com sucesso", id);
+    }
+
+    // ----------------------------------------------------------------
     // PORTAL — HORÁRIOS DISPONÍVEIS
     // ----------------------------------------------------------------
 

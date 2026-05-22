@@ -572,6 +572,322 @@ Decisão 5 — MapStruct para mapeamento
   MapStruct gera o código de conversão entidade↔DTO em tempo de compilação,
   eliminando reflexão e garantindo segurança de tipos no mapeamento.
 
+Decisão 6 — POST para deletar/cancelar (não GET)
+  Operações destrutivas (cancelar, deletar) usam POST via formulário HTML,
+  nunca GET. GET é idempotente e pode ser disparado por crawlers, pré-fetch
+  de browser ou link compartilhado — usar GET para deletar seria uma
+  vulnerabilidade CSRF clássica (OWASP A01).
+
+Decisão 7 — Confirmação via modal antes de ações destrutivas
+  O modal de confirmação antes de deletar ou cancelar segue o princípio de
+  UX de "ação de alto custo requer confirmação explícita". Isso reduz erros
+  acidentais e é padrão em sistemas enterprise como GitHub, Jira, Notion.
+
+Decisão 8 — Chart.js via CDN no dashboard
+  Chart.js foi incluído via CDN (não como dependência Maven/npm) para manter
+  o projeto com zero dependências de ferramentas de build frontend (webpack,
+  vite). O trade-off é dependência de rede, aceitável para um painel admin
+  interno. Os dados do gráfico são injetados pelo Thymeleaf em atributos
+  data-* de um elemento hidden, evitando interpolação de string em JS.
+
+Decisão 9 — Páginas de erro customizadas (404/500/403)
+  Spring Boot resolve automaticamente templates em /templates/error/{código}.html
+  via BasicErrorController. Isso elimina a Whitelabel Error Page padrão e
+  mantém a identidade visual do sistema mesmo em situações de erro,
+  melhorando a experiência do usuário.
+
+Decisão 10 — Portal sem autenticação por senha
+  A identificação do cliente no portal é feita apenas por e-mail (sem senha),
+  conforme escopo do TCC. Isso simplifica a experiência do cliente que
+  "chega para o agendamento" sem precisar criar conta. Em produção real,
+  a segurança pode ser reforçada com magic link (link de acesso por email),
+  OTP SMS ou integração com OAuth2/Google.
+
+================================================================================
+4.9 BRIEFING DE DEFESA — PERGUNTAS PROVÁVEIS DA BANCA
+================================================================================
+
+Esta seção prepara respostas para os questionamentos mais prováveis em
+uma defesa de TCC de Engenharia de Software / Sistemas de Informação.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO A — ARQUITETURA E PADRÕES
+────────────────────────────────────────────────────────────────────────────────
+
+P: Por que você escolheu o padrão MVC em vez de uma arquitetura de microsserviços?
+R: O escopo do TCC é um sistema único de agendamento para uma empresa de pequeno porte.
+   Microsserviços introduzem complexidade operacional (orquestração, service discovery,
+   latência de rede entre serviços) que não se justifica para um domínio com 4 entidades.
+   MVC com Spring Boot entrega o produto funcional com muito menor overhead de
+   infraestrutura. A API REST coexiste no mesmo processo, permitindo evolução futura
+   para microsserviços sem reescrever a lógica de negócio.
+
+P: Qual a diferença entre a camada Controller, Service e Repository no seu projeto?
+R: Controller: recebe a requisição HTTP, valida entrada, delega para Service, formata
+   resposta (View ou JSON). Não contém lógica de negócio.
+   Service: contém as regras de negócio (validação de conflito de horário, transições
+   de status, cálculo de dataHoraFim). Anotado com @Transactional para garantir
+   atomicidade das operações que envolvem múltiplos repositórios.
+   Repository: interface Spring Data JPA que gera as queries SQL. A lógica de acesso
+   a dados fica isolada aqui, facilitando troca de banco de dados.
+
+P: O que é DTO e por que você não retorna a entidade diretamente?
+R: DTO (Data Transfer Object) é um objeto sem comportamento que carrega apenas os dados
+   necessários para a operação. Retornar a entidade JPA diretamente expõe a estrutura
+   interna do banco, pode gerar lazy loading infinito em relacionamentos bidirecionais
+   (StackOverflowError na serialização JSON), e acopla o cliente da API ao schema
+   interno. Com MapStruct, a conversão é segura e eficiente.
+
+P: O que é o padrão Repository e qual a vantagem de usar Spring Data JPA?
+R: Repository é um padrão de design que abstrai o acesso a dados como se fosse uma
+   coleção em memória. Spring Data JPA implementa automaticamente as operações CRUD
+   a partir da interface JpaRepository, gerando o SQL em tempo de execução via
+   reflection + proxy dinâmico. Isso elimina DAO boilerplate e permite queries
+   derivadas do nome do método (findByEmail, existsByProfissionalIdAndDataHoraBetween).
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO B — SPRING BOOT E FRAMEWORK
+────────────────────────────────────────────────────────────────────────────────
+
+P: O que é Spring Boot e qual a diferença para o Spring Framework tradicional?
+R: Spring Framework é um container de injeção de dependência e conjunto de módulos
+   para aplicações Java EE. Spring Boot é uma camada sobre o Spring que aplica
+   "convenção sobre configuração": auto-configura beans baseado nas dependências
+   no classpath (se H2 está no classpath, configura DataSource H2 automaticamente),
+   provê um servidor embutido (Tomcat), e elimina XML de configuração. O resultado é
+   uma aplicação executável com java -jar sem servidor de aplicação externo.
+
+P: O que é injeção de dependência e como você usou no projeto?
+R: Injeção de Dependência (DI) é um padrão onde o container (Spring) cria e injeta
+   as dependências em vez de o próprio objeto criá-las com new. No projeto, usamos
+   @RequiredArgsConstructor do Lombok nos controllers e services: Lombok gera um
+   construtor com todos os campos final, e Spring detecta esse construtor único e
+   injeta as dependências automaticamente. Isso desacopla as classes e facilita testes
+   unitários (basta passar mocks pelo construtor).
+
+P: O que é @Transactional e por que é importante?
+R: @Transactional marca um método como uma unidade atômica de trabalho no banco de dados.
+   Se o método lança uma RuntimeException, o Spring faz rollback automático de todas as
+   operações de banco daquela execução. No AgendamentoService.criar(), verificamos
+   conflito de horário e persistimos o agendamento na mesma transação — sem @Transactional,
+   uma condição de corrida poderia criar dois agendamentos sobrepostos em requisições
+   simultâneas.
+
+P: O que é @SessionAttributes e por que usou no wizard?
+R: @SessionAttributes("wizard") instrui o Spring MVC a persistir o WizardForm na sessão
+   HTTP entre múltiplos POST requests. Sem isso, o objeto seria criado do zero a cada
+   request e os dados das etapas anteriores seriam perdidos. A alternativa (hidden inputs
+   em todos os formulários) expõe dados sensíveis no HTML e é frágil. SessionStatus.
+   setComplete() ao final limpa o objeto da sessão, liberando memória do servidor.
+
+P: Para que serve o Lombok no projeto?
+R: Lombok é um processador de anotações que gera código boilerplate em tempo de
+   compilação. @Data gera getters, setters, equals, hashCode e toString. @Builder
+   gera o padrão Builder para construção fluente de objetos. @RequiredArgsConstructor
+   gera construtor com campos final para injeção de dependência. @Slf4j injeta um
+   logger. Sem Lombok, cada entidade/DTO teria dezenas de linhas repetitivas.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO C — BANCO DE DADOS E PERSISTÊNCIA
+────────────────────────────────────────────────────────────────────────────────
+
+P: Por que você usa H2 em desenvolvimento e PostgreSQL em produção?
+R: H2 é um banco relacional escrito em Java que roda em memória — inicia em milissegundos,
+   não requer instalação, e é descartado ao encerrar a aplicação. Perfeito para
+   desenvolvimento e testes. PostgreSQL é o banco de produção escolhido por ser open
+   source, robusto para cargas reais, e nativamente suportado por plataformas de deploy
+   como Railway, Heroku, e AWS RDS. A troca entre os dois exige apenas alterar
+   spring.datasource.url e o driver no application.properties.
+
+P: Como você preveniu conflito de horário (dois agendamentos no mesmo profissional/hora)?
+R: No AgendamentoRepository há uma query JPQL que conta agendamentos do profissional
+   cujo intervalo [dataHora, dataHoraFim) se sobrepõe ao intervalo solicitado.
+   Dois intervalos [A,B) e [C,D) se sobrepõem quando A < D && C < B.
+   O campo dataHoraFim é calculado e persistido (dataHora + duracaoMinutos) para
+   que a query rode com índice no banco. Se a contagem > 0, o AgendamentoService
+   lança uma BusinessException que o Controller captura e exibe como mensagem de erro.
+
+P: O que é JPA e qual a diferença para JDBC?
+R: JDBC é a API Java de baixo nível para executar SQL diretamente. JPA (Jakarta
+   Persistence API) é uma especificação de ORM (Object-Relational Mapping) que mapeia
+   objetos Java a tabelas relacionais via anotações (@Entity, @Column, @ManyToOne).
+   Hibernate é a implementação JPA utilizada. O ganho é produtividade (não escreve SQL
+   para CRUD básico) e portabilidade (muda o banco sem mudar código Java). O custo
+   é o risco de N+1 queries em relacionamentos (mitigado com @EntityGraph ou JOIN FETCH).
+
+P: O que é Spring Data JPA e como funciona o método existsByProfissionalIdAnd...?
+R: Spring Data JPA analisa o nome do método em tempo de boot e gera automaticamente
+   a query JPQL correspondente. existsByProfissionalIdAndDataHoraBetween gera
+   "SELECT COUNT(*) > 0 FROM Agendamento WHERE profissional_id = ? AND data_hora BETWEEN ? AND ?".
+   Métodos mais complexos usam @Query com JPQL ou SQL nativo.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO D — SEGURANÇA
+────────────────────────────────────────────────────────────────────────────────
+
+P: Como você implementou a segurança do painel administrativo?
+R: O painel admin é protegido pelo Spring Security com autenticação em memória
+   (InMemoryUserDetailsManager) e formLogin. A SecurityFilterChain define que
+   /web/**, /dashboard/** requerem ROLE_ADMIN, enquanto /portal/** e /api/** têm
+   regras específicas. O Spring Security intercepta cada request antes do Controller
+   e redireciona para /login se não autenticado.
+
+P: O portal do cliente não tem senha — isso não é uma vulnerabilidade?
+R: Para o escopo do TCC é aceitável. A identificação por e-mail é suficiente para
+   um sistema de agendamento onde o dado mais sensível é a agenda pessoal. Em produção
+   real, o recomendado seria magic link (token de uso único enviado por email, validade
+   de 15 minutos), eliminando a necessidade de senha sem comprometer a segurança.
+   O protocolo HTTPS (TLS) é obrigatório nesse cenário para evitar interceptação
+   do e-mail em trânsito.
+
+P: O que é CSRF e como o Spring Security protege contra isso?
+R: CSRF (Cross-Site Request Forgery) é um ataque onde um site malicioso faz uma
+   requisição autenticada em nome do usuário sem seu conhecimento (ex: link que
+   deleta sua conta ao clicar). Spring Security habilita proteção CSRF por padrão
+   para formulários: injeta um token único (_csrf) no formulário e valida no servidor.
+   Operações destrutivas como deletar agendamento usam POST (não GET) exatamente
+   para que o CSRF token seja validado.
+
+P: O que é Bean Validation e onde você usou?
+R: Bean Validation (Jakarta Validation) define anotações como @NotBlank, @Email,
+   @Size, @Pattern para validar objetos Java. No projeto, os DTOs de request
+   (AgendamentoRequest, ClienteRequest) têm essas anotações. O Controller usa
+   @Valid para acionar a validação e BindingResult para capturar os erros.
+   O Thymeleaf exibe os erros com th:errors="*{campo}". Isso garante validação
+   no servidor independente de qualquer JavaScript no cliente.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO E — FRONTEND / THYMELEAF
+────────────────────────────────────────────────────────────────────────────────
+
+P: Por que Thymeleaf e não React/Angular/Vue?
+R: Para um TCC com foco em backend Java, Thymeleaf permite entregar uma interface
+   funcional completa sem adicionar um segundo projeto frontend com toolchain Node.js.
+   Thymeleaf é processado no servidor, gera HTML completo, é facilmente testável com
+   MockMvc, e não requer API separada para o painel admin. A API REST coexiste para
+   futuras integrações mobile.
+
+P: Como funciona o sistema de layouts/fragmentos no Thymeleaf?
+R: O padrão de fragmento parametrizado permite um layout base que define a estrutura
+   da página (navbar, sidebar, scripts) e aceita um fragmento de conteúdo como parâmetro:
+   th:replace="~{layout/base :: html(~{:: conteudo})}". O fragment "conteudo" é definido
+   na página específica. Isso equivale ao slot/yield de outros frameworks de template e
+   evita duplicação de HTML estrutural em cada página.
+
+P: O que é o Bootstrap e por que você o usou?
+R: Bootstrap é um framework CSS que provê componentes visuais (cards, botões, modais,
+   tabelas, formulários, grid) prontos e responsivos. Usar Bootstrap acelera o
+   desenvolvimento de interface sem precisar escrever CSS do zero, garante consistência
+   visual e responsividade mobile automática. O grid system (col-sm-6 col-lg-3) adapta
+   os cards do dashboard para qualquer tamanho de tela.
+
+P: Como o wizard de agendamento funciona tecnicamente?
+R: O wizard tem 4 etapas em 4 URLs distintas (/portal/step1 a step4). Um objeto
+   WizardForm é criado e mantido na sessão HTTP via @SessionAttributes("wizard").
+   Cada POST salva os dados daquela etapa no WizardForm (setServicoId, setProfissionalId,
+   etc.) e renderiza a próxima etapa. No step4, AgendamentoService.criarPeloPortal()
+   usa todos os dados acumulados para criar o agendamento. SessionStatus.setComplete()
+   descarta o objeto da sessão após a conclusão.
+
+P: Por que os time slots do step2 são gerados em JavaScript e não no servidor?
+R: Gerar slots no servidor obrigaria o Controller a conhecer a regra de negócio
+   de horários disponíveis (início 08:00, fim 17:30, intervalo 30min). Como essa regra
+   é puramente de UX — a validação real de conflito ocorre no servidor ao salvar —
+   é mais coeso manter essa lógica no JavaScript do formulário. Isso também evita
+   um round-trip ao servidor apenas para montar a grade de horários.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO F — API REST
+────────────────────────────────────────────────────────────────────────────────
+
+P: Qual a diferença entre PUT e PATCH na sua API?
+R: PUT (idempotente) substitui o recurso completo — todos os campos devem ser enviados.
+   PATCH atualiza parcialmente — apenas os campos enviados são alterados. Na API do
+   projeto, /agendamentos/{id}/status usa PATCH porque altera apenas o campo status,
+   sem precisar reenviar cliente, profissional, serviço e dataHora. PUT é usado em
+   /agendamentos/{id} para atualização completa do agendamento.
+
+P: O que é RESTful? Seu sistema é verdadeiramente RESTful?
+R: REST (Representational State Transfer) define 6 constraints: interface uniforme,
+   stateless, cacheable, client-server, layered system, code on demand (opcional).
+   A constraint mais importante é stateless: cada request deve conter todas as
+   informações necessárias para ser processado. A API REST do projeto segue REST
+   para os endpoints de dados. O painel admin com sessão de login não é stateless,
+   mas isso é intencional — é uma aplicação web tradicional, não uma API.
+
+P: Como você documentou a API?
+R: A API é documentada com SpringDoc OpenAPI (springdoc-openapi-starter-webmvc-ui),
+   que gera automaticamente a interface Swagger UI em /swagger-ui.html e o arquivo
+   de especificação OpenAPI 3.0 em /v3/api-docs. As anotações @Operation, @ApiResponse
+   e @Schema nos controllers e DTOs enriquecem a documentação com descrições e exemplos.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO G — QUALIDADE E BOAS PRÁTICAS
+────────────────────────────────────────────────────────────────────────────────
+
+P: Você fez testes automatizados?
+R: O projeto tem estrutura para testes unitários com JUnit 5 e Mockito. Os services
+   podem ser testados unitariamente com mock dos repositórios (verificando que a lógica
+   de conflito é aplicada corretamente). Para um TCC, o foco foi garantir cobertura
+   dos cenários de negócio críticos (criação de agendamento, conflito de horário,
+   transições de status) via testes de integração com MockMvc e H2 em memória.
+
+P: O que é Clean Code e como você aplicou?
+R: Clean Code (Robert C. Martin) são práticas para escrever código legível e
+   manutenível: nomes descritivos (agendamentoService.criarPeloPortal vs. create2),
+   métodos com responsabilidade única (buscarOuLancarExcecao encapsula o Optional.
+   orElseThrow), ausência de comentários redundantes (código autoexplicativo),
+   e separação de camadas (Controller não acessa Repository diretamente).
+
+P: O que é o princípio SOLID e onde você aplicou?
+R: S (Single Responsibility): cada Controller cuida de um recurso (ClienteWebController,
+   AgendamentoWebController). O (Open/Closed): novas regras de validação são adicionadas
+   no Service sem modificar o Controller. L (Liskov): não aplicável (sem herança
+   significativa). I (Interface Segregation): interfaces de repositório com métodos
+   específicos. D (Dependency Inversion): Controllers dependem da abstração Service,
+   não da implementação concreta do banco.
+
+P: O que acontece se dois usuários agendarem o mesmo horário ao mesmo tempo?
+R: A query de conflito é executada dentro de uma transação @Transactional. O banco de
+   dados garante isolamento de transações (nível READ_COMMITTED por padrão no PostgreSQL):
+   se dois requests chegam simultaneamente, um aguarda o lock liberado pelo outro.
+   O primeiro que confirmar não verá conflito e salvará; o segundo executará a query
+   de conflito após o commit do primeiro e verá o agendamento existente, retornando
+   BusinessException. Em carga muito alta, um índice UNIQUE parcial no banco seria a
+   garantia definitiva.
+
+────────────────────────────────────────────────────────────────────────────────
+BLOCO H — PERGUNTAS SOBRE O TRABALHO EM SI
+────────────────────────────────────────────────────────────────────────────────
+
+P: Qual foi o maior desafio técnico do projeto?
+R: A implementação do wizard multi-etapa com @SessionAttributes foi o ponto de maior
+   atenção técnica. Garantir que o WizardForm sobrevivesse entre POSTs, que a sessão
+   fosse limpa após conclusão ou expiração, e que o usuário não ficasse preso em estado
+   inconsistente (ex: sessão expirada no meio do wizard) exigiu tratamento cuidadoso
+   com verificações em cada step e redirecionamento para step1 com mensagem de erro.
+
+P: O que você faria diferente se refizesse o projeto?
+R: Adicionaria autenticação JWT completa para o portal do cliente (magic link por email),
+   implementaria testes de integração com @SpringBootTest para todos os fluxos críticos,
+   e adicionaria cache (Spring Cache + Redis) na listagem de serviços e profissionais,
+   que raramente mudam mas são consultados em cada início de wizard.
+
+P: Como o sistema escalaria para múltiplas empresas (multi-tenant)?
+R: Adicionaria um campo empresa_id em todas as tabelas e um discriminador na sessão.
+   Spring Security filtraria os dados por empresa automaticamente via um filtro global.
+   Essa arquitetura é chamada de Row-Level Security (RLS) e é suportada nativamente
+   pelo PostgreSQL, podendo ser implementada com Spring Data JPA Specifications.
+
+P: Quais melhorias você recomendaria para uma versão de produção?
+R: 1) Autenticação robusta: JWT + refresh token ou Spring Security OAuth2 com Google.
+   2) Notificações: email de confirmação (Spring Mail + Thymeleaf template) e SMS via API.
+   3) Testes: cobertura >80% com JUnit 5 + Mockito + @SpringBootTest.
+   4) CI/CD: GitHub Actions com build Maven + deploy automático no Railway/AWS.
+   5) Monitoramento: Spring Actuator + Micrometer + Prometheus + Grafana.
+   6) Cache: Spring Cache (@Cacheable) em listar servicos/profissionais.
+   7) Paginação: Spring Data Pageable nos endpoints de listagem.
+
 ================================================================================
 FIM DO DOCUMENTO
 Para renderizar os diagramas PlantUML: https://plantuml.com/plantuml

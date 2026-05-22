@@ -185,6 +185,17 @@ public class AgendamentoWebController {
         return "redirect:/web/agendamentos/listar";
     }
 
+    @PostMapping("/deletar/{id}")
+    public String deletar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            agendamentoService.deletar(id);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Agendamento removido com sucesso!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagemErro", e.getMessage());
+        }
+        return "redirect:/web/agendamentos/listar";
+    }
+
     private void popularSelects(Model model) {
         model.addAttribute("clientes", clienteService.listarTodos());
         model.addAttribute("profissionais", profissionalService.listarTodos());

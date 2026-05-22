@@ -60,7 +60,7 @@
                     <th>Serviço</th>
                     <th class="text-nowrap">Data/Hora</th>
                     <th>Status</th>
-                    <th class="text-center" style="width:110px;">Ações</th>
+                    <th class="text-center" style="width:130px;">Ações</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -99,6 +99,19 @@
                                              data-status=${a.status.name()},
                                              data-cliente=${a.clienteNome}">
                                 <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                            <!-- Deletar -->
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm"
+                                    title="Deletar agendamento"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalDeletar"
+                                    th:attr="data-id=${a.id},
+                                             data-cliente=${a.clienteNome},
+                                             data-servico=${a.servicoNome},
+                                             data-datahora=${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')},
+                                             data-status=${a.status.name()}">
+                                <i class="bi bi-trash"></i>
                             </button>
                         </div>
                     </td>
@@ -175,6 +188,61 @@
         </div>
     </div>
 
+    <!-- ── Modal: Deletar Agendamento ───────────────────────────── -->
+    <div class="modal fade" id="modalDeletar" tabindex="-1"
+         aria-labelledby="modalDeletarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <form id="formDeletar" method="post">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title" id="modalDeletarLabel">
+                            <i class="bi bi-trash me-2 text-danger"></i>Deletar Agendamento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <!-- Dados do agendamento -->
+                        <div class="mb-3 p-3 rounded"
+                             style="background:var(--bs-light, #f8f9fa); border:1px solid var(--bs-border-color, #dee2e6);">
+                            <div class="row g-2 small">
+                                <div class="col-5 text-muted">Cliente</div>
+                                <div class="col-7 fw-semibold" id="deletarClienteNome">—</div>
+                                <div class="col-5 text-muted">Serviço</div>
+                                <div class="col-7" id="deletarServico">—</div>
+                                <div class="col-5 text-muted">Data/Hora</div>
+                                <div class="col-7" id="deletarDataHora">—</div>
+                                <div class="col-5 text-muted">Status</div>
+                                <div class="col-7"><span id="deletarStatusBadge"></span></div>
+                            </div>
+                        </div>
+
+                        <!-- Aviso irreversível -->
+                        <div class="alert alert-danger d-flex gap-2 py-2 mb-0">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1 text-danger"></i>
+                            <div class="small">
+                                <strong>Tem certeza?</strong> Essa ação é <strong>irreversível</strong>.
+                                O registro será permanentemente removido do sistema.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Deletar
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -203,15 +271,12 @@
         const status   = btn.getAttribute('data-status');
         const cliente  = btn.getAttribute('data-cliente');
 
-        /* Preenche cabeçalho */
         document.getElementById('modalClienteNome').textContent = cliente;
         document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
 
-        /* Badge do status atual */
         const badgeEl = document.getElementById('modalStatusAtualBadge');
         badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
 
-        /* Opções do select */
         const select = document.getElementById('novoStatusSelect');
         select.innerHTML = '<option value="">— Selecione —</option>';
         const opcoes = transicoes[status] || [];
@@ -222,12 +287,29 @@
             select.appendChild(opt);
         });
 
-        /* Aviso de cancelamento */
         document.getElementById('cancelarAviso').classList.add('d-none');
         select.addEventListener('change', function () {
             document.getElementById('cancelarAviso')
                 .classList.toggle('d-none', this.value !== 'CANCELADO');
         });
+    });
+
+    document.getElementById('modalDeletar').addEventListener('show.bs.modal', function (event) {
+        const btn      = event.relatedTarget;
+        const id       = btn.getAttribute('data-id');
+        const cliente  = btn.getAttribute('data-cliente');
+        const servico  = btn.getAttribute('data-servico');
+        const dataHora = btn.getAttribute('data-datahora');
+        const status   = btn.getAttribute('data-status');
+
+        document.getElementById('formDeletar').action = '/web/agendamentos/deletar/' + id;
+        document.getElementById('deletarClienteNome').textContent = cliente;
+        document.getElementById('deletarServico').textContent     = servico;
+        document.getElementById('deletarDataHora').textContent    = dataHora;
+
+        const badgeEl = document.getElementById('deletarStatusBadge');
+        badgeEl.className = 'badge badge-status ' + (badgeClasses[status] || '');
+        badgeEl.textContent = status;
     });
 </script>
 </body>
