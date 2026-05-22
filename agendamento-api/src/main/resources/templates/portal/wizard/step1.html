@@ -3,34 +3,109 @@
 <body>
 <section>
 
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <h2>Passo 1 de 3 — Selecione o Serviço</h2>
-            <span style="background:#667eea; color:#fff; padding:4px 12px; border-radius:14px; font-size:0.8rem;">
-                Etapa 1/3
-            </span>
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step active">
+            <div class="step-number">1</div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
         </div>
-        <p style="color:#666; margin-bottom:18px;">Escolha o serviço que deseja agendar.</p>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-line"></div>
+            <div>Data e Hora</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+            <div>Confirmar</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Concluído</div>
+        </div>
+    </div>
 
-        <form method="post" th:action="@{/portal/step2}">
-            <div class="form-group">
-                <label for="servicoId">Serviço</label>
-                <select id="servicoId" name="servicoId" class="form-control" required>
-                    <option value="">— Selecione um serviço —</option>
-                    <option th:each="s : ${servicos}"
-                            th:value="${s.id}"
-                            th:text="${s.nome} + ' (' + ${s.duracaoMinutos} + ' min — R$ ' + ${#numbers.formatDecimal(s.preco, 1, 'COMMA', 2, 'POINT')} + ')'"
-                            th:selected="${wizard != null and s.id == wizard.servicoId}"></option>
-                </select>
+    <div class="card p-4">
+        <h4 class="mb-1">Selecione o Serviço</h4>
+        <p class="text-muted small mb-4">Escolha o serviço que deseja agendar.</p>
+
+        <form method="post" th:action="@{/portal/step2}" id="formStep1" novalidate>
+
+            <div class="row g-3" id="servicosGrid">
+                <div class="col-md-6 col-lg-4" th:each="s : ${servicos}">
+                    <label th:for="${'s-' + s.id}"
+                           class="service-card w-100 d-flex flex-column h-100"
+                           th:classappend="${wizard != null and s.id == wizard.servicoId} ? ' selected'">
+                        <input type="radio"
+                               name="servicoId"
+                               th:id="${'s-' + s.id}"
+                               th:value="${s.id}"
+                               class="d-none"
+                               th:checked="${wizard != null and s.id == wizard.servicoId}"
+                               required>
+                        <h6 class="mb-1 fw-semibold" th:text="${s.nome}">Serviço</h6>
+                        <p class="text-muted small mb-auto"
+                           th:text="${s.descricao}"
+                           th:if="${s.descricao != null}"></p>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2"
+                             style="border-top:1px solid var(--clr-border);">
+                            <span class="price"
+                                  th:text="'R$ ' + ${#numbers.formatDecimal(s.preco, 1, 'POINT', 2, 'COMMA')}">
+                            </span>
+                            <span class="duration">
+                                <i class="bi bi-clock me-1"></i>
+                                <span th:text="${s.duracaoMinutos}"></span> min
+                            </span>
+                        </div>
+                    </label>
+                </div>
             </div>
 
-            <div style="display:flex; justify-content:space-between; gap:10px; margin-top:20px;">
-                <a th:href="@{/portal}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Avançar &rarr;</button>
+            <!-- Estado vazio -->
+            <div th:if="${#lists.isEmpty(servicos)}"
+                 class="text-center py-5 text-muted">
+                <i class="bi bi-scissors d-block mb-2" style="font-size:2.5rem;"></i>
+                Nenhum serviço disponível no momento.
+            </div>
+
+            <!-- Validação client-side -->
+            <div id="erroServico" class="text-danger small mt-2 d-none">
+                <i class="bi bi-exclamation-circle me-1"></i>Selecione um serviço para continuar.
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a th:href="@{/portal}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-1"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-portal px-4">
+                    Avançar <i class="bi bi-arrow-right ms-1"></i>
+                </button>
             </div>
         </form>
     </div>
 
 </section>
+
+<script>
+    /* Seleciona card visualmente ao clicar */
+    document.querySelectorAll('.service-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+            document.querySelectorAll('.service-card').forEach(function (c) {
+                c.classList.remove('selected');
+            });
+            this.classList.add('selected');
+        });
+    });
+
+    /* Validação antes do submit */
+    document.getElementById('formStep1').addEventListener('submit', function (e) {
+        const selecionado = document.querySelector('input[name="servicoId"]:checked');
+        if (!selecionado) {
+            e.preventDefault();
+            document.getElementById('erroServico').classList.remove('d-none');
+        }
+    });
+</script>
 </body>
 </html>

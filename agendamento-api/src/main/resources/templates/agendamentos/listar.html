@@ -18,44 +18,33 @@
 
     <!-- Filtros -->
     <div class="card mb-4 p-3">
-        <form method="get" th:action="@{/web/agendamentos/listar}"
-              class="row g-2 align-items-end">
-
+        <form method="get" th:action="@{/web/agendamentos/listar}" class="row g-2 align-items-end">
             <div class="col-sm-6 col-md-3">
                 <label for="status" class="form-label small text-muted mb-1">Status</label>
                 <select id="status" name="status" class="form-select form-select-sm">
                     <option value="">Todos</option>
                     <option th:each="s : ${statusList}"
-                            th:value="${s}"
-                            th:text="${s}"
+                            th:value="${s}" th:text="${s}"
                             th:selected="${s == statusSelecionado}"></option>
                 </select>
             </div>
-
             <div class="col-sm-6 col-md-3">
                 <label for="dataInicio" class="form-label small text-muted mb-1">De</label>
                 <input type="date" id="dataInicio" name="dataInicio"
-                       class="form-control form-control-sm"
-                       th:value="${dataInicio}">
+                       class="form-control form-control-sm" th:value="${dataInicio}">
             </div>
-
             <div class="col-sm-6 col-md-3">
                 <label for="dataFim" class="form-label small text-muted mb-1">Até</label>
                 <input type="date" id="dataFim" name="dataFim"
-                       class="form-control form-control-sm"
-                       th:value="${dataFim}">
+                       class="form-control form-control-sm" th:value="${dataFim}">
             </div>
-
             <div class="col-sm-6 col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                     <i class="bi bi-funnel-fill me-1"></i>Filtrar
                 </button>
                 <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary btn-sm"
-                   title="Limpar filtros">
-                    <i class="bi bi-x-lg"></i>
-                </a>
+                   title="Limpar filtros"><i class="bi bi-x-lg"></i></a>
             </div>
-
         </form>
     </div>
 
@@ -71,79 +60,49 @@
                     <th>Serviço</th>
                     <th class="text-nowrap">Data/Hora</th>
                     <th>Status</th>
-                    <th class="text-center" style="width:180px;">Ações</th>
+                    <th class="text-center" style="width:110px;">Ações</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="a : ${agendamentos}">
                     <td class="text-muted small fw-semibold" th:text="${a.id}"></td>
-
                     <td>
                         <span class="fw-semibold d-block" th:text="${a.clienteNome}"></span>
                     </td>
-
                     <td>
                         <span class="d-block" th:text="${a.profissionalNome}"></span>
                         <small class="text-muted" th:text="${a.profissionalEspecialidade}"></small>
                     </td>
-
                     <td class="small" th:text="${a.servicoNome}"></td>
-
                     <td class="small text-nowrap"
                         th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
-
                     <td>
                         <span th:text="${a.status}"
                               th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}"></span>
                     </td>
-
                     <td class="text-center">
-                        <div class="d-flex gap-1 justify-content-center flex-wrap">
-
+                        <div class="d-flex gap-1 justify-content-center">
                             <!-- Editar -->
                             <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
                                th:href="@{/web/agendamentos/editar/{id}(id=${a.id})}"
                                class="btn btn-outline-warning btn-sm" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-
-                            <!-- Confirmar: AGENDADO → CONFIRMADO -->
-                            <form th:if="${a.status.name() == 'AGENDADO'}"
-                                  th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
-                                  method="post" class="d-inline">
-                                <input type="hidden" name="novoStatus" value="CONFIRMADO">
-                                <button type="submit" class="btn btn-outline-success btn-sm"
-                                        title="Confirmar agendamento">
-                                    <i class="bi bi-check-lg"></i>
-                                </button>
-                            </form>
-
-                            <!-- Concluir: CONFIRMADO → CONCLUIDO -->
-                            <form th:if="${a.status.name() == 'CONFIRMADO'}"
-                                  th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
-                                  method="post" class="d-inline">
-                                <input type="hidden" name="novoStatus" value="CONCLUIDO">
-                                <button type="submit" class="btn btn-outline-secondary btn-sm"
-                                        title="Marcar como concluído">
-                                    <i class="bi bi-check2-all"></i>
-                                </button>
-                            </form>
-
-                            <!-- Cancelar -->
-                            <form th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                                  th:action="@{/web/agendamentos/cancelar/{id}(id=${a.id})}"
-                                  method="post" class="d-inline">
-                                <button type="submit" class="btn btn-outline-danger btn-sm"
-                                        title="Cancelar agendamento"
-                                        onclick="return confirm('Cancelar este agendamento?')">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </form>
-
+                            <!-- Mudar Status -->
+                            <button th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
+                                    type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    title="Alterar status"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalStatus"
+                                    th:attr="data-id=${a.id},
+                                             data-status=${a.status.name()},
+                                             data-cliente=${a.clienteNome}">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
-
                 <tr th:if="${#lists.isEmpty(agendamentos)}">
                     <td colspan="7" class="text-center py-5 text-muted">
                         <i class="bi bi-calendar-x d-block mb-2" style="font-size:2rem;"></i>
@@ -160,6 +119,116 @@
         </div>
     </div>
 
+    <!-- ── Modal: Alterar Status ─────────────────────────────────── -->
+    <div class="modal fade" id="modalStatus" tabindex="-1"
+         aria-labelledby="modalStatusLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <form id="formStatus" method="post">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title" id="modalStatusLabel">
+                            <i class="bi bi-arrow-repeat me-2 text-primary"></i>Alterar Status
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">
+                            Cliente: <strong id="modalClienteNome" class="text-dark"></strong>
+                        </p>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Status atual</label>
+                            <div id="modalStatusAtualBadge"></div>
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="novoStatusSelect" class="form-label small fw-semibold text-muted">
+                                Novo status <span class="text-danger">*</span>
+                            </label>
+                            <select id="novoStatusSelect" name="novoStatus"
+                                    class="form-select" required>
+                            </select>
+                        </div>
+
+                        <div id="cancelarAviso" class="d-none mt-3">
+                            <div class="alert alert-warning py-2 mb-0 d-flex gap-2">
+                                <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                                <span class="small">Cancelar é uma ação irreversível. O cliente deverá criar um novo agendamento.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Fechar
+                        </button>
+                        <button type="submit" id="btnConfirmarStatus" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Confirmar
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    /* Mapa de transições válidas por status */
+    const transicoes = {
+        'AGENDADO':   [
+            { value: 'CONFIRMADO', label: 'Confirmar agendamento',  cls: 'badge-confirmado' },
+            { value: 'CANCELADO',  label: 'Cancelar agendamento',   cls: 'badge-cancelado'  }
+        ],
+        'CONFIRMADO': [
+            { value: 'CONCLUIDO',  label: 'Marcar como Concluído',  cls: 'badge-concluido'  },
+            { value: 'CANCELADO',  label: 'Cancelar agendamento',   cls: 'badge-cancelado'  }
+        ]
+    };
+
+    const badgeClasses = {
+        'AGENDADO':   'badge-agendado',
+        'CONFIRMADO': 'badge-confirmado',
+        'CONCLUIDO':  'badge-concluido',
+        'CANCELADO':  'badge-cancelado'
+    };
+
+    document.getElementById('modalStatus').addEventListener('show.bs.modal', function (event) {
+        const btn      = event.relatedTarget;
+        const id       = btn.getAttribute('data-id');
+        const status   = btn.getAttribute('data-status');
+        const cliente  = btn.getAttribute('data-cliente');
+
+        /* Preenche cabeçalho */
+        document.getElementById('modalClienteNome').textContent = cliente;
+        document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
+
+        /* Badge do status atual */
+        const badgeEl = document.getElementById('modalStatusAtualBadge');
+        badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
+
+        /* Opções do select */
+        const select = document.getElementById('novoStatusSelect');
+        select.innerHTML = '<option value="">— Selecione —</option>';
+        const opcoes = transicoes[status] || [];
+        opcoes.forEach(function (op) {
+            const opt = document.createElement('option');
+            opt.value = op.value;
+            opt.textContent = op.label;
+            select.appendChild(opt);
+        });
+
+        /* Aviso de cancelamento */
+        document.getElementById('cancelarAviso').classList.add('d-none');
+        select.addEventListener('change', function () {
+            document.getElementById('cancelarAviso')
+                .classList.toggle('d-none', this.value !== 'CANCELADO');
+        });
+    });
+</script>
 </body>
 </html>

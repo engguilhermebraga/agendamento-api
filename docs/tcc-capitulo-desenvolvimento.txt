@@ -1,0 +1,579 @@
+================================================================================
+  TCC UNDB 2026 — Sistema de Agendamento
+  Autor: Guilherme Braga
+  Capítulo: Desenvolvimento do Sistema
+  Formato de diagramas: PlantUML (https://plantuml.com)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+4. DESENVOLVIMENTO DO SISTEMA
+────────────────────────────────────────────────────────────────────────────────
+
+4.1 Visão Geral da Arquitetura
+───────────────────────────────
+
+O sistema foi desenvolvido seguindo o padrão arquitetural MVC (Model-View-
+Controller) sobre o framework Spring Boot 4.0.5, com separação em três
+contextos funcionais distintos:
+
+  a) Painel Administrativo (/web/** e /dashboard):
+     Interface Thymeleaf para gestão de clientes, profissionais, serviços
+     e agendamentos. Acesso restrito ao administrador via Spring Security.
+
+  b) Portal do Cliente (/portal/**):
+     Interface pública com wizard de autoagendamento em quatro etapas,
+     identificação por e-mail e acompanhamento de agendamentos.
+
+  c) API REST (/api/v1/**):
+     API RESTful documentada via Swagger/OpenAPI 3.0 para integração com
+     sistemas externos. Autenticação via HTTP Basic com suporte a JWT.
+
+A persistência é realizada pelo Spring Data JPA sobre banco H2 em memória
+(desenvolvimento) ou PostgreSQL (produção), com mapeamento objeto-relacional
+das quatro entidades principais: Cliente, Profissional, Servico e Agendamento.
+
+────────────────────────────────────────────────────────────────────────────────
+4.2 Modelo de Dados
+────────────────────────────────────────────────────────────────────────────────
+
+O modelo relacional é composto por quatro tabelas principais:
+
+  clientes (id, nome, email, telefone, cpf, criado_em, atualizado_em)
+  profissionais (id, nome, especialidade, email, telefone, criado_em, atualizado_em)
+  servicos (id, nome, descricao, duracao_minutos, preco, criado_em, atualizado_em)
+  agendamentos (id, cliente_id, profissional_id, servico_id,
+                data_hora, data_hora_fim, status, criado_em, atualizado_em)
+
+O campo data_hora_fim é calculado automaticamente (data_hora + duracaoMinutos)
+e utilizado pela query de detecção de conflito de horário:
+
+  SELECT COUNT(*) > 0 FROM agendamentos
+  WHERE profissional_id = :profId
+    AND status NOT IN ('CANCELADO', 'CONCLUIDO')
+    AND data_hora < :novoFim
+    AND data_hora_fim > :novoInicio
+
+O enum StatusAgendamento define o ciclo de vida de um agendamento:
+  AGENDADO → CONFIRMADO → CONCLUIDO
+  AGENDADO → CANCELADO
+  CONFIRMADO → CANCELADO
+
+────────────────────────────────────────────────────────────────────────────────
+4.3 Tecnologias Utilizadas
+────────────────────────────────────────────────────────────────────────────────
+
+  Framework:       Spring Boot 4.0.5 / Spring Framework 7.x
+  Persistência:    Spring Data JPA + Hibernate 7.x + H2 / PostgreSQL
+  Apresentação:    Thymeleaf 3.x + Bootstrap 5.3.3 + Bootstrap Icons 1.11.3
+  Segurança:       Spring Security 7.x (HTTP Basic + JWT via JJWT)
+  Documentação:    SpringDoc OpenAPI 3.0 (Swagger UI)
+  Build:           Apache Maven 3.x
+  Java:            Java 21 (LTS)
+  Mapeamento:      MapStruct 1.5.x
+  Utilitários:     Lombok
+
+────────────────────────────────────────────────────────────────────────────────
+4.4 Estrutura de Pacotes
+────────────────────────────────────────────────────────────────────────────────
+
+  com.guilhermebraga.agendamento_api
+  ├── config/          Configurações Spring (Security, OpenAPI, CORS)
+  ├── controller/
+  │   ├── portal/      Controllers do portal do cliente (Thymeleaf)
+  │   └── web/         Controllers do painel admin (Thymeleaf)
+  ├── controller/      Controllers da API REST
+  ├── dto/
+  │   ├── form/        WizardForm (sessão do wizard de agendamento)
+  │   ├── request/     DTOs de entrada validados com Bean Validation
+  │   └── response/    DTOs de saída da API
+  ├── entity/          Entidades JPA
+  ├── exception/       BusinessException, ResourceNotFoundException
+  ├── mapper/          Interfaces MapStruct (entidade ↔ DTO)
+  ├── repository/      Interfaces Spring Data JPA
+  └── service/         Regras de negócio e orquestração
+
+────────────────────────────────────────────────────────────────────────────────
+4.5 Fluxo do Wizard de Agendamento
+────────────────────────────────────────────────────────────────────────────────
+
+O wizard utiliza @SessionAttributes("wizard") para persistir o WizardForm
+entre as requisições HTTP sem expor os dados na URL:
+
+  Etapa 1 (GET /portal/step1):
+    - Exibe catálogo de serviços como radio button cards
+    - Cliente seleciona o serviço desejado
+
+  Etapa 2 (POST /portal/step2):
+    - Recebe: servicoId
+    - Salva no WizardForm: servicoId, servicoNome, duracaoMinutos, preco
+    - Exibe: dropdown de profissionais + date picker + grade de horários
+
+  Etapa 3 (POST /portal/step3):
+    - Recebe: profissionalId, data, hora
+    - Salva no WizardForm: profissionalId, profissionalNome, data, hora
+    - Exibe: resumo read-only para confirmação
+
+  Etapa 4 (POST /portal/step4):
+    - Valida completude do WizardForm
+    - Chama agendamentoService.criarPeloPortal(...)
+    - Chama sessionStatus.setComplete() para limpar a sessão
+    - Exibe: página de sucesso com número do agendamento
+
+  Em caso de conflito de horário: BusinessException → retorno à etapa 1
+  com mensagem de erro.
+
+================================================================================
+DIAGRAMA 1 — CASOS DE USO
+================================================================================
+
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+actor "Administrador" as Admin
+actor "Cliente" as Cliente
+
+rectangle "Sistema de Agendamento" {
+
+  package "Painel Administrativo" {
+    usecase "Gerenciar Clientes"        as UC1
+    usecase "Gerenciar Profissionais"   as UC2
+    usecase "Gerenciar Serviços"        as UC3
+    usecase "Visualizar Agendamentos"   as UC4
+    usecase "Alterar Status"            as UC5
+    usecase "Filtrar Agendamentos"      as UC6
+    usecase "Visualizar Dashboard"      as UC7
+  }
+
+  package "Portal do Cliente" {
+    usecase "Identificar-se por e-mail" as UC8
+    usecase "Cadastrar-se"              as UC9
+    usecase "Selecionar Serviço"        as UC10
+    usecase "Selecionar Data e Hora"    as UC11
+    usecase "Confirmar Agendamento"     as UC12
+    usecase "Ver Meus Agendamentos"     as UC13
+    usecase "Cancelar Agendamento"      as UC14
+  }
+
+  package "API REST" {
+    usecase "Autenticar (JWT/Basic)"    as UC15
+    usecase "CRUD via API"              as UC16
+  }
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC15
+Admin --> UC16
+
+Cliente --> UC8
+Cliente --> UC9
+UC8 ..> UC10 : <<include>>
+UC10 ..> UC11 : <<include>>
+UC11 ..> UC12 : <<include>>
+Cliente --> UC13
+Cliente --> UC14
+
+UC5 ..> UC4 : <<extend>>
+UC6 ..> UC4 : <<extend>>
+@enduml
+
+================================================================================
+DIAGRAMA 2 — CLASSES (ENTIDADES E RELAÇÕES)
+================================================================================
+
+@startuml
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor White
+  BorderColor #667eea
+  ArrowColor #667eea
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  CONFIRMADO
+  CONCLUIDO
+  CANCELADO
+}
+
+class Cliente {
+  - id: Long
+  - nome: String
+  - email: String
+  - telefone: String
+  - cpf: String
+  - criadoEm: LocalDateTime
+  - atualizadoEm: LocalDateTime
+  + prePersist(): void
+  + preUpdate(): void
+}
+
+class Profissional {
+  - id: Long
+  - nome: String
+  - especialidade: String
+  - email: String
+  - telefone: String
+  - criadoEm: LocalDateTime
+  - atualizadoEm: LocalDateTime
+  + prePersist(): void
+  + preUpdate(): void
+}
+
+class Servico {
+  - id: Long
+  - nome: String
+  - descricao: String
+  - duracaoMinutos: Integer
+  - preco: BigDecimal
+  - criadoEm: LocalDateTime
+  - atualizadoEm: LocalDateTime
+  + prePersist(): void
+  + preUpdate(): void
+}
+
+class Agendamento {
+  - id: Long
+  - dataHora: LocalDateTime
+  - dataHoraFim: LocalDateTime
+  - status: StatusAgendamento
+  - criadoEm: LocalDateTime
+  - atualizadoEm: LocalDateTime
+  + prePersist(): void
+  + preUpdate(): void
+}
+
+Cliente       "1" --> "0..*" Agendamento : realiza
+Profissional  "1" --> "0..*" Agendamento : atende
+Servico       "1" --> "0..*" Agendamento : referencia
+Agendamento   --> StatusAgendamento
+
+class ClienteService {
+  + listarTodos(): List<ClienteResponse>
+  + buscarPorId(id): ClienteResponse
+  + criar(request): ClienteResponse
+  + atualizar(id, request): ClienteResponse
+  + deletar(id): void
+  + autenticarPorEmail(email): Cliente
+  + criarPeloPortal(...): Cliente
+}
+
+class AgendamentoService {
+  + listarTodos(): List<AgendamentoResponse>
+  + buscarPorId(id): AgendamentoResponse
+  + criar(request): AgendamentoResponse
+  + atualizar(id, request): AgendamentoResponse
+  + atualizarStatus(id, status): AgendamentoResponse
+  + cancelar(id): void
+  + listarPorCliente(clienteId): List<AgendamentoResponse>
+  + criarPeloPortal(...): AgendamentoResponse
+  - validarConflito(profId, dataHora, duracaoMin, excluirId): void
+}
+
+ClienteService    ..> Cliente
+AgendamentoService ..> Agendamento
+@enduml
+
+================================================================================
+DIAGRAMA 3 — SEQUÊNCIA: WIZARD DE AGENDAMENTO
+================================================================================
+
+@startuml
+actor "Cliente" as C
+participant "Browser" as B
+participant "PortalClienteController" as PC
+participant "ServicoService" as SS
+participant "ProfissionalService" as PS
+participant "AgendamentoService" as AS
+database "Banco de Dados" as DB
+
+== Etapa 1: Selecionar Serviço ==
+C -> B : Acessa /portal/step1
+B -> PC : GET /portal/step1
+PC -> SS : listarTodos()
+SS -> DB : SELECT * FROM servicos
+DB --> SS : List<Servico>
+SS --> PC : List<ServicoResponse>
+PC --> B : step1.html (cards de serviço)
+B --> C : Exibe catálogo
+
+C -> B : Seleciona serviço e clica Avançar
+B -> PC : POST /portal/step2 (servicoId)
+
+== Etapa 2: Data e Hora ==
+PC -> SS : buscarPorId(servicoId)
+SS --> PC : ServicoResponse
+note right of PC : Salva no WizardForm:\nservicoId, nome, preço, duração
+PC -> PS : listarTodos()
+PS --> PC : List<ProfissionalResponse>
+PC --> B : step2.html (dropdown + date + horários)
+B --> C : Exibe formulário
+
+C -> B : Seleciona profissional, data e horário
+B -> PC : POST /portal/step3 (profissionalId, data, hora)
+
+== Etapa 3: Confirmação ==
+PC -> PS : buscarPorId(profissionalId)
+PS --> PC : ProfissionalResponse
+note right of PC : Salva no WizardForm:\nprofissionalId, nome, data, hora
+PC --> B : step3.html (resumo read-only)
+B --> C : Exibe resumo
+
+C -> B : Clica em Confirmar
+B -> PC : POST /portal/step4
+
+== Etapa 4: Criação do Agendamento ==
+PC -> AS : criarPeloPortal(clienteId, profId, servId, dataHora)
+AS -> DB : SELECT conflitos de horário
+DB --> AS : sem conflito
+AS -> DB : INSERT INTO agendamentos
+DB --> AS : Agendamento (id=42)
+AS --> PC : AgendamentoResponse (id=42)
+note right of PC : sessionStatus.setComplete()\nWizardForm removido da sessão
+PC --> B : step4.html (sucesso, protocolo #42)
+B --> C : "Agendamento #42 confirmado!"
+
+== Caso de Conflito ==
+AS -> DB : SELECT conflitos de horário
+DB --> AS : conflito encontrado
+AS --> PC : throws BusinessException
+PC --> B : redirect /portal/step1 + mensagemErro
+B --> C : "Horário indisponível"
+@enduml
+
+================================================================================
+DIAGRAMA 4 — COMPONENTES (ARQUITETURA EM CAMADAS)
+================================================================================
+
+@startuml
+skinparam componentStyle rectangle
+
+package "Cliente (Browser)" {
+  [Bootstrap 5 + Thymeleaf] as UI
+}
+
+package "Camada de Apresentação" {
+  [AgendamentoWebController] as AWC
+  [ClienteWebController]     as CWC
+  [DashboardWebController]   as DWC
+  [PortalClienteController]  as PCC
+  [PortalHomeController]     as PHC
+  [AgendamentoController]    as ARC <<REST>>
+  [ClienteController]        as CC  <<REST>>
+}
+
+package "Camada de Negócio" {
+  [AgendamentoService] as AS
+  [ClienteService]     as CS
+  [ProfissionalService] as PFS
+  [ServicoService]     as SVS
+}
+
+package "Camada de Persistência" {
+  [AgendamentoRepository] as AR
+  [ClienteRepository]     as CR
+  [ProfissionalRepository] as PR
+  [ServicoRepository]     as SR
+}
+
+package "Banco de Dados" {
+  database "H2 / PostgreSQL" as DB
+}
+
+package "Segurança" {
+  [SecurityFilterChain] as SEC
+  [JwtUtil]             as JWT
+}
+
+UI --> AWC
+UI --> CWC
+UI --> DWC
+UI --> PCC
+UI --> PHC
+
+AWC --> AS
+CWC --> CS
+DWC --> AS
+PCC --> AS
+PCC --> SVS
+PCC --> PFS
+PHC --> CS
+PHC --> SVS
+
+ARC --> AS
+CC  --> CS
+
+AS  --> AR
+CS  --> CR
+PFS --> PR
+SVS --> SR
+
+AR --> DB
+CR --> DB
+PR --> DB
+SR --> DB
+
+SEC ..> AWC
+SEC ..> ARC
+JWT ..> SEC
+@enduml
+
+================================================================================
+DIAGRAMA 5 — SEQUÊNCIA: REQUISIÇÃO API REST
+================================================================================
+
+@startuml
+actor "Admin" as A
+participant "HTTP Client" as H
+participant "SecurityFilterChain" as SEC
+participant "AgendamentoController" as AC
+participant "AgendamentoService" as AS
+database "Banco" as DB
+
+A -> H : curl -u admin:admin123\n  POST /api/v1/agendamentos
+H -> SEC : HTTP Request + Authorization header
+SEC -> SEC : BasicAuthenticationFilter\nextrai credenciais
+SEC -> SEC : UserDetailsService\nvalida admin:admin123
+SEC --> AC : request autorizada
+
+AC -> AS : criar(AgendamentoRequest)
+AS -> AS : validarConflito(profId, dataHora, duracao, null)
+AS -> DB : SELECT COUNT conflitos
+DB --> AS : 0 (sem conflito)
+AS -> DB : INSERT INTO agendamentos
+DB --> AS : Agendamento{id=1, status=AGENDADO}
+AS --> AC : AgendamentoResponse
+AC --> H : 201 Created + JSON body
+H --> A : {"id":1,"status":"AGENDADO",...}
+@enduml
+
+================================================================================
+DIAGRAMA 6 — MÁQUINA DE ESTADOS: StatusAgendamento
+================================================================================
+
+@startuml
+[*] --> AGENDADO : @PrePersist\n(criação)
+
+AGENDADO   --> CONFIRMADO : confirmar()
+AGENDADO   --> CANCELADO  : cancelar()
+CONFIRMADO --> CONCLUIDO  : concluir()
+CONFIRMADO --> CANCELADO  : cancelar()
+CONCLUIDO  --> [*]
+CANCELADO  --> [*]
+
+AGENDADO   : Aguardando confirmação
+CONFIRMADO : Confirmado — atendimento previsto
+CONCLUIDO  : Serviço realizado com sucesso
+CANCELADO  : Cancelado pelo cliente ou admin
+@enduml
+
+================================================================================
+4.6 REGRAS DE NEGÓCIO IMPLEMENTADAS
+================================================================================
+
+RN01 — Conflito de Horário
+  Ao criar ou atualizar um agendamento, o sistema verifica se o profissional
+  já possui atendimento no intervalo [dataHora, dataHora + duracao).
+  Implementação: AgendamentoRepository.findConflitosHorario(...)
+
+RN02 — Cancelamento por antecedência mínima
+  O portal do cliente só permite cancelamento com antecedência configurável
+  (padrão: 2 horas). Parâmetro: agendamento.cancelamento.antecedencia-horas
+
+RN03 — Imutabilidade de status terminal
+  Agendamentos com status CONCLUIDO ou CANCELADO não podem ser editados.
+  O formulário de edição desabilita todos os campos e exibe alerta visual.
+
+RN04 — Fluxo unidirecional de status
+  Transições permitidas: AGENDADO→CONFIRMADO, AGENDADO→CANCELADO,
+  CONFIRMADO→CONCLUIDO, CONFIRMADO→CANCELADO.
+  Tentativas de transição inválida retornam HTTP 400 (API) ou mensagem
+  de erro (painel admin).
+
+RN05 — CPF único e validado
+  O CPF deve conter exatamente 11 dígitos numéricos e ser único no sistema.
+  Validação aplicada em nível de Bean Validation (@Pattern) e unicidade
+  garantida por constraint UNIQUE na coluna.
+
+RN06 — E-mail único
+  E-mail único para clientes e para profissionais (tabelas independentes).
+  Verificação de duplicidade no service antes de persistir.
+
+================================================================================
+4.7 ENDPOINTS DA API REST
+================================================================================
+
+Prefixo: /api/v1  |  Autenticação: HTTP Basic (admin:admin123)
+Documentação interativa: GET /swagger-ui.html
+
+  CLIENTES
+  GET    /clientes              Lista todos os clientes
+  GET    /clientes/{id}         Busca cliente por ID
+  POST   /clientes              Cria novo cliente
+  PUT    /clientes/{id}         Atualiza cliente
+  DELETE /clientes/{id}         Remove cliente
+
+  PROFISSIONAIS
+  GET    /profissionais         Lista todos os profissionais
+  GET    /profissionais/{id}    Busca profissional por ID
+  POST   /profissionais         Cria profissional
+  PUT    /profissionais/{id}    Atualiza profissional
+  DELETE /profissionais/{id}    Remove profissional
+
+  SERVIÇOS
+  GET    /servicos              Lista todos os serviços
+  GET    /servicos/{id}         Busca serviço por ID
+  POST   /servicos              Cria serviço
+  PUT    /servicos/{id}         Atualiza serviço
+  DELETE /servicos/{id}         Remove serviço
+
+  AGENDAMENTOS
+  GET    /agendamentos          Lista todos (filtros: status, clienteId, data)
+  GET    /agendamentos/{id}     Busca por ID
+  POST   /agendamentos          Cria agendamento
+  PUT    /agendamentos/{id}     Atualiza agendamento
+  PATCH  /agendamentos/{id}/status?status=CONFIRMADO   Altera status
+  DELETE /agendamentos/{id}     Remove agendamento
+
+  AUTENTICAÇÃO
+  POST   /auth/login            Gera token JWT (body: {email, senha})
+
+================================================================================
+4.8 DECISÕES TÉCNICAS RELEVANTES
+================================================================================
+
+Decisão 1 — Thymeleaf SSR vs SPA
+  Optou-se por Server-Side Rendering com Thymeleaf para o painel admin e
+  portal, evitando a complexidade de um frontend JavaScript separado. A API
+  REST coexiste para integração futura com aplicativos mobile.
+
+Decisão 2 — WizardForm em @SessionAttributes
+  O formulário de agendamento foi implementado como wizard multi-etapa usando
+  @SessionAttributes para persistir o estado entre POST requests, evitando
+  campos hidden para todos os dados e mantendo a URL limpa.
+
+Decisão 3 — data_hora_fim calculada
+  O campo dataHoraFim é calculado e persistido no banco (não como @Transient)
+  para permitir queries de conflito eficientes com índices do banco de dados.
+
+Decisão 4 — H2 em desenvolvimento
+  O banco H2 em memória simplifica o ambiente de desenvolvimento sem depender
+  de infraestrutura externa. A troca para PostgreSQL requer apenas alteração
+  de propriedades no application.properties.
+
+Decisão 5 — MapStruct para mapeamento
+  MapStruct gera o código de conversão entidade↔DTO em tempo de compilação,
+  eliminando reflexão e garantindo segurança de tipos no mapeamento.
+
+================================================================================
+FIM DO DOCUMENTO
+Para renderizar os diagramas PlantUML: https://plantuml.com/plantuml
+ou use o plugin do IntelliJ IDEA "PlantUML Integration"
+================================================================================
