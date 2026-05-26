@@ -28,7 +28,7 @@ API REST para gestão de agendamentos desenvolvida como Trabalho de Conclusão d
 
 | Tecnologia | Versão | Uso |
 |---|---|---|
-| Java | 21 (LTS) | Linguagem principal |
+| Java | 25 (LTS) | Linguagem principal |
 | Spring Boot | 4.0.5 | Framework da aplicação |
 | Spring Framework | 7.x | Injeção de dependências, MVC, Security |
 | Jakarta EE | 11 | Validação, persistência e servlet |
