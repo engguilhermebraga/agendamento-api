@@ -85,6 +85,27 @@
         </form>
     </div>
 
+    <script>
+        /* Swap O(1): mantém referência ao card selecionado para não iterar todos */
+        let cardAtivo = document.querySelector('.service-card.selected') || null;
+        document.querySelectorAll('.service-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                if (cardAtivo && cardAtivo !== this) cardAtivo.classList.remove('selected');
+                this.classList.add('selected');
+                cardAtivo = this;
+                document.getElementById('erroServico').classList.add('d-none');
+            });
+        });
+
+        /* Validação antes do submit */
+        document.getElementById('formStep1').addEventListener('submit', function (e) {
+            if (!document.querySelector('input[name="servicoId"]:checked')) {
+                e.preventDefault();
+                document.getElementById('erroServico').classList.remove('d-none');
+            }
+        });
+    </script>
+
 </section>
 
 <script>

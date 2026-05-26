@@ -194,6 +194,53 @@ main { flex: 1; }
   flex-shrink: 0;
 }
 
+/* Gradient metric cards (dashboard moderno) */
+.metric-card {
+  border-radius: var(--rad-lg);
+  padding: 1.4rem 1.5rem;
+  color: #fff;
+  box-shadow: var(--shd-md);
+  transition: transform 0.20s ease, box-shadow 0.20s ease;
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: -24px; right: -24px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  pointer-events: none;
+}
+.metric-card::after {
+  content: '';
+  position: absolute;
+  bottom: -36px; right: 28px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+}
+.metric-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+.metric-card .metric-value { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+.metric-card .metric-label { font-size: 0.80rem; opacity: 0.88; margin-top: 0.3rem; letter-spacing: 0.02em; }
+.metric-card .metric-icon  { font-size: 2rem; opacity: 0.85; flex-shrink: 0; }
+.metric-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.metric-warning { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); }
+.metric-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.metric-info    { background: linear-gradient(135deg, #4facfe 0%, #667eea 100%); }
+
+/* Quick-access cards (linha de cadastros) */
+.quick-card {
+  border-left: 4px solid;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.quick-card:hover          { transform: translateX(3px); box-shadow: var(--shd-hover) !important; }
+.quick-card-primary        { border-left-color: var(--clr-primary); }
+.quick-card-success        { border-left-color: var(--clr-success); }
+.quick-card-warning        { border-left-color: var(--clr-warning); }
+
 
 /* ── 8. TABELAS ──────────────────────────────────────────────── */
 .table th {
@@ -352,13 +399,15 @@ main { flex: 1; }
   border-radius: var(--rad-lg);
   padding: var(--sp-lg);
   box-shadow: var(--shd-md);
-  transition: var(--tr-base);
+  transition: border-color 0.12s ease, background-color 0.12s ease,
+              box-shadow 0.18s ease, transform 0.18s ease;
   cursor: pointer;
   border: 2px solid transparent;
   background: var(--clr-surface);
 }
 .service-card:hover              { transform: translateY(-3px); box-shadow: var(--shd-lg); }
-.service-card.selected           { border-color: var(--clr-primary); background: var(--clr-primary-light); }
+.service-card.selected           { border-color: var(--clr-primary); background: var(--clr-primary-light);
+                                   transform: translateY(-3px); box-shadow: var(--shd-hover); }
 .service-card .price             { font-size: 1.2rem; font-weight: 600; color: var(--clr-primary); }
 .service-card .duration          { color: var(--clr-text-muted); font-size: 0.85rem; }
 
