@@ -41,15 +41,13 @@ jobs:
       - name: Resultado do Build
         if: always()
         run: echo "Build finalizado com status ${{ job.status }}"
-  ```
-
----
+  
 
 ## Faça o commit do workflow
-  ```
+  
 feat: adiciona pipeline de CI com GitHub Actions
-  ```
+  
 
 Depois do Push, acesse:
-  ```
+  
   https://github.com/engguilhermebraga/agendamento-api/actions

@@ -20,7 +20,7 @@
     <description>API REST para Gestão de Agendamentos — TCC UNDB</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
@@ -84,12 +84,12 @@
         </dependency>
 
         <!-- ===== H2 (banco em memória para desenvolvimento) ===== -->
-        <!-- CORRIGIDO: removida spring-boot-h2console — não existe como dependência -->
-        <!-- O console H2 é ativado via application.properties -->
+        <!-- scope compile (não runtime) para que H2ConsoleConfig possa referenciar
+             JakartaWebServlet em tempo de compilação. No Spring Boot 4.x a auto-
+             configuração do console H2 foi removida; registramos o servlet manualmente. -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- ===== MySQL (driver para ambiente de produção) ===== -->
@@ -104,12 +104,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- ===== SPRING SECURITY (autenticação e autorização da API REST) ===== -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
         <!-- ===== TESTES (JUnit 5 + Mockito + MockMvc) ===== -->

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOG_PATTERN" value="[%d{HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="LOG_FILE"    value="logs/agendamento.log"/>
+
+    <!-- Console: DEBUG e acima -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Arquivo: INFO e acima, com rotação diária -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Arquivos diários: logs/agendamento.2026-05-09.log -->
+            <fileNamePattern>logs/agendamento.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Silencia o barulho do Hibernate SQL em INFO (deixa só no console via DEBUG) -->
+    <logger name="org.hibernate.SQL"                         level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.hibernate.orm.jdbc.bind"               level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Spring Security: WARN no arquivo, INFO no console -->
+    <logger name="org.springframework.security"              level="INFO"  additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Pacote da aplicação: DEBUG completo -->
+    <logger name="com.guilhermebraga.agendamento_api"        level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Root: INFO para tudo que não foi explicitado acima -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

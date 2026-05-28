@@ -3,7 +3,7 @@
 <body>
 <section>
 
-    <!-- Indicador de etapas -->
+    <!-- Indicador de etapas: todos concluídos -->
     <div class="steps mb-4">
         <div class="step completed">
             <div class="step-number"><i class="bi bi-check-lg"></i></div>
@@ -26,47 +26,73 @@
         </div>
     </div>
 
-    <div class="card p-5 text-center">
-        <div style="width:72px; height:72px; background:var(--clr-success); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
-            <i class="bi bi-check-lg" style="font-size:2rem; color:#fff;"></i>
+    <div class="card p-4 text-center">
+
+        <!-- Ícone de sucesso -->
+        <div class="mb-3">
+            <div style="display:inline-flex; align-items:center; justify-content:center;
+                        width:80px; height:80px; border-radius:50%;
+                        background:var(--clr-success); color:#fff; font-size:2.2rem;">
+                <i class="bi bi-check-lg"></i>
+            </div>
         </div>
 
-        <h3 class="mb-2">Agendamento Confirmado!</h3>
+        <h3 class="mb-1" style="color:var(--clr-success);">Agendamento Confirmado!</h3>
+
+        <!-- Número do agendamento -->
         <p class="text-muted mb-4">
-            Seu agendamento <strong th:text="'#' + ${agendamentoId}">#—</strong>
-            foi registrado com sucesso.
+            Protocolo:
+            <span class="badge bg-secondary fs-6 px-3 py-2 ms-1"
+                  th:text="'#' + ${agendamentoId}">#—</span>
         </p>
 
-        <!-- Resumo compacto -->
-        <div class="d-inline-block text-start" style="min-width:280px; max-width:400px;">
-            <div class="summary-row">
-                <span class="summary-label"><i class="bi bi-scissors me-2"></i>Serviço</span>
+        <!-- Resumo final -->
+        <div class="text-start mb-4"
+             style="background:var(--clr-bg); border-radius:var(--rad-lg); overflow:hidden;">
+
+            <div class="summary-item px-3">
+                <span class="summary-label"><i class="bi bi-scissors me-2 text-muted"></i>Serviço</span>
                 <span class="summary-value" th:text="${wizardFinalizado.servicoNome}">—</span>
             </div>
-            <div class="summary-row">
-                <span class="summary-label"><i class="bi bi-person-badge me-2"></i>Profissional</span>
-                <span class="summary-value" th:text="${wizardFinalizado.profissionalNome}">—</span>
+
+            <div class="summary-item px-3">
+                <span class="summary-label"><i class="bi bi-person-badge me-2 text-muted"></i>Profissional</span>
+                <span class="summary-value">
+                    <span th:text="${wizardFinalizado.profissionalNome}">—</span>
+                    <small class="text-muted ms-1"
+                           th:text="'(' + ${wizardFinalizado.profissionalEspecialidade} + ')'"></small>
+                </span>
             </div>
-            <div class="summary-row">
-                <span class="summary-label"><i class="bi bi-calendar-event me-2"></i>Data</span>
+
+            <div class="summary-item px-3">
+                <span class="summary-label"><i class="bi bi-calendar3 me-2 text-muted"></i>Data</span>
                 <span class="summary-value"
                       th:text="${#temporals.format(wizardFinalizado.data, 'dd/MM/yyyy')}">—</span>
             </div>
-            <div class="summary-row">
-                <span class="summary-label"><i class="bi bi-alarm me-2"></i>Horário</span>
-                <span class="summary-value"
+
+            <div class="summary-item px-3">
+                <span class="summary-label"><i class="bi bi-clock me-2 text-muted"></i>Horário</span>
+                <span class="summary-value fw-semibold"
                       th:text="${#temporals.format(wizardFinalizado.hora, 'HH:mm')}">—</span>
             </div>
+
+            <div class="summary-item px-3" style="border-bottom:none;">
+                <span class="summary-label"><i class="bi bi-tag me-2 text-muted"></i>Valor</span>
+                <span class="summary-value fw-semibold" style="color:var(--clr-success);"
+                      th:text="'R$ ' + ${#numbers.formatDecimal(wizardFinalizado.servicoPreco, 1, 'POINT', 2, 'COMMA')}">—</span>
+            </div>
+
         </div>
 
-        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
             <a th:href="@{/portal/meus-agendamentos}" class="btn btn-portal px-4">
-                <i class="bi bi-list-check"></i>Meus Agendamentos
+                <i class="bi bi-calendar3 me-1"></i>Meus Agendamentos
             </a>
-            <a th:href="@{/portal/step1}" class="btn btn-outline-secondary">
-                <i class="bi bi-calendar-plus"></i>Novo Agendamento
+            <a th:href="@{/portal/step1}" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-calendar-plus me-1"></i>Novo Agendamento
             </a>
         </div>
+
     </div>
 
 </section>

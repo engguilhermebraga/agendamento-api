@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 fw-bold">Dashboard</h2>
+            <p class="text-muted mb-0 small mt-1">Visão geral do sistema de agendamentos</p>
+        </div>
+        <a th:href="@{/web/agendamentos/novo}" class="btn btn-primary px-4">
+            <i class="bi bi-calendar-plus-fill me-2"></i>Novo Agendamento
+        </a>
+    </div>
+
+    <!-- ── Linha 1: Métricas com gradiente ───────────────────────── -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="metric-value" th:text="${totalAgendamentos}">0</div>
+                        <div class="metric-label">Total de Agendamentos</div>
+                    </div>
+                    <div class="metric-icon"><i class="bi bi-calendar3"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="metric-value" th:text="${agendamentosHoje}">0</div>
+                        <div class="metric-label">Agendamentos Hoje</div>
+                    </div>
+                    <div class="metric-icon"><i class="bi bi-calendar-day"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="metric-value" th:text="${proximos7Dias}">0</div>
+                        <div class="metric-label">Próximos 7 Dias</div>
+                    </div>
+                    <div class="metric-icon"><i class="bi bi-calendar-week"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="metric-value" th:text="${clientesAtivos}">0</div>
+                        <div class="metric-label">Clientes com Agend. Ativos</div>
+                    </div>
+                    <div class="metric-icon"><i class="bi bi-people-fill"></i></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Linha 2: Gráfico + Próximos agendamentos ──────────────── -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-5">
+            <div class="card p-3 h-100">
+                <h6 class="mb-3 fw-semibold">
+                    <i class="bi bi-pie-chart-fill me-2 text-primary"></i>Agendamentos por Status
+                </h6>
+                <div class="d-flex justify-content-center align-items-center" style="min-height:220px;">
+                    <canvas id="chartStatus" style="max-height:220px;"></canvas>
+                </div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                    <span class="badge badge-status badge-agendado">
+                        AGENDADO: <span th:text="${porStatus['AGENDADO']}">0</span>
+                    </span>
+                    <span class="badge badge-status badge-confirmado">
+                        CONFIRMADO: <span th:text="${porStatus['CONFIRMADO']}">0</span>
+                    </span>
+                    <span class="badge badge-status badge-concluido">
+                        CONCLUIDO: <span th:text="${porStatus['CONCLUIDO']}">0</span>
+                    </span>
+                    <span class="badge badge-status badge-cancelado">
+                        CANCELADO: <span th:text="${porStatus['CANCELADO']}">0</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="bi bi-clock-history me-2 text-success"></i>Próximos Agendamentos
+                    </h6>
+                    <a th:href="@{/web/agendamentos/listar}" class="btn btn-sm btn-outline-secondary">
+                        Ver todos
+                    </a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(proximosAgendamentos)}"
+                     class="text-center text-muted py-4 small">
+                    <i class="bi bi-calendar-x d-block mb-2 fs-3"></i>
+                    Nenhum agendamento futuro.
+                </div>
+
+                <div th:if="${!#lists.isEmpty(proximosAgendamentos)}" class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th class="small text-muted fw-normal">Data/Hora</th>
+                            <th class="small text-muted fw-normal">Cliente</th>
+                            <th class="small text-muted fw-normal">Serviço</th>
+                            <th class="small text-muted fw-normal">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${proximosAgendamentos}">
+                            <td class="small text-nowrap fw-semibold"
+                                th:text="${#temporals.format(a.dataHora, 'dd/MM HH:mm')}"></td>
+                            <td class="small" th:text="${a.clienteNome}"></td>
+                            <td class="small" th:text="${a.servicoNome}"></td>
+                            <td>
+                                <span th:text="${a.status}"
+                                      th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}"></span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Linha 3: Acesso rápido a cadastros ────────────────────── -->
+    <div class="row g-3">
+
+        <div class="col-sm-4">
+            <div class="card quick-card quick-card-primary p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small mb-1">Clientes cadastrados</div>
+                        <div class="fs-3 fw-bold" th:text="${totalClientes}">0</div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <a th:href="@{/web/clientes}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-people me-1"></i>Gerenciar
+                        </a>
+                        <a th:href="@{/web/clientes/novo}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-person-plus me-1"></i>Novo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="card quick-card quick-card-success p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small mb-1">Profissionais</div>
+                        <div class="fs-3 fw-bold" th:text="${totalProfissionais}">0</div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <a th:href="@{/web/profissionais}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-person-badge me-1"></i>Gerenciar
+                        </a>
+                        <a th:href="@{/web/profissionais/novo}" class="btn btn-sm btn-success">
+                            <i class="bi bi-person-plus me-1"></i>Novo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="card quick-card quick-card-warning p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small mb-1">Serviços disponíveis</div>
+                        <div class="fs-3 fw-bold" th:text="${totalServicos}">0</div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <a th:href="@{/web/servicos}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-scissors me-1"></i>Gerenciar
+                        </a>
+                        <a th:href="@{/web/servicos/novo}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-plus-circle me-1"></i>Novo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dados para o Chart.js (injeção via data-* — sem risco de XSS) -->
+    <div id="chartData"
+         th:attr="data-agendado=${porStatus['AGENDADO']},
+                  data-confirmado=${porStatus['CONFIRMADO']},
+                  data-concluido=${porStatus['CONCLUIDO']},
+                  data-cancelado=${porStatus['CANCELADO']}"
+         style="display:none;"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        const d = document.getElementById('chartData');
+        const agendado   = parseInt(d.dataset.agendado   || '0', 10);
+        const confirmado = parseInt(d.dataset.confirmado || '0', 10);
+        const concluido  = parseInt(d.dataset.concluido  || '0', 10);
+        const cancelado  = parseInt(d.dataset.cancelado  || '0', 10);
+
+        new Chart(document.getElementById('chartStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
+                datasets: [{
+                    data: [agendado, confirmado, concluido, cancelado],
+                    backgroundColor: ['#ffc107', '#198754', '#6c757d', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                cutout: '65%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    })();
+</script>
+</body>
+</html>

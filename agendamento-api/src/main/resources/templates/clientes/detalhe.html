@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a th:href="@{/web/clientes}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-0" th:text="${cliente.nome}">Nome do Cliente</h2>
+            <p class="text-muted small mb-0">
+                Cadastrado em <span th:text="${#temporals.format(cliente.criadoEm, 'dd/MM/yyyy')}"></span>
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ── Coluna esquerda: informações do cliente ─────────── -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">
+                        <i class="bi bi-person-fill me-1"></i>Informações
+                    </span>
+                    <a th:href="@{/web/clientes/{id}/editar(id=${cliente.id})}"
+                       class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+
+                        <dt class="col-5 text-muted">Nome</dt>
+                        <dd class="col-7 fw-semibold mb-3" th:text="${cliente.nome}"></dd>
+
+                        <dt class="col-5 text-muted">E-mail</dt>
+                        <dd class="col-7 mb-3">
+                            <a th:href="'mailto:' + ${cliente.email}"
+                               th:text="${cliente.email}"
+                               class="text-decoration-none text-break"></a>
+                        </dd>
+
+                        <dt class="col-5 text-muted">Telefone</dt>
+                        <dd class="col-7 mb-3" th:text="${cliente.telefone}"></dd>
+
+                        <dt class="col-5 text-muted">CPF</dt>
+                        <dd class="col-7 mb-3 font-monospace" th:text="${cliente.cpf}"></dd>
+
+                        <dt class="col-5 text-muted">Cadastro</dt>
+                        <dd class="col-7 mb-0"
+                            th:text="${#temporals.format(cliente.criadoEm, 'dd/MM/yyyy')}"></dd>
+
+                    </dl>
+                </div>
+                <div class="card-footer border-0 pt-0 pb-3">
+                    <a th:href="@{/web/agendamentos/novo}"
+                       class="btn btn-success w-100">
+                        <i class="bi bi-calendar-plus me-1"></i>Novo Agendamento
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Coluna direita: agendamentos ───────────────────── -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">
+                        <i class="bi bi-calendar3 me-1"></i>Agendamentos
+                        <span class="badge bg-secondary ms-1"
+                              th:text="${#lists.size(agendamentos)}">0</span>
+                    </span>
+                    <a th:href="@{/web/agendamentos/listar}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-list-ul me-1"></i>Ver todos
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Serviço</th>
+                            <th>Profissional</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${agendamentos}">
+                            <td class="small text-nowrap"
+                                th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td class="small" th:text="${a.servicoNome}"></td>
+                            <td class="small" th:text="${a.profissionalNome}"></td>
+                            <td>
+                                <span th:text="${a.status}"
+                                      th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}">
+                                </span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(agendamentos)}">
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x d-block mb-2" style="font-size:2rem;"></i>
+                                Este cliente não possui agendamentos.
+                                <div class="mt-2">
+                                    <a th:href="@{/web/agendamentos/novo}" class="btn btn-success btn-sm">
+                                        <i class="bi bi-calendar-plus me-1"></i>Criar agendamento
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

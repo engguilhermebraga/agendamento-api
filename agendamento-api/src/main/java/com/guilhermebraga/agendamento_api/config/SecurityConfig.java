@@ -28,14 +28,14 @@ import static org.springframework.security.config.Customizer.withDefaults;
  *
  * Autenticação suportada:
  *   1. JWT Bearer token  — para a API REST (/api/v1/**)
- *   2. HTTP Basic auth   — para Swagger UI e testes via curl
- *   3. Form Login        — para o painel admin (/web/** e /dashboard)
+ *   2. HTTP Basic auth   — alternativa para Swagger UI e testes
  *
- * Regras de autorização:
- *   Portal (/portal/**)               → público (autenticação própria por sessão)
- *   Admin web (/web/**, /dashboard)   → ROLE_USER ou ROLE_ADMIN via form login
- *   API REST GET                      → ROLE_USER ou ROLE_ADMIN
- *   API REST POST/PUT/PATCH/DELETE    → ROLE_ADMIN
+ * Regras de autorização da API REST:
+ *   GET           → ROLE_USER ou ROLE_ADMIN
+ *   POST/PUT/PATCH/DELETE → apenas ROLE_ADMIN
+ *
+ * Caminhos públicos: dashboard, portal, views web (/web/**), Swagger UI,
+ * recursos estáticos e endpoint de login JWT.
  *
  * @author Guilherme Braga
  */
@@ -53,9 +53,23 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
 
-                // --- Recursos estáticos e infra ---
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll()
-                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
+                // --- Páginas públicas, dashboard e handler de erros ---
+                .requestMatchers("/", "/dashboard", "/dashboard/**", "/error", "/portal/**", "/web/**").permitAll()
+
+                // --- Recursos estáticos ---
+                .requestMatchers(
+                    "/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico"
+                ).permitAll()
+
+                // --- Swagger UI e OpenAPI ---
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/api-docs/**",
+                    "/v3/api-docs/**"
+                ).permitAll()
+
+                // --- H2 Console ---
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll()
 
@@ -68,8 +82,8 @@ public class SecurityConfig {
                 // --- Login do painel admin (a própria página de login é pública) ---
                 .requestMatchers("/web/login").permitAll()
 
-                // --- Painel admin: exige autenticação via form login ---
-                .requestMatchers("/web/**", "/dashboard", "/dashboard/**").hasAnyRole("USER", "ADMIN")
+                // --- Endpoint de login (JWT) ---
+                .requestMatchers("/api/v1/auth/**").permitAll()
 
                 // --- API REST: leitura → USER ou ADMIN ---
                 .requestMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("USER", "ADMIN")
@@ -82,22 +96,9 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
             )
+            // JWT filter runs before the Basic auth filter so Bearer tokens are validated first
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            .httpBasic(withDefaults())
-            .formLogin(form -> form
-                .loginPage("/web/login")
-                .loginProcessingUrl("/web/login")
-                .defaultSuccessUrl("/web/dashboard", true)
-                .failureUrl("/web/login?error")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/web/logout")
-                .logoutSuccessUrl("/web/login?logout")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .permitAll()
-            );
+            .httpBasic(withDefaults());
 
         return http.build();
     }

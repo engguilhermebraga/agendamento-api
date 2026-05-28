@@ -6,19 +6,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
- * Filtro que intercepta requisições com JWT Bearer token,
- * valida o token e configura o contexto de segurança do Spring.
+ * Filtro JWT que intercepta cada request e valida o Bearer token.
  *
- * Executado antes do UsernamePasswordAuthenticationFilter.
+ * Se o header "Authorization: Bearer <token>" estiver presente e válido,
+ * autentica o usuário no SecurityContext para que o Spring Security
+ * reconheça o acesso como autenticado — sem exigir sessão HTTP.
+ *
+ * Inserido antes do BasicAuthenticationFilter na cadeia de filtros.
  *
  * @author Guilherme Braga
  */
@@ -27,25 +30,27 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        String header = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
 
             if (jwtTokenProvider.validateToken(token)) {
-                String usuario = jwtTokenProvider.getUsuarioFromToken(token);
+                String username = jwtTokenProvider.getUsuarioFromToken(token);
+                var userDetails = userDetailsService.loadUserByUsername(username);
 
                 var auth = new UsernamePasswordAuthenticationToken(
-                        usuario,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                );
+                        userDetails, null, userDetails.getAuthorities());
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }

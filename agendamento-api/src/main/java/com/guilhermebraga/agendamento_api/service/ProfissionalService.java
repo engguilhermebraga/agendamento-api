@@ -8,6 +8,7 @@ import com.guilhermebraga.agendamento_api.exception.ResourceNotFoundException;
 import com.guilhermebraga.agendamento_api.mapper.ProfissionalMapper;
 import com.guilhermebraga.agendamento_api.repository.ProfissionalRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.List;
  * @author Guilherme Braga
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ProfissionalService {
 
@@ -31,15 +33,18 @@ public class ProfissionalService {
      */
     @Transactional
     public ProfissionalResponse criar(ProfissionalRequest request) {
+        log.info("Criando profissional: {}", request.getEmail());
 
         // Verifica duplicidade de e-mail
         if (profissionalRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Tentativa de cadastro duplicado de profissional — e-mail já existe: {}", request.getEmail());
             throw new BusinessException(
                     "Já existe um profissional cadastrado com o e-mail: " + request.getEmail());
         }
 
         Profissional profissional = profissionalMapper.toEntity(request);
         Profissional salvo = profissionalRepository.save(profissional);
+        log.info("Profissional criado com sucesso: id={}, email={}", salvo.getId(), salvo.getEmail());
         return profissionalMapper.toResponse(salvo);
     }
 
@@ -67,17 +72,21 @@ public class ProfissionalService {
      */
     @Transactional
     public ProfissionalResponse atualizar(Long id, ProfissionalRequest request) {
+        log.info("Atualizando profissional: id={}", id);
 
         Profissional profissional = buscarOuLancarExcecao(id);
 
         // Verifica se outro profissional já usa o novo e-mail
         if (profissionalRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            log.warn("Atualização de profissional id={} bloqueada — e-mail em uso: {}", id, request.getEmail());
             throw new BusinessException(
                     "Já existe outro profissional com o e-mail: " + request.getEmail());
         }
 
         profissionalMapper.updateEntityFromRequest(request, profissional);
-        return profissionalMapper.toResponse(profissionalRepository.save(profissional));
+        Profissional atualizado = profissionalRepository.save(profissional);
+        log.info("Profissional atualizado: id={}", atualizado.getId());
+        return profissionalMapper.toResponse(atualizado);
     }
 
     /**
@@ -85,8 +94,10 @@ public class ProfissionalService {
      */
     @Transactional
     public void deletar(Long id) {
+        log.info("Deletando profissional: id={}", id);
         buscarOuLancarExcecao(id);
         profissionalRepository.deleteById(id);
+        log.info("Profissional deletado: id={}", id);
     }
 
     /**

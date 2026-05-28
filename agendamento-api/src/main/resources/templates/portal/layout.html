@@ -1,307 +1,200 @@
 <!DOCTYPE html>
-<html th:fragment="html(content)" xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR" th:fragment="html(conteudo)">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${titulo != null ? titulo + ' | Portal de Agendamento' : 'Portal de Agendamento'}">Portal de Agendamento</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
     <style>
-        :root {
-            --clr-primary:        #4f46e5;
-            --clr-primary-dark:   #4338ca;
-            --clr-primary-light:  #eef2ff;
-            --clr-accent:         #7c3aed;
-            --clr-gradient:       linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            --clr-bg:             #f5f3ff;
-            --clr-surface:        #ffffff;
-            --clr-text:           #1e1b4b;
-            --clr-text-muted:     #6b7280;
-            --clr-border:         #e5e7eb;
-            --clr-success:        #059669;
-            --clr-warning:        #d97706;
-            --clr-danger:         #dc2626;
-            --radius-card:        14px;
-            --shd-card:           0 1px 4px rgba(79,70,229,.08), 0 1px 2px rgba(0,0,0,.04);
-            --shd-hover:          0 6px 20px rgba(79,70,229,.18);
-        }
+        /* ── Portal brand ───────────────────────────────────── */
+        .portal-navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .portal-navbar .navbar-brand { font-weight: 600; letter-spacing: 0.3px; }
+        .portal-navbar .nav-link { color: rgba(255,255,255,0.85) !important; }
+        .portal-navbar .nav-link:hover,
+        .portal-navbar .nav-link.active { color: #fff !important; background: rgba(255,255,255,0.15); border-radius: 6px; }
 
-        *, *::before, *::after { box-sizing: border-box; }
-        html, body { height: 100%; }
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--clr-bg);
-            color: var(--clr-text);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        /* ── Cards ──────────────────────────────────────────── */
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card h2 { font-size: 1.3rem; color: #444; }
 
-        /* ── Header ─────────────────────────────── */
-        .portal-header {
-            background: var(--clr-gradient);
-            color: #fff;
-            box-shadow: 0 2px 12px rgba(79,70,229,.3);
-        }
-        .portal-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 30px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .portal-brand {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: -.01em;
-        }
-        .portal-brand:hover { color: rgba(255,255,255,.85); }
-        .portal-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: .875rem;
-        }
-        .portal-user span {
-            color: rgba(255,255,255,.85);
-            font-weight: 500;
-        }
-        .portal-user a {
-            color: rgba(255,255,255,.9);
-            text-decoration: none;
-            padding: 5px 14px;
-            border: 1px solid rgba(255,255,255,.4);
-            border-radius: 50px;
-            font-size: .82rem;
-            transition: background .18s, border-color .18s;
-        }
-        .portal-user a:hover {
-            background: rgba(255,255,255,.18);
-            border-color: #fff;
-        }
-
-        /* ── Nav ─────────────────────────────────── */
-        .portal-nav {
-            background: rgba(0,0,0,.12);
-            padding: 0 30px;
-        }
-        .portal-nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 4px;
-        }
-        .portal-nav a {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 9px 16px;
-            color: rgba(255,255,255,.8);
-            text-decoration: none;
-            font-size: .875rem;
-            border-radius: 8px 8px 0 0;
-            transition: color .15s, background .15s;
-        }
-        .portal-nav a:hover,
-        .portal-nav a.active {
-            color: #fff;
-            background: rgba(255,255,255,.15);
-        }
-
-        /* ── Main ────────────────────────────────── */
-        .portal-main {
-            flex: 1;
-            padding: 28px 24px;
-            max-width: 1100px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        /* ── Cards ───────────────────────────────── */
-        .card {
-            background: var(--clr-surface);
-            border: 1px solid var(--clr-border);
-            border-radius: var(--radius-card);
-            box-shadow: var(--shd-card);
-        }
-
-        /* ── Alerts ──────────────────────────────── */
-        .alert {
-            padding: 12px 18px;
-            border-radius: 10px;
-            margin-bottom: 18px;
-            font-size: .9rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-        .alert-danger  { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
-        .alert-info    { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
-        .alert-warning { background: #fef3c7; color: #78350f; border: 1px solid #fcd34d; }
-
-        /* ── Buttons ─────────────────────────────── */
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 8px; font-size: .9rem; font-weight: 500; text-decoration: none; border: none; cursor: pointer; transition: transform .15s, box-shadow .15s, opacity .15s; }
-        .btn-portal { background: var(--clr-gradient); color: #fff; box-shadow: 0 2px 8px rgba(79,70,229,.3); }
-        .btn-portal:hover { opacity: .9; transform: translateY(-1px); box-shadow: var(--shd-hover); color: #fff; }
-        .btn-outline-secondary { background: transparent; border: 1px solid var(--clr-border); color: var(--clr-text); }
-        .btn-outline-secondary:hover { background: #f3f4f6; }
-        .btn-danger  { background: var(--clr-danger); color: #fff; }
-        .btn-danger:hover { background: #b91c1c; color: #fff; }
-        .btn-success { background: var(--clr-success); color: #fff; }
-        .btn-success:hover { background: #047857; color: #fff; }
-        .btn-sm { padding: 5px 14px; font-size: .8rem; }
-
-        /* ── Tables ──────────────────────────────── */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f3f4f6; }
-        th { background: #fafafa; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--clr-text-muted); }
-        tr:hover td { background: var(--clr-primary-light); }
-
-        /* ── Badges ──────────────────────────────── */
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 50px; font-size: .75rem; font-weight: 600; letter-spacing: .02em; }
-        .badge-agendado   { background: #fef3c7; color: #92400e; }
-        .badge-confirmado { background: #dbeafe; color: #1e40af; }
-        .badge-concluido  { background: #d1fae5; color: #065f46; }
-        .badge-cancelado  { background: #fee2e2; color: #991b1b; }
-
-        /* ── Step Indicator ──────────────────────── */
-        .steps { display: flex; justify-content: center; margin-bottom: 28px; }
-        .step  { flex: 1; text-align: center; padding: 10px 4px; position: relative; color: var(--clr-text-muted); font-size: .82rem; }
-        .step.active    { color: var(--clr-primary); font-weight: 600; }
-        .step.completed { color: var(--clr-success); }
-        .step-number {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 34px; height: 34px; border-radius: 50%;
-            border: 2px solid #d1d5db; margin-bottom: 6px;
-            font-weight: 700; font-size: .9rem; background: #fff;
-        }
-        .step.active    .step-number { border-color: var(--clr-primary); background: var(--clr-primary); color: #fff; }
-        .step.completed .step-number { border-color: var(--clr-success);  background: var(--clr-success);  color: #fff; }
-        .step-line {
-            position: absolute; top: 27px; left: 50%; width: 100%;
-            height: 2px; background: #e5e7eb; z-index: 0;
-        }
-        .step.completed .step-line { background: var(--clr-success); }
-        .step.active    .step-line { background: var(--clr-primary); }
-
-        /* ── Service Cards ───────────────────────── */
-        .service-card {
-            display: block; padding: 18px; border-radius: 12px;
-            border: 2px solid var(--clr-border); background: #fff;
-            cursor: pointer; text-decoration: none; color: var(--clr-text);
-            transition: border-color .14s ease, background-color .14s ease,
-                        box-shadow .18s ease, transform .18s ease;
-        }
-        .service-card:hover  { border-color: var(--clr-primary-border, #818cf8); box-shadow: var(--shd-hover); transform: translateY(-2px); }
-        .service-card.selected { border-color: var(--clr-primary); background: var(--clr-primary-light); transform: translateY(-3px); box-shadow: var(--shd-hover); }
-        .price    { font-size: 1.1rem; font-weight: 700; color: var(--clr-primary); }
-        .duration { color: var(--clr-text-muted); font-size: .82rem; }
-
-        /* ── Time Slots ──────────────────────────── */
-        .time-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-        .time-slot {
-            padding: 8px 16px; border: 2px solid var(--clr-border); border-radius: 8px;
-            cursor: pointer; font-size: .875rem; font-weight: 600; background: #fff;
-            transition: border-color .14s, background .14s, color .14s;
-        }
-        .time-slot:hover    { border-color: var(--clr-primary); background: var(--clr-primary-light); }
-        .time-slot.selected { border-color: var(--clr-primary); background: var(--clr-primary); color: #fff; }
-
-        /* ── Summary (step 3) ────────────────────── */
-        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid #f3f4f6; }
-        .summary-row:last-child { border-bottom: none; }
-        .summary-label { color: var(--clr-text-muted); font-size: .875rem; }
-        .summary-value { font-weight: 600; }
-
-        /* ── Form controls ───────────────────────── */
-        .form-label { font-weight: 600; font-size: .85rem; color: var(--clr-text); margin-bottom: .35rem; }
-        .form-control, .form-select {
-            border: 1.5px solid var(--clr-border); border-radius: 8px;
-            font-size: .9rem; padding: .5rem .85rem;
-            transition: border-color .15s, box-shadow .15s;
-        }
+        /* ── Forms ──────────────────────────────────────────── */
         .form-control:focus, .form-select:focus {
-            border-color: var(--clr-primary);
-            box-shadow: 0 0 0 3px rgba(79,70,229,.15);
-            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.18);
         }
 
-        /* ── Footer ──────────────────────────────── */
-        .portal-footer {
-            background: #1e1b4b;
-            color: rgba(255,255,255,.55);
-            text-align: center;
-            padding: 16px 20px;
-            font-size: .82rem;
-            margin-top: auto;
+        /* ── Buttons ────────────────────────────────────────── */
+        .btn-portal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
         }
+        .btn-portal:hover { opacity: 0.9; color: #fff; transform: translateY(-1px); }
+
+        /* ── Status badges ──────────────────────────────────── */
+        .badge-agendado  { background: #fff3cd; color: #856404; }
+        .badge-confirmado{ background: #d1ecf1; color: #0c5460; }
+        .badge-concluido { background: #d4edda; color: #155724; }
+        .badge-cancelado { background: #f8d7da; color: #721c24; }
+
+        /* ── Steps indicator ────────────────────────────────── */
+        .steps { display: flex; justify-content: center; margin-bottom: 28px; }
+        .step { flex: 1; text-align: center; padding: 10px; position: relative; color: #999; font-size: 0.88rem; }
+        .step.active { color: #667eea; font-weight: 600; }
+        .step.completed { color: #28a745; }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ddd; margin-bottom: 6px; font-weight: 600; }
+        .step.active    .step-number { border-color: #667eea; background: #667eea; color: #fff; }
+        .step.completed .step-number { border-color: #28a745; background: #28a745; color: #fff; }
+        .step-line { position: absolute; top: 26px; left: 50%; width: 100%; height: 2px; background: #ddd; z-index: -1; }
+        .step.completed .step-line { background: #28a745; }
+
+        /* ── Service cards ──────────────────────────────────── */
+        .service-card { border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform .2s, box-shadow .2s; cursor: pointer; border: 2px solid transparent; background: #fff; }
+        .service-card:hover  { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.12); }
+        .service-card.selected { border-color: #667eea; background: #f8f7ff; }
+        .service-card .price  { font-size: 1.2rem; font-weight: 600; color: #667eea; }
+        .service-card .duration { color: #888; font-size: 0.85rem; }
+
+        /* ── Time slots ─────────────────────────────────────── */
+        .time-slots { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+        .time-slot { padding: 9px 18px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all .2s; font-weight: 500; background: #fff; }
+        .time-slot:hover    { border-color: #667eea; background: #f8f7ff; }
+        .time-slot.selected { border-color: #667eea; background: #667eea; color: #fff; }
+
+        /* ── Summary list ───────────────────────────────────── */
+        .summary-item { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #eee; }
+        .summary-item:last-child { border-bottom: none; }
+        .summary-label { color: #888; }
+        .summary-value { font-weight: 500; }
     </style>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100 bg-light">
 
-<header class="portal-header">
-    <div class="portal-top">
-        <a th:href="@{/portal}" class="portal-brand">
-            <i class="bi bi-calendar-check-fill"></i>
-            Portal de Agendamento
+<!-- ══════════════════════════════════════════════════════════
+     NAVBAR
+     ══════════════════════════════════════════════════════════ -->
+<nav class="navbar navbar-expand-lg portal-navbar navbar-dark shadow-sm">
+    <div class="container-xl">
+
+        <!-- Logo -->
+        <a class="navbar-brand" th:href="@{/portal}">
+            <i class="bi bi-calendar-check-fill me-2"></i>Agendamento
         </a>
-        <div class="portal-user" th:if="${session.clienteLogado != null}">
-            <i class="bi bi-person-circle" style="font-size:1.1rem; color:rgba(255,255,255,.75);"></i>
-            <span th:text="${session.clienteLogado.nome}">Cliente</span>
-            <a th:href="@{/portal/meus-agendamentos}">
-                <i class="bi bi-calendar3 me-1"></i>Meus Agendamentos
-            </a>
-            <a th:href="@{/portal/logout}" style="border-color:rgba(255,255,255,.3);">
-                <i class="bi bi-box-arrow-right me-1"></i>Sair
-            </a>
+
+        <!-- Mobile toggler -->
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarPortal"
+                aria-controls="navbarPortal" aria-expanded="false"
+                aria-label="Alternar navegação">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Links -->
+        <div class="collapse navbar-collapse" id="navbarPortal">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                <li class="nav-item">
+                    <a class="nav-link px-3 py-2 rounded"
+                       th:href="@{/portal}"
+                       th:classappend="${menuAtivo == 'home' ? ' active' : ''}">
+                        <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 py-2 rounded"
+                       th:href="@{/portal/servicos}"
+                       th:classappend="${menuAtivo == 'servicos' ? ' active' : ''}">
+                        <i class="bi bi-scissors me-1"></i>Serviços
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 py-2 rounded"
+                       th:href="@{/portal/meus-agendamentos}"
+                       th:classappend="${menuAtivo == 'meus-agendamentos' ? ' active' : ''}">
+                        <i class="bi bi-calendar3 me-1"></i>Agendamentos
+                    </a>
+                </li>
+            </ul>
+
+            <!-- User info -->
+            <div class="d-flex align-items-center gap-2" th:if="${session.clienteLogado != null}">
+                <span class="text-white-50 small">
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span th:text="${session.clienteLogado.nome}">Cliente</span>
+                </span>
+                <a th:href="@{/portal/logout}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right me-1"></i>Sair
+                </a>
+            </div>
         </div>
     </div>
-    <nav class="portal-nav" th:if="${session.clienteLogado != null}">
-        <ul>
-            <li>
-                <a th:href="@{/portal}"
-                   th:classappend="${menuAtivo == 'home' ? ' active' : ''}">
-                    <i class="bi bi-house-door"></i>Início
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/portal/servicos}"
-                   th:classappend="${menuAtivo == 'servicos' ? ' active' : ''}">
-                    <i class="bi bi-scissors"></i>Serviços
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/portal/step1}"
-                   th:classappend="${menuAtivo == 'agendar' ? ' active' : ''}">
-                    <i class="bi bi-calendar-plus"></i>Agendar
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/portal/meus-agendamentos}"
-                   th:classappend="${menuAtivo == 'meus-agendamentos' ? ' active' : ''}">
-                    <i class="bi bi-list-check"></i>Meus Agendamentos
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
+</nav>
 
-<main class="portal-main">
-    <div th:if="${mensagemSucesso}" class="alert alert-success">
-        <i class="bi bi-check-circle-fill flex-shrink-0"></i>
-        <span th:text="${mensagemSucesso}"></span>
+<!-- ══════════════════════════════════════════════════════════
+     BREADCRUMB (fragment dinâmico — populado via model)
+     Uso no controller: model.addAttribute("breadcrumbs",
+       List.of(Map.of("label","Agendar","url","/portal/step1"),
+               Map.of("label","Confirmar","url","")))
+     ══════════════════════════════════════════════════════════ -->
+<div th:fragment="breadcrumb"
+     th:if="${breadcrumbs != null and !#lists.isEmpty(breadcrumbs)}"
+     class="bg-white border-bottom">
+    <div class="container-xl py-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a th:href="@{/portal}" class="text-decoration-none text-muted">
+                        <i class="bi bi-house-fill"></i> Portal
+                    </a>
+                </li>
+                <li th:each="item, iter : ${breadcrumbs}"
+                    th:class="${iter.last ? 'breadcrumb-item active' : 'breadcrumb-item'}">
+                    <a th:unless="${iter.last}"
+                       th:href="${item.url}"
+                       th:text="${item.label}"
+                       class="text-decoration-none text-muted"></a>
+                    <span th:if="${iter.last}"
+                          th:text="${item.label}"
+                          aria-current="page"></span>
+                </li>
+            </ol>
+        </nav>
     </div>
-    <div th:if="${mensagemErro}" class="alert alert-danger">
-        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
-        <span th:text="${mensagemErro}"></span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+     ══════════════════════════════════════════════════════════ -->
+<main class="flex-grow-1">
+    <div class="container-xl py-4">
+
+        <!-- Alertas de flash -->
+        <div class="alert alert-success alert-dismissible fade show"
+             th:if="${mensagemSucesso}" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${mensagemSucesso}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+        <div class="alert alert-danger alert-dismissible fade show"
+             th:if="${mensagemErro}" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${mensagemErro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+        <div class="alert alert-info alert-dismissible fade show"
+             th:if="${mensagemInfo}" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <span th:text="${mensagemInfo}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+
+        <!-- Conteúdo da página injetado aqui -->
+        <div th:replace="${conteudo}"></div>
+
     </div>
     <div th:if="${mensagemInfo}" class="alert alert-info">
         <i class="bi bi-info-circle-fill flex-shrink-0"></i>
@@ -311,10 +204,20 @@
     <th:block th:replace="${content}"/>
 </main>
 
-<footer class="portal-footer">
-    <p>Sistema de Agendamento &mdash; TCC UNDB 2026 &mdash; Guilherme Braga</p>
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════════ -->
+<footer class="mt-auto py-3" style="background:#2d3748;">
+    <div class="container-xl text-center">
+        <p class="mb-0 small" style="color:rgba(255,255,255,0.55);">
+            <i class="bi bi-calendar-check me-1"></i>
+            &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
+            Sistema de Agendamento &mdash; TCC UNDB &mdash; Guilherme Braga
+        </p>
+    </div>
 </footer>
 
+<!-- Bootstrap 5 Bundle JS (Popper + Bootstrap) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

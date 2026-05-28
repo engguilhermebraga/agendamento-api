@@ -3,12 +3,6 @@
 <body>
 <section>
 
-    <!-- Mensagem de erro vinda de redirect (ex.: tentou avançar sem selecionar serviço) -->
-    <div th:if="${mensagemErro}" class="alert alert-danger" role="alert">
-        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
-        <span th:text="${mensagemErro}"></span>
-    </div>
-
     <!-- Indicador de etapas -->
     <div class="steps mb-4">
         <div class="step active">
@@ -34,7 +28,7 @@
 
     <div class="card p-4">
         <h4 class="mb-1">Selecione o Serviço</h4>
-        <p style="color:var(--clr-text-muted); font-size:.875rem;" class="mb-4">Escolha o serviço que deseja agendar.</p>
+        <p class="text-muted small mb-4">Escolha o serviço que deseja agendar.</p>
 
         <form method="post" th:action="@{/portal/step2}" id="formStep1" novalidate>
 
@@ -42,7 +36,7 @@
                 <div class="col-md-6 col-lg-4" th:each="s : ${servicos}">
                     <label th:for="${'s-' + s.id}"
                            class="service-card w-100 d-flex flex-column h-100"
-                           th:classappend="${wizard != null and s.id == wizard.servicoId} ? ' selected' : ''">
+                           th:classappend="${wizard != null and s.id == wizard.servicoId} ? ' selected'">
                         <input type="radio"
                                name="servicoId"
                                th:id="${'s-' + s.id}"
@@ -51,7 +45,7 @@
                                th:checked="${wizard != null and s.id == wizard.servicoId}"
                                required>
                         <h6 class="mb-1 fw-semibold" th:text="${s.nome}">Serviço</h6>
-                        <p style="color:var(--clr-text-muted); font-size:.85rem; flex:1;"
+                        <p class="text-muted small mb-auto"
                            th:text="${s.descricao}"
                            th:if="${s.descricao != null}"></p>
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2"
@@ -70,30 +64,30 @@
 
             <!-- Estado vazio -->
             <div th:if="${#lists.isEmpty(servicos)}"
-                 class="text-center py-5" style="color:var(--clr-text-muted);">
-                <i class="bi bi-scissors d-block mb-2" style="font-size:2.5rem; color:#d1d5db;"></i>
+                 class="text-center py-5 text-muted">
+                <i class="bi bi-scissors d-block mb-2" style="font-size:2.5rem;"></i>
                 Nenhum serviço disponível no momento.
             </div>
 
-            <!-- Erro de validação client-side -->
-            <div id="erroServico" class="alert alert-danger mt-3 d-none" role="alert">
+            <!-- Validação client-side -->
+            <div id="erroServico" class="text-danger small mt-2 d-none">
                 <i class="bi bi-exclamation-circle me-1"></i>Selecione um serviço para continuar.
             </div>
 
             <div class="d-flex justify-content-between mt-4">
                 <a th:href="@{/portal}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-lg"></i>Cancelar
+                    <i class="bi bi-x-lg me-1"></i>Cancelar
                 </a>
                 <button type="submit" class="btn btn-portal px-4">
-                    Avançar <i class="bi bi-arrow-right"></i>
+                    Avançar <i class="bi bi-arrow-right ms-1"></i>
                 </button>
             </div>
         </form>
     </div>
 
     <script>
-        /* O(1): mantém referência ao card ativo sem iterar todos */
-        var cardAtivo = document.querySelector('.service-card.selected') || null;
+        /* Swap O(1): mantém referência ao card selecionado para não iterar todos */
+        let cardAtivo = document.querySelector('.service-card.selected') || null;
         document.querySelectorAll('.service-card').forEach(function (card) {
             card.addEventListener('click', function () {
                 if (cardAtivo && cardAtivo !== this) cardAtivo.classList.remove('selected');
@@ -103,6 +97,7 @@
             });
         });
 
+        /* Validação antes do submit */
         document.getElementById('formStep1').addEventListener('submit', function (e) {
             if (!document.querySelector('input[name="servicoId"]:checked')) {
                 e.preventDefault();
@@ -112,5 +107,26 @@
     </script>
 
 </section>
+
+<script>
+    /* Seleciona card visualmente ao clicar */
+    document.querySelectorAll('.service-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+            document.querySelectorAll('.service-card').forEach(function (c) {
+                c.classList.remove('selected');
+            });
+            this.classList.add('selected');
+        });
+    });
+
+    /* Validação antes do submit */
+    document.getElementById('formStep1').addEventListener('submit', function (e) {
+        const selecionado = document.querySelector('input[name="servicoId"]:checked');
+        if (!selecionado) {
+            e.preventDefault();
+            document.getElementById('erroServico').classList.remove('d-none');
+        }
+    });
+</script>
 </body>
 </html>

@@ -67,11 +67,11 @@ public class ServicoWebController {
         return "redirect:/web/servicos";
     }
 
-    @GetMapping("/{id}/deletar")
+    @PostMapping("/{id}/deletar")
     public String deletar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             servicoService.deletar(id);
-            redirectAttributes.addFlashAttribute("mensagemSucesso", "Servico removido com sucesso!");
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Serviço removido com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("mensagemErro", e.getMessage());
         }

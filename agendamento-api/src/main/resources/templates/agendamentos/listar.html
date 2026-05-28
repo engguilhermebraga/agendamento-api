@@ -2,20 +2,62 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
 <body>
 <div th:fragment="conteudo">
-    <div class="top-bar">
-        <h2>Agendamentos</h2>
-        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">Novo Agendamento</a>
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Agendamentos</h2>
+            <p class="text-muted mb-0 small">
+                <span th:text="${#lists.size(agendamentos)}">0</span> resultado(s)
+            </p>
+        </div>
+        <a th:href="@{/web/agendamentos/novo}" class="btn btn-success">
+            <i class="bi bi-calendar-plus-fill me-1"></i>Novo Agendamento
+        </a>
     </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4 p-3">
+        <form method="get" th:action="@{/web/agendamentos/listar}" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-md-3">
+                <label for="status" class="form-label small text-muted mb-1">Status</label>
+                <select id="status" name="status" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${statusList}"
+                            th:value="${s}" th:text="${s}"
+                            th:selected="${s == statusSelecionado}"></option>
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label for="dataInicio" class="form-label small text-muted mb-1">De</label>
+                <input type="date" id="dataInicio" name="dataInicio"
+                       class="form-control form-control-sm" th:value="${dataInicio}">
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label for="dataFim" class="form-label small text-muted mb-1">Até</label>
+                <input type="date" id="dataFim" name="dataFim"
+                       class="form-control form-control-sm" th:value="${dataFim}">
+            </div>
+            <div class="col-sm-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-funnel-fill me-1"></i>Filtrar
+                </button>
+                <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary btn-sm"
+                   title="Limpar filtros"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+
     <table>
         <thead>
         <tr>
             <th>ID</th>
             <th>Cliente</th>
             <th>Profissional</th>
-            <th>Servico</th>
+            <th>Serviço</th>
             <th>Data/Hora</th>
             <th>Status</th>
-            <th>Acoes</th>
+            <th>Ações</th>
         </tr>
         </thead>
         <tbody>
@@ -23,32 +65,162 @@
             <td th:text="${a.id}"></td>
             <td th:text="${a.clienteNome}"></td>
             <td>
-                <span th:text="${a.profissionalNome}"></span>
-                <br>
-                <small th:text="${a.profissionalEspecialidade}" style="color: #7f8c8d;"></small>
+                <span th:text="${a.profissionalNome}"></span><br>
+                <small th:text="${a.profissionalEspecialidade}" style="color:#7f8c8d;"></small>
             </td>
             <td th:text="${a.servicoNome}"></td>
             <td th:text="${#temporals.format(a.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
             <td>
                 <span th:text="${a.status}"
-                      th:style="${a.status.name() == 'AGENDADO'} ? 'color: #3498db; font-weight: bold;' :
-                                ${a.status.name() == 'CONFIRMADO'} ? 'color: #27ae60; font-weight: bold;' :
-                                ${a.status.name() == 'CONCLUIDO'} ? 'color: #7f8c8d; font-weight: bold;' :
-                                'color: #e74c3c; font-weight: bold;'"></span>
+                      th:class="${'badge badge-status badge-' + a.status.name().toLowerCase()}"></span>
             </td>
             <td class="actions">
+                <!-- Editar -->
                 <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                   th:href="@{/web/agendamentos/{id}/editar(id=${a.id})}" class="btn btn-warning">Editar</a>
-                <a th:if="${a.status.name() != 'CONCLUIDO' and a.status.name() != 'CANCELADO'}"
-                   th:href="@{/web/agendamentos/{id}/cancelar(id=${a.id})}" class="btn btn-danger"
-                   onclick="return confirm('Deseja realmente cancelar este agendamento?')">Cancelar</a>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(agendamentos)}">
-            <td colspan="7" style="text-align: center; padding: 2rem;">Nenhum agendamento cadastrado.</td>
-        </tr>
-        </tbody>
-    </table>
+                   th:href="@{/web/agendamentos/editar/{id}(id=${a.id})}"
+                   class="btn btn-warning">Editar</a>
+
+                <!-- Avançar status: AGENDADO → CONFIRMADO → CONCLUIDO -->
+                <form th:if="${a.status.name() == 'AGENDADO'}"
+                      th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
+                      method="post" style="display:inline;">
+                    <input type="hidden" name="novoStatus" value="CONFIRMADO">
+                    <button type="submit" class="btn btn-success">Confirmar</button>
+                </form>
+                <form th:if="${a.status.name() == 'CONFIRMADO'}"
+                      th:action="@{/web/agendamentos/status/{id}(id=${a.id})}"
+                      method="post" style="display:inline;">
+                    <input type="hidden" name="novoStatus" value="CONCLUIDO">
+                    <button type="submit" class="btn btn-primary">Concluir</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Modal: Deletar Agendamento ───────────────────────────── -->
+    <div class="modal fade" id="modalDeletar" tabindex="-1"
+         aria-labelledby="modalDeletarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <form id="formDeletar" method="post">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title" id="modalDeletarLabel">
+                            <i class="bi bi-trash me-2 text-danger"></i>Deletar Agendamento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <!-- Dados do agendamento -->
+                        <div class="mb-3 p-3 rounded"
+                             style="background:var(--bs-light, #f8f9fa); border:1px solid var(--bs-border-color, #dee2e6);">
+                            <div class="row g-2 small">
+                                <div class="col-5 text-muted">Cliente</div>
+                                <div class="col-7 fw-semibold" id="deletarClienteNome">—</div>
+                                <div class="col-5 text-muted">Serviço</div>
+                                <div class="col-7" id="deletarServico">—</div>
+                                <div class="col-5 text-muted">Data/Hora</div>
+                                <div class="col-7" id="deletarDataHora">—</div>
+                                <div class="col-5 text-muted">Status</div>
+                                <div class="col-7"><span id="deletarStatusBadge"></span></div>
+                            </div>
+                        </div>
+
+                        <!-- Aviso irreversível -->
+                        <div class="alert alert-danger d-flex gap-2 py-2 mb-0">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1 text-danger"></i>
+                            <div class="small">
+                                <strong>Tem certeza?</strong> Essa ação é <strong>irreversível</strong>.
+                                O registro será permanentemente removido do sistema.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Deletar
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    /* Mapa de transições válidas por status */
+    const transicoes = {
+        'AGENDADO':   [
+            { value: 'CONFIRMADO', label: 'Confirmar agendamento',  cls: 'badge-confirmado' },
+            { value: 'CANCELADO',  label: 'Cancelar agendamento',   cls: 'badge-cancelado'  }
+        ],
+        'CONFIRMADO': [
+            { value: 'CONCLUIDO',  label: 'Marcar como Concluído',  cls: 'badge-concluido'  },
+            { value: 'CANCELADO',  label: 'Cancelar agendamento',   cls: 'badge-cancelado'  }
+        ]
+    };
+
+    const badgeClasses = {
+        'AGENDADO':   'badge-agendado',
+        'CONFIRMADO': 'badge-confirmado',
+        'CONCLUIDO':  'badge-concluido',
+        'CANCELADO':  'badge-cancelado'
+    };
+
+    document.getElementById('modalStatus').addEventListener('show.bs.modal', function (event) {
+        const btn      = event.relatedTarget;
+        const id       = btn.getAttribute('data-id');
+        const status   = btn.getAttribute('data-status');
+        const cliente  = btn.getAttribute('data-cliente');
+
+        document.getElementById('modalClienteNome').textContent = cliente;
+        document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
+
+        const badgeEl = document.getElementById('modalStatusAtualBadge');
+        badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
+
+        const select = document.getElementById('novoStatusSelect');
+        select.innerHTML = '<option value="">— Selecione —</option>';
+        const opcoes = transicoes[status] || [];
+        opcoes.forEach(function (op) {
+            const opt = document.createElement('option');
+            opt.value = op.value;
+            opt.textContent = op.label;
+            select.appendChild(opt);
+        });
+
+        document.getElementById('cancelarAviso').classList.add('d-none');
+        select.addEventListener('change', function () {
+            document.getElementById('cancelarAviso')
+                .classList.toggle('d-none', this.value !== 'CANCELADO');
+        });
+    });
+
+    document.getElementById('modalDeletar').addEventListener('show.bs.modal', function (event) {
+        const btn      = event.relatedTarget;
+        const id       = btn.getAttribute('data-id');
+        const cliente  = btn.getAttribute('data-cliente');
+        const servico  = btn.getAttribute('data-servico');
+        const dataHora = btn.getAttribute('data-datahora');
+        const status   = btn.getAttribute('data-status');
+
+        document.getElementById('formDeletar').action = '/web/agendamentos/deletar/' + id;
+        document.getElementById('deletarClienteNome').textContent = cliente;
+        document.getElementById('deletarServico').textContent     = servico;
+        document.getElementById('deletarDataHora').textContent    = dataHora;
+
+        const badgeEl = document.getElementById('deletarStatusBadge');
+        badgeEl.className = 'badge badge-status ' + (badgeClasses[status] || '');
+        badgeEl.textContent = status;
+    });
+</script>
 </body>
 </html>
