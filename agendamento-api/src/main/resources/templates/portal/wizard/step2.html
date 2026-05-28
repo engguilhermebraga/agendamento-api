@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
+<body>
+<section>
+
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
+        </div>
+        <div class="step active">
+            <div class="step-number">2</div>
+            <div class="step-line"></div>
+            <div>Data e Hora</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+            <div>Confirmar</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Concluído</div>
+        </div>
+    </div>
+
+    <!-- Badge do serviço selecionado -->
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-scissors flex-shrink-0"></i>
+        <div>
+            <strong th:text="${wizard.servicoNome}">Serviço</strong>
+            &nbsp;·&nbsp;
+            <span th:text="${wizard.servicoDuracaoMinutos} + ' min'"></span>
+            &nbsp;·&nbsp;
+            <span th:text="'R$ ' + ${#numbers.formatDecimal(wizard.servicoPreco, 1, 'POINT', 2, 'COMMA')}"></span>
+        </div>
+    </div>
+
+    <div class="card p-4">
+        <h4 class="mb-1">Escolha Data e Horário</h4>
+        <p style="color:var(--clr-text-muted); font-size:.875rem;" class="mb-4">Selecione o profissional, a data e um horário disponível.</p>
+
+        <!-- Erro de validação vindo do servidor -->
+        <div th:if="${erroValidacao}" class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+            <span th:text="${erroValidacao}"></span>
+        </div>
+
+        <form method="post" th:action="@{/portal/step3}" id="formStep2" novalidate>
+
+            <!-- Profissional -->
+            <div class="mb-3">
+                <label for="profissionalId" class="form-label">
+                    Profissional <span class="text-danger">*</span>
+                </label>
+                <select id="profissionalId" name="profissionalId" class="form-select" required>
+                    <option value="">— Selecione um profissional —</option>
+                    <option th:each="p : ${profissionais}"
+                            th:value="${p.id}"
+                            th:text="${p.nome} + ' — ' + ${p.especialidade}"
+                            th:selected="${wizard.profissionalId != null and p.id == wizard.profissionalId}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- Data -->
+            <div class="mb-3">
+                <label for="data" class="form-label">
+                    Data <span class="text-danger">*</span>
+                </label>
+                <input type="date" id="data" name="data"
+                       class="form-control" required
+                       th:min="${dataMinima}"
+                       th:value="${wizard.data}"
+                       onchange="destacarData(this)">
+            </div>
+
+            <!-- Horários disponíveis -->
+            <div class="mb-4">
+                <label class="form-label">
+                    Horário <span class="text-danger">*</span>
+                </label>
+                <div id="timeSlots" class="time-slots"></div>
+                <input type="hidden" id="hora" name="hora" th:value="${wizard.hora}">
+                <div id="erroHorario" class="alert alert-danger small mt-2 d-none" style="padding:8px 14px;">
+                    <i class="bi bi-exclamation-circle me-1"></i>Selecione um horário para continuar.
+                </div>
+            </div>
+
+            <!-- Erro de validação client-side -->
+            <div id="erroFormulario" class="alert alert-danger small mb-3 d-none" style="padding:8px 14px;">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                <span id="erroFormularioTexto"></span>
+            </div>
+
+            <!-- Rodapé -->
+            <div class="d-flex justify-content-between">
+                <a th:href="@{/portal/step1}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i>Voltar
+                </a>
+                <button type="submit" class="btn btn-portal px-4">
+                    Avançar <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        var horaSalva = document.getElementById('hora').value || '';
+
+        function gerarHorarios() {
+            var container = document.getElementById('timeSlots');
+            container.innerHTML = '';
+            var inicio = 8, fim = 18, intervalo = 30;
+            for (var h = inicio; h < fim; h++) {
+                for (var m = 0; m < 60; m += intervalo) {
+                    var hora = pad(h) + ':' + pad(m);
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'time-slot' + (hora === horaSalva ? ' selected' : '');
+                    btn.textContent = hora;
+                    btn.setAttribute('data-time', hora);
+                    btn.addEventListener('click', function () {
+                        document.querySelectorAll('.time-slot')
+                            .forEach(function (b) { b.classList.remove('selected'); });
+                        this.classList.add('selected');
+                        document.getElementById('hora').value = this.getAttribute('data-time');
+                        document.getElementById('erroHorario').classList.add('d-none');
+                        document.getElementById('erroFormulario').classList.add('d-none');
+                    });
+                    container.appendChild(btn);
+                }
+            }
+        }
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function destacarData(input) {
+            input.style.borderColor = input.value ? 'var(--clr-primary)' : '';
+        }
+
+        document.getElementById('formStep2').addEventListener('submit', function (e) {
+            var profissional = document.getElementById('profissionalId').value;
+            var data = document.getElementById('data').value;
+            var hora = document.getElementById('hora').value;
+            var erros = [];
+
+            if (!profissional) erros.push('Selecione um profissional.');
+            if (!data) erros.push('Informe a data.');
+            if (!hora) {
+                erros.push('Selecione um horário.');
+                document.getElementById('erroHorario').classList.remove('d-none');
+            } else {
+                document.getElementById('erroHorario').classList.add('d-none');
+            }
+
+            if (erros.length > 0) {
+                e.preventDefault();
+                var erroEl = document.getElementById('erroFormulario');
+                document.getElementById('erroFormularioTexto').textContent = erros.join(' ');
+                erroEl.classList.remove('d-none');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            gerarHorarios();
+            var dataInput = document.getElementById('data');
+            if (dataInput.value) destacarData(dataInput);
+        });
+    </script>
+
+</section>
+</body>
+</html>

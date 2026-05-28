@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
+<body>
+<section>
+
+    <!-- Mensagem de erro vinda de redirect (ex.: tentou avançar sem selecionar serviço) -->
+    <div th:if="${mensagemErro}" class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+        <span th:text="${mensagemErro}"></span>
+    </div>
+
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step active">
+            <div class="step-number">1</div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-line"></div>
+            <div>Data e Hora</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+            <div>Confirmar</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Concluído</div>
+        </div>
+    </div>
+
+    <div class="card p-4">
+        <h4 class="mb-1">Selecione o Serviço</h4>
+        <p style="color:var(--clr-text-muted); font-size:.875rem;" class="mb-4">Escolha o serviço que deseja agendar.</p>
+
+        <form method="post" th:action="@{/portal/step2}" id="formStep1" novalidate>
+
+            <div class="row g-3" id="servicosGrid">
+                <div class="col-md-6 col-lg-4" th:each="s : ${servicos}">
+                    <label th:for="${'s-' + s.id}"
+                           class="service-card w-100 d-flex flex-column h-100"
+                           th:classappend="${wizard != null and s.id == wizard.servicoId} ? ' selected' : ''">
+                        <input type="radio"
+                               name="servicoId"
+                               th:id="${'s-' + s.id}"
+                               th:value="${s.id}"
+                               class="d-none"
+                               th:checked="${wizard != null and s.id == wizard.servicoId}"
+                               required>
+                        <h6 class="mb-1 fw-semibold" th:text="${s.nome}">Serviço</h6>
+                        <p style="color:var(--clr-text-muted); font-size:.85rem; flex:1;"
+                           th:text="${s.descricao}"
+                           th:if="${s.descricao != null}"></p>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2"
+                             style="border-top:1px solid var(--clr-border);">
+                            <span class="price"
+                                  th:text="'R$ ' + ${#numbers.formatDecimal(s.preco, 1, 'POINT', 2, 'COMMA')}">
+                            </span>
+                            <span class="duration">
+                                <i class="bi bi-clock me-1"></i>
+                                <span th:text="${s.duracaoMinutos}"></span> min
+                            </span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Estado vazio -->
+            <div th:if="${#lists.isEmpty(servicos)}"
+                 class="text-center py-5" style="color:var(--clr-text-muted);">
+                <i class="bi bi-scissors d-block mb-2" style="font-size:2.5rem; color:#d1d5db;"></i>
+                Nenhum serviço disponível no momento.
+            </div>
+
+            <!-- Erro de validação client-side -->
+            <div id="erroServico" class="alert alert-danger mt-3 d-none" role="alert">
+                <i class="bi bi-exclamation-circle me-1"></i>Selecione um serviço para continuar.
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a th:href="@{/portal}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-portal px-4">
+                    Avançar <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        /* O(1): mantém referência ao card ativo sem iterar todos */
+        var cardAtivo = document.querySelector('.service-card.selected') || null;
+        document.querySelectorAll('.service-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                if (cardAtivo && cardAtivo !== this) cardAtivo.classList.remove('selected');
+                this.classList.add('selected');
+                cardAtivo = this;
+                document.getElementById('erroServico').classList.add('d-none');
+            });
+        });
+
+        document.getElementById('formStep1').addEventListener('submit', function (e) {
+            if (!document.querySelector('input[name="servicoId"]:checked')) {
+                e.preventDefault();
+                document.getElementById('erroServico').classList.remove('d-none');
+            }
+        });
+    </script>
+
+</section>
+</body>
+</html>

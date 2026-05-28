@@ -1,17 +1,20 @@
 package com.guilhermebraga.agendamento_api.config;
 
+import com.guilhermebraga.agendamento_api.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -23,12 +26,16 @@ import static org.springframework.security.config.Customizer.withDefaults;
 /**
  * Configuração central de segurança da aplicação.
  *
- * Regras da API REST (/api/v1/**):
- *   GET           → ROLE_USER ou ROLE_ADMIN
- *   POST/PUT/DELETE/PATCH → apenas ROLE_ADMIN
+ * Autenticação suportada:
+ *   1. JWT Bearer token  — para a API REST (/api/v1/**)
+ *   2. HTTP Basic auth   — para Swagger UI e testes via curl
+ *   3. Form Login        — para o painel admin (/web/** e /dashboard)
  *
- * Caminhos públicos: Swagger UI, H2 Console, portal e views web.
- * CSRF desabilitado (API stateless). CORS habilitado para localhost:3000.
+ * Regras de autorização:
+ *   Portal (/portal/**)               → público (autenticação própria por sessão)
+ *   Admin web (/web/**, /dashboard)   → ROLE_USER ou ROLE_ADMIN via form login
+ *   API REST GET                      → ROLE_USER ou ROLE_ADMIN
+ *   API REST POST/PUT/PATCH/DELETE    → ROLE_ADMIN
  *
  * @author Guilherme Braga
  */
@@ -36,32 +43,33 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // ----------------------------------------------------------------
-    // FILTER CHAIN — regras de autorização HTTP
-    // ----------------------------------------------------------------
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter jwtFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .headers(headers -> headers
-                // Permite iframes no H2 Console (mesma origem)
                 .frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
 
-                // --- Swagger UI e OpenAPI ---
-                .requestMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**"
-                ).permitAll()
-
-                // --- H2 Console (somente perfil dev) ---
+                // --- Recursos estáticos e infra ---
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/error").permitAll()
 
-                // --- Portal público e views Thymeleaf ---
-                .requestMatchers("/portal/**", "/web/**").permitAll()
+                // --- Portal do cliente (sessão própria, sem Spring Security) ---
+                .requestMatchers("/portal/**").permitAll()
+
+                // --- Endpoint de autenticação JWT ---
+                .requestMatchers("/api/v1/auth/**").permitAll()
+
+                // --- Login do painel admin (a própria página de login é pública) ---
+                .requestMatchers("/web/login").permitAll()
+
+                // --- Painel admin: exige autenticação via form login ---
+                .requestMatchers("/web/**", "/dashboard", "/dashboard/**").hasAnyRole("USER", "ADMIN")
 
                 // --- API REST: leitura → USER ou ADMIN ---
                 .requestMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("USER", "ADMIN")
@@ -72,18 +80,27 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH,  "/api/v1/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/**").hasRole("ADMIN")
 
-                // Qualquer outra rota exige autenticação
                 .anyRequest().authenticated()
             )
-            // HTTP Basic para consumo via Swagger / clientes REST
-            .httpBasic(withDefaults());
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(withDefaults())
+            .formLogin(form -> form
+                .loginPage("/web/login")
+                .loginProcessingUrl("/web/login")
+                .defaultSuccessUrl("/web/dashboard", true)
+                .failureUrl("/web/login?error")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/web/logout")
+                .logoutSuccessUrl("/web/login?logout")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .permitAll()
+            );
 
         return http.build();
     }
-
-    // ----------------------------------------------------------------
-    // USUÁRIOS EM MEMÓRIA
-    // ----------------------------------------------------------------
 
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
@@ -102,10 +119,6 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(admin, user);
     }
 
-    // ----------------------------------------------------------------
-    // PASSWORD ENCODER
-    // ----------------------------------------------------------------
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -115,10 +128,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    // ----------------------------------------------------------------
-    // CORS — permite requisições do frontend em localhost:3000
-    // ----------------------------------------------------------------
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

@@ -1,41 +1,83 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head><title>Portal</title></head>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
 <body>
-<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Início', menuAtivo='home'">
-    <div th:fragment="conteudoPortal">
+<section>
 
-        <div class="card" style="text-align: center; padding: 50px 25px;">
-            <h2 style="font-size: 1.8rem; margin-bottom: 10px;">Bem-vindo ao Portal de Agendamento</h2>
-            <p style="color: #666; font-size: 1.05rem; margin-bottom: 30px;">
-                Agende seus serviços de forma rápida e prática.
-            </p>
-            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                <a th:href="@{/portal/servicos}" class="btn btn-outline" style="padding: 14px 30px; font-size: 1rem;">
-                    Ver Serviços
-                </a>
-                <a th:href="@{/portal/agendar/servico}" class="btn btn-primary" style="padding: 14px 30px; font-size: 1rem;">
-                    Agendar Agora
-                </a>
+    <!-- Boas-vindas -->
+    <div class="card p-4 mb-4" style="background:var(--clr-gradient); color:#fff; border:none;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:52px;height:52px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-calendar-heart-fill" style="font-size:1.6rem;"></i>
+            </div>
+            <div>
+                <h4 class="mb-1" th:text="'Olá, ' + ${session.clienteLogado.nome} + '!'">Olá!</h4>
+                <p class="mb-0" style="opacity:.85; font-size:.9rem;">Bem-vindo(a) ao seu Portal de Agendamento.</p>
             </div>
         </div>
-
-        <div class="grid grid-3" style="margin-top: 20px;">
-            <div class="card" style="text-align: center;">
-                <h3 style="font-size: 2rem; color: #667eea;" th:text="${totalServicos}">0</h3>
-                <p style="color: #888;">Serviços Disponíveis</p>
-            </div>
-            <div class="card" style="text-align: center;">
-                <h3 style="font-size: 2rem; color: #667eea;" th:text="${totalProfissionais}">0</h3>
-                <p style="color: #888;">Profissionais</p>
-            </div>
-            <div class="card" style="text-align: center;">
-                <h3 style="font-size: 2rem; color: #667eea;" th:text="${meusAgendamentos}">0</h3>
-                <p style="color: #888;">Meus Agendamentos</p>
-            </div>
-        </div>
-
     </div>
-</div>
+
+    <!-- Métricas rápidas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 h-100" style="border-left:4px solid var(--clr-primary);">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:44px;height:44px;background:var(--clr-primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-scissors" style="color:var(--clr-primary);font-size:1.25rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:1.8rem;font-weight:800;line-height:1;color:var(--clr-primary);"
+                             th:text="${totalServicos}">0</div>
+                        <div style="font-size:.82rem;color:var(--clr-text-muted);margin-top:2px;">Serviços Disponíveis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 h-100" style="border-left:4px solid var(--clr-success);">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:44px;height:44px;background:#d1fae5;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-badge" style="color:var(--clr-success);font-size:1.25rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:1.8rem;font-weight:800;line-height:1;color:var(--clr-success);"
+                             th:text="${totalProfissionais}">0</div>
+                        <div style="font-size:.82rem;color:var(--clr-text-muted);margin-top:2px;">Profissionais</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 h-100" style="border-left:4px solid var(--clr-warning);">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:44px;height:44px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-calendar-check" style="color:var(--clr-warning);font-size:1.25rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:1.8rem;font-weight:800;line-height:1;color:var(--clr-warning);"
+                             th:text="${meusAgendamentos}">0</div>
+                        <div style="font-size:.82rem;color:var(--clr-text-muted);margin-top:2px;">Meus Agendamentos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="card p-4">
+        <h5 class="mb-3"><i class="bi bi-lightning-charge-fill me-2" style="color:var(--clr-warning);"></i>O que deseja fazer?</h5>
+        <div class="d-flex flex-wrap gap-3">
+            <a th:href="@{/portal/step1}" class="btn btn-portal px-4" style="font-size:.95rem;">
+                <i class="bi bi-calendar-plus"></i>Agendar Agora
+            </a>
+            <a th:href="@{/portal/servicos}" class="btn btn-outline-secondary px-4" style="font-size:.95rem;">
+                <i class="bi bi-scissors"></i>Ver Serviços
+            </a>
+            <a th:href="@{/portal/meus-agendamentos}" class="btn btn-outline-secondary px-4" style="font-size:.95rem;">
+                <i class="bi bi-list-check"></i>Meus Agendamentos
+            </a>
+        </div>
+    </div>
+
+</section>
 </body>
 </html>

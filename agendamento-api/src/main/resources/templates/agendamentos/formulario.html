@@ -1,15 +1,54 @@
 <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
 <body>
-                                </select>
-                            </div>
-                                </select>
-                            </div>
-                                </select>
-                            </div>
-                        </div>
-                        </div>
-                    </form>
-                </div>
+<div th:fragment="conteudo">
+    <h2 th:text="${agendamentoId != null} ? 'Editar Agendamento' : 'Novo Agendamento'">Formulário</h2>
+    <div class="form-card">
+        <form th:action="${agendamentoId != null} ? @{/web/agendamentos/{id}(id=${agendamentoId})} : @{/web/agendamentos}"
+              method="post" th:object="${agendamento}">
+            <div class="form-group">
+                <label for="clienteId">Cliente</label>
+                <select id="clienteId" th:field="*{clienteId}" required>
+                    <option value="">-- Selecione --</option>
+                    <option th:each="c : ${clientes}"
+                            th:value="${c.id}"
+                            th:text="${c.nome}"></option>
+                </select>
             </div>
+            <div class="form-group">
+                <label for="profissionalId">Profissional</label>
+                <select id="profissionalId" th:field="*{profissionalId}" required>
+                    <option value="">-- Selecione --</option>
+                    <option th:each="p : ${profissionais}"
+                            th:value="${p.id}"
+                            th:text="${p.nome} + ' — ' + ${p.especialidade}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="servicoId">Serviço</label>
+                <select id="servicoId" th:field="*{servicoId}" required>
+                    <option value="">-- Selecione --</option>
+                    <option th:each="s : ${servicos}"
+                            th:value="${s.id}"
+                            th:text="${s.nome}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="dataHora">Data e Hora</label>
+                <input type="datetime-local" id="dataHora" th:field="*{dataHora}" required/>
+            </div>
+            <div class="form-group" th:if="${agendamentoId != null}">
+                <label for="status">Status</label>
+                <select id="status" th:field="*{status}">
+                    <option th:each="s : ${statusList}"
+                            th:value="${s}"
+                            th:text="${s}"></option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a th:href="@{/web/agendamentos}" class="btn btn-danger" style="margin-left:.5rem;">Cancelar</a>
+        </form>
+    </div>
+</div>
 </body>
 </html>
