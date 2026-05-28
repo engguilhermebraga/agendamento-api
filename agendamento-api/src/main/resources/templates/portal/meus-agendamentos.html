@@ -25,19 +25,18 @@
                     <tr>
                         <th>Serviço</th>
                         <th>Profissional</th>
-                        <th>Data/Hora</th>
+                        <th>Data / Hora</th>
                         <th>Status</th>
-                        <th>Ações</th>
+                        <th>Ação</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="ag : ${agendamentos}">
-                        <td th:text="${ag.servicoNome}">Serviço</td>
                         <td>
                             <span th:text="${ag.profissionalNome}">Profissional</span><br/>
                             <small class="text-muted" th:text="${ag.profissionalEspecialidade}">Especialidade</small>
                         </td>
-                        <td th:text="${#temporals.format(ag.dataHora, 'dd/MM/yyyy HH:mm')}">01/01/2026 08:00</td>
+                        <td th:text="${#temporals.format(ag.dataHora, 'dd/MM/yyyy HH:mm')}">—</td>
                         <td>
                             <span class="badge"
                                   th:classappend="${ag.status.name() == 'AGENDADO'   ? 'badge-agendado'   :

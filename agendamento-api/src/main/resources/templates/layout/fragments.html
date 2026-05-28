@@ -6,10 +6,14 @@
   Fragment: navbar
   Uso: <nav th:replace="~{layout/fragments :: navbar}"></nav>
 -->
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/web/dashboard}">
-            <i class="bi bi-calendar-check-fill me-2"></i>Agendamento API
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark shadow-sm"
+     style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/web/dashboard}">
+            <span style="background:rgba(59,130,246,.2); border-radius:8px; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;">
+                <i class="bi bi-calendar-check-fill" style="color:#60a5fa;"></i>
+            </span>
+            Agendamento API
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarNav" aria-controls="navbarNav"
@@ -17,44 +21,55 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto gap-1">
+            <ul class="navbar-nav me-auto gap-1">
                 <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/web/dashboard}">
+                    <a class="nav-link px-3 rounded-2" th:href="@{/web/dashboard}"
+                       th:classappend="${#httpServletRequest.requestURI.contains('/dashboard') ? ' active bg-white bg-opacity-10' : ''}">
                         <i class="bi bi-speedometer2 me-1"></i>Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/web/clientes}">
+                    <a class="nav-link px-3 rounded-2" th:href="@{/web/clientes}"
+                       th:classappend="${#httpServletRequest.requestURI.contains('/clientes') ? ' active bg-white bg-opacity-10' : ''}">
                         <i class="bi bi-people me-1"></i>Clientes
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/web/profissionais}">
+                    <a class="nav-link px-3 rounded-2" th:href="@{/web/profissionais}"
+                       th:classappend="${#httpServletRequest.requestURI.contains('/profissionais') ? ' active bg-white bg-opacity-10' : ''}">
                         <i class="bi bi-person-badge me-1"></i>Profissionais
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/web/servicos}">
+                    <a class="nav-link px-3 rounded-2" th:href="@{/web/servicos}"
+                       th:classappend="${#httpServletRequest.requestURI.contains('/servicos') ? ' active bg-white bg-opacity-10' : ''}">
                         <i class="bi bi-scissors me-1"></i>Serviços
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/web/agendamentos}">
+                    <a class="nav-link px-3 rounded-2" th:href="@{/web/agendamentos}"
+                       th:classappend="${#httpServletRequest.requestURI.contains('/agendamentos') ? ' active bg-white bg-opacity-10' : ''}">
                         <i class="bi bi-calendar3 me-1"></i>Agendamentos
                     </a>
                 </li>
-                <li class="nav-item ms-2">
-                    <a class="btn btn-outline-light btn-sm" href="/swagger-ui.html" target="_blank">
-                        <i class="bi bi-code-slash me-1"></i>Swagger UI
-                    </a>
-                </li>
             </ul>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-sm btn-outline-light" href="/swagger-ui.html" target="_blank">
+                    <i class="bi bi-code-slash me-1"></i>API Docs
+                </a>
+                <form th:action="@{/web/logout}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-sm"
+                            style="background:rgba(239,68,68,.2); color:#fca5a5; border:1px solid rgba(239,68,68,.3);">
+                        <i class="bi bi-box-arrow-right me-1"></i>Sair
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </nav>
 
 <!--
-  Fragment: alertas (mensagens de sucesso/erro via flash attributes do redirect)
+  Fragment: alertas
   Uso: <div th:replace="~{layout/fragments :: alertas}"></div>
 -->
 <div th:fragment="alertas" class="mb-4">
@@ -63,36 +78,36 @@
          role="alert">
         <i class="bi bi-check-circle-fill flex-shrink-0"></i>
         <span th:text="${mensagemSucesso}"></span>
-        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
-                aria-label="Fechar"></button>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     <div th:if="${mensagemErro}"
          class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2"
          role="alert">
         <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
         <span th:text="${mensagemErro}"></span>
-        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
-                aria-label="Fechar"></button>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 </div>
 
 <!--
-  Fragment: footer
+  Fragment: rodape
   Uso: <footer th:replace="~{layout/fragments :: rodape}"></footer>
 -->
-<footer th:fragment="rodape" class="footer mt-auto py-3 bg-light border-top">
-    <div class="container d-flex justify-content-between align-items-center">
+<footer th:fragment="rodape" class="footer mt-auto py-3 border-top"
+        style="background:#f8fafc;">
+    <div class="container-fluid px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span class="text-muted small">
-            Agendamento API &mdash; TCC UNDB 2026
+            <i class="bi bi-mortarboard me-1"></i>Agendamento API &mdash; TCC UNDB 2026 &mdash; Guilherme Braga
         </span>
         <div class="d-flex gap-3">
-            <a href="/swagger-ui.html" target="_blank"
-               class="text-muted small text-decoration-none">
+            <a href="/swagger-ui.html" target="_blank" class="text-muted small text-decoration-none">
                 <i class="bi bi-code-slash me-1"></i>Swagger UI
             </a>
-            <a href="/h2-console" target="_blank"
-               class="text-muted small text-decoration-none">
+            <a href="/h2-console" target="_blank" class="text-muted small text-decoration-none">
                 <i class="bi bi-database me-1"></i>H2 Console
+            </a>
+            <a th:href="@{/portal}" class="text-muted small text-decoration-none">
+                <i class="bi bi-person-circle me-1"></i>Portal Cliente
             </a>
         </div>
     </div>

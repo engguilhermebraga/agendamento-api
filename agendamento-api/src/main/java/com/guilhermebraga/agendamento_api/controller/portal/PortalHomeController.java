@@ -64,13 +64,16 @@ public class PortalHomeController {
     }
 
     /**
-     * Login simples por e-mail.
+     * Login por e-mail + senha (BCrypt).
      */
     @PostMapping("/login")
-    public String login(@RequestParam String email, HttpSession session, RedirectAttributes redirect) {
-        Cliente cliente = clienteService.autenticarPorEmail(email);
+    public String login(@RequestParam String email,
+                        @RequestParam String senha,
+                        HttpSession session,
+                        RedirectAttributes redirect) {
+        Cliente cliente = clienteService.autenticarPorEmailESenha(email, senha);
         if (cliente == null) {
-            redirect.addFlashAttribute("mensagemErro", "E-mail não encontrado. Cadastre-se primeiro.");
+            redirect.addFlashAttribute("mensagemErro", "E-mail ou senha inválidos.");
             return "redirect:/portal";
         }
         session.setAttribute("clienteLogado", cliente);
@@ -94,11 +97,21 @@ public class PortalHomeController {
                             @RequestParam String email,
                             @RequestParam String telefone,
                             @RequestParam String cpf,
+                            @RequestParam String senha,
+                            @RequestParam String confirmarSenha,
                             HttpSession session,
                             RedirectAttributes redirect,
                             Model model) {
+        if (senha.length() < 6) {
+            model.addAttribute("mensagemErro", "A senha deve ter pelo menos 6 caracteres.");
+            return "portal/cadastro";
+        }
+        if (!senha.equals(confirmarSenha)) {
+            model.addAttribute("mensagemErro", "As senhas não conferem.");
+            return "portal/cadastro";
+        }
         try {
-            Cliente cliente = clienteService.criarPeloPortal(nome, email, telefone, cpf);
+            Cliente cliente = clienteService.criarPeloPortal(nome, email, telefone, cpf, senha);
             session.setAttribute("clienteLogado", cliente);
             redirect.addFlashAttribute("mensagemSucesso", "Cadastro realizado com sucesso! Bem-vindo(a), " + cliente.getNome() + "!");
             return "redirect:/portal";

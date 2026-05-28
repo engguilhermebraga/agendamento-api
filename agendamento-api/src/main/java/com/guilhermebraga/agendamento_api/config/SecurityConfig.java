@@ -71,6 +71,16 @@ public class SecurityConfig {
 
                 // --- H2 Console ---
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/error").permitAll()
+
+                // --- Portal do cliente (sessão própria, sem Spring Security) ---
+                .requestMatchers("/portal/**").permitAll()
+
+                // --- Endpoint de autenticação JWT ---
+                .requestMatchers("/api/v1/auth/**").permitAll()
+
+                // --- Login do painel admin (a própria página de login é pública) ---
+                .requestMatchers("/web/login").permitAll()
 
                 // --- Endpoint de login (JWT) ---
                 .requestMatchers("/api/v1/auth/**").permitAll()

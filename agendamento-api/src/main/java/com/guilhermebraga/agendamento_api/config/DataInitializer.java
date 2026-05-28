@@ -1,7 +1,6 @@
 package com.guilhermebraga.agendamento_api.config;
 
 import com.guilhermebraga.agendamento_api.dto.request.AgendamentoRequest;
-import com.guilhermebraga.agendamento_api.dto.request.ClienteRequest;
 import com.guilhermebraga.agendamento_api.dto.request.ProfissionalRequest;
 import com.guilhermebraga.agendamento_api.dto.request.ServicoRequest;
 import com.guilhermebraga.agendamento_api.dto.response.ClienteResponse;
@@ -52,26 +51,21 @@ public class DataInitializer implements CommandLineRunner {
 
         try {
             // ---- CLIENTES ----
-            ClienteResponse c1 = clienteService.criar(new ClienteRequest(
-                    "Maria Fernanda Oliveira",
-                    "maria.fernanda@email.com",
-                    "98988881111",
-                    "11122233344"
-            ));
+            // Clientes criados com senha "cliente123" para acesso ao portal
+            var ent1 = clienteService.criarPeloPortal(
+                    "Maria Fernanda Oliveira", "maria.fernanda@email.com",
+                    "98988881111", "11122233344", "cliente123");
+            ClienteResponse c1 = ClienteResponse.builder().id(ent1.getId()).build();
 
-            ClienteResponse c2 = clienteService.criar(new ClienteRequest(
-                    "João Pedro Santos",
-                    "joao.pedro@email.com",
-                    "98988882222",
-                    "22233344455"
-            ));
+            var ent2 = clienteService.criarPeloPortal(
+                    "João Pedro Santos", "joao.pedro@email.com",
+                    "98988882222", "22233344455", "cliente123");
+            ClienteResponse c2 = ClienteResponse.builder().id(ent2.getId()).build();
 
-            ClienteResponse c3 = clienteService.criar(new ClienteRequest(
-                    "Ana Carolina Lima",
-                    "ana.lima@email.com",
-                    "98988883333",
-                    "33344455566"
-            ));
+            var ent3 = clienteService.criarPeloPortal(
+                    "Ana Carolina Lima", "ana.lima@email.com",
+                    "98988883333", "33344455566", "cliente123");
+            ClienteResponse c3 = ClienteResponse.builder().id(ent3.getId()).build();
 
             log.info(" [OK] {} clientes cadastrados.", 3);
 

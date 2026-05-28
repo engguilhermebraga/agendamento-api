@@ -48,6 +48,12 @@ public class Cliente {
     private String cpf;
 
     /**
+     * Senha hasheada com BCrypt — nullable para compatibilidade com clientes legados.
+     */
+    @Column(name = "senha", length = 255)
+    private String senha;
+
+    /**
      * Data e hora de criação do registro.
      */
     @Column(name = "criado_em", nullable = false, updatable = false)

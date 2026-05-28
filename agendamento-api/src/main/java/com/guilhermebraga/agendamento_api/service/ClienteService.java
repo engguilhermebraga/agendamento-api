@@ -27,6 +27,7 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Cadastra novo cliente após validar duplicidade de CPF e e-mail.
@@ -115,19 +116,21 @@ public class ClienteService {
     }
 
     /**
-     * Identifica um cliente pelo e-mail (autenticação simples do portal).
-     * Retorna o cliente se encontrado, ou null se não existir.
+     * Autentica por e-mail + senha (BCrypt). Retorna null se inválido.
      */
     @Transactional(readOnly = true)
-    public Cliente autenticarPorEmail(String email) {
-        return clienteRepository.findByEmail(email).orElse(null);
+    public Cliente autenticarPorEmailESenha(String email, String senha) {
+        return clienteRepository.findByEmail(email)
+                .filter(c -> c.getSenha() != null && passwordEncoder.matches(senha, c.getSenha()))
+                .orElse(null);
     }
 
     /**
      * Cadastra um novo cliente a partir dos dados básicos (usado no portal).
+     * Recebe a senha em texto claro e a armazena hasheada com BCrypt.
      */
     @Transactional
-    public Cliente criarPeloPortal(String nome, String email, String telefone, String cpf) {
+    public Cliente criarPeloPortal(String nome, String email, String telefone, String cpf, String senha) {
 
         if (clienteRepository.findByEmail(email).isPresent()) {
             throw new BusinessException(
@@ -144,6 +147,7 @@ public class ClienteService {
                 .email(email)
                 .telefone(telefone)
                 .cpf(cpf)
+                .senha(passwordEncoder.encode(senha))
                 .build();
 
         return clienteRepository.save(cliente);

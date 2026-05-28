@@ -196,6 +196,12 @@
         <div th:replace="${conteudo}"></div>
 
     </div>
+    <div th:if="${mensagemInfo}" class="alert alert-info">
+        <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+        <span th:text="${mensagemInfo}"></span>
+    </div>
+
+    <th:block th:replace="${content}"/>
 </main>
 
 <!-- ══════════════════════════════════════════════════════════
