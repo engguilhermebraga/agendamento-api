@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Intercepta e trata exceções lançadas APENAS nos controllers REST da API.
@@ -38,10 +39,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidationErrors(
             MethodArgumentNotValidException ex) {
 
-        Map<String, String> erros = new HashMap<>();
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            erros.put(fieldError.getField(), fieldError.getDefaultMessage());
-        }
+        Map<String, String> erros = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
