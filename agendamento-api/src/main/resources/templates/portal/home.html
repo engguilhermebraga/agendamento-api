@@ -3,38 +3,77 @@
 <body>
 <section>
 
-    <div class="card p-4 text-center mb-4">
-        <h2 style="font-size:1.8rem; margin-bottom:10px;">Bem-vindo ao Portal de Agendamento</h2>
-        <p style="color:#666; font-size:1.05rem; margin-bottom:28px;">
-            Agende seus serviços de forma rápida e prática.
-        </p>
-        <div class="d-flex justify-content-center gap-3 flex-wrap">
-            <a th:href="@{/portal/servicos}" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-grid me-1"></i>Ver Serviços
-            </a>
-            <a th:href="@{/portal/step1}" class="btn btn-portal px-4">
-                <i class="bi bi-calendar-plus me-1"></i>Agendar Agora
-            </a>
+    <!-- Hero card com gradiente -->
+    <div class="card p-4 mb-4"
+         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border:none;">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-2" style="font-size:1.8rem; color:#fff;">
+                    Bem-vindo ao Portal de Agendamento
+                </h2>
+                <p style="color:rgba(255,255,255,0.88); font-size:1rem; margin-bottom:24px;">
+                    Agende seus serviços de forma rápida e prática, a qualquer hora.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a th:href="@{/portal/servicos}" class="btn btn-light px-4 fw-semibold">
+                        <i class="bi bi-grid me-1"></i>Ver Serviços
+                    </a>
+                    <a th:href="@{/portal/step1}" class="btn btn-outline-light px-4 fw-semibold">
+                        <i class="bi bi-calendar-plus me-1"></i>Agendar Agora
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4 text-center d-none d-md-block">
+                <i class="bi bi-calendar-check-fill" style="font-size:7rem; opacity:0.25;"></i>
+            </div>
         </div>
     </div>
 
+    <!-- Cards de estatísticas -->
     <div class="row g-3">
         <div class="col-md-4">
-            <div class="card p-4 text-center">
-                <h3 style="font-size:2rem; color:#667eea;" th:text="${totalServicos}">0</h3>
-                <p class="text-muted mb-0">Serviços Disponíveis</p>
+            <div class="card p-4 text-center h-100">
+                <div class="mb-3">
+                    <span style="display:inline-flex; align-items:center; justify-content:center;
+                                 width:56px; height:56px; border-radius:16px;
+                                 background:#ede9fe; font-size:1.6rem; color:#667eea;">
+                        <i class="bi bi-scissors"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold mb-1" style="font-size:2.2rem; color:#667eea;"
+                    th:text="${totalServicos}">0</h3>
+                <p class="text-muted mb-0 small fw-semibold text-uppercase"
+                   style="letter-spacing:.05em;">Serviços Disponíveis</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card p-4 text-center">
-                <h3 style="font-size:2rem; color:#667eea;" th:text="${totalProfissionais}">0</h3>
-                <p class="text-muted mb-0">Profissionais</p>
+            <div class="card p-4 text-center h-100">
+                <div class="mb-3">
+                    <span style="display:inline-flex; align-items:center; justify-content:center;
+                                 width:56px; height:56px; border-radius:16px;
+                                 background:#dcfce7; font-size:1.6rem; color:#28a745;">
+                        <i class="bi bi-person-badge"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold mb-1" style="font-size:2.2rem; color:#28a745;"
+                    th:text="${totalProfissionais}">0</h3>
+                <p class="text-muted mb-0 small fw-semibold text-uppercase"
+                   style="letter-spacing:.05em;">Profissionais</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card p-4 text-center">
-                <h3 style="font-size:2rem; color:#667eea;" th:text="${meusAgendamentos}">0</h3>
-                <p class="text-muted mb-0">Meus Agendamentos</p>
+            <div class="card p-4 text-center h-100">
+                <div class="mb-3">
+                    <span style="display:inline-flex; align-items:center; justify-content:center;
+                                 width:56px; height:56px; border-radius:16px;
+                                 background:#e0f2fe; font-size:1.6rem; color:#17a2b8;">
+                        <i class="bi bi-calendar3"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold mb-1" style="font-size:2.2rem; color:#17a2b8;"
+                    th:text="${meusAgendamentos}">0</h3>
+                <p class="text-muted mb-0 small fw-semibold text-uppercase"
+                   style="letter-spacing:.05em;">Meus Agendamentos</p>
             </div>
         </div>
     </div>
