@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +68,8 @@ public class DashboardWebController {
                 .collect(Collectors.toSet());
 
         // Distribuição por status — mapa ordenado com todos os status
-        Map<String, Long> porStatus = new LinkedHashMap<>();
-        for (StatusAgendamento s : StatusAgendamento.values()) {
-            porStatus.put(s.name(), 0L);
-        }
+        Map<String, Long> porStatus = Arrays.stream(StatusAgendamento.values())
+                .collect(Collectors.toMap(StatusAgendamento::name, s -> 0L, (a, b) -> a, LinkedHashMap::new));
         todos.stream()
                 .collect(Collectors.groupingBy(a -> a.getStatus().name(), Collectors.counting()))
                 .forEach(porStatus::put);
@@ -79,7 +79,7 @@ public class DashboardWebController {
                 .filter(a -> a.getStatus() == StatusAgendamento.AGENDADO
                           || a.getStatus() == StatusAgendamento.CONFIRMADO)
                 .filter(a -> !a.getDataHora().isBefore(inicioHoje))
-                .sorted((a, b) -> a.getDataHora().compareTo(b.getDataHora()))
+                .sorted(Comparator.comparing(AgendamentoResponse::getDataHora))
                 .limit(3)
                 .toList();
 
