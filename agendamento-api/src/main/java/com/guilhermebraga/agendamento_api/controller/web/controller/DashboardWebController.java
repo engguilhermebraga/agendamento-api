@@ -93,6 +93,10 @@ public class DashboardWebController {
         model.addAttribute("totalServicos",        servicoService.listarTodos().size());
         model.addAttribute("porStatus",            porStatus);
         model.addAttribute("proximosAgendamentos", proximosAgendamentos);
+        model.addAttribute("totalAgendado",        porStatus.getOrDefault("AGENDADO",   0L));
+        model.addAttribute("totalConfirmado",      porStatus.getOrDefault("CONFIRMADO", 0L));
+        model.addAttribute("totalConcluido",       porStatus.getOrDefault("CONCLUIDO",  0L));
+        model.addAttribute("totalCancelado",       porStatus.getOrDefault("CANCELADO",  0L));
 
         return "dashboard/index";
     }
