@@ -2,39 +2,141 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
 <body>
 <div th:fragment="conteudo">
-    <div class="top-bar">
-        <h2>Profissionais</h2>
-        <a th:href="@{/web/profissionais/novo}" class="btn btn-success">Novo Profissional</a>
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">Profissionais</h2>
+            <p class="text-muted mb-0 small">
+                <span th:text="${#lists.size(profissionais)}">0</span> profissional(is) cadastrado(s)
+            </p>
+        </div>
+        <a th:href="@{/web/profissionais/novo}" class="btn btn-success px-4">
+            <i class="bi bi-person-plus-fill me-1"></i>Novo Profissional
+        </a>
     </div>
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Especialidade</th>
-            <th>E-mail</th>
-            <th>Telefone</th>
-            <th>Acoes</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="p : ${profissionais}">
-            <td th:text="${p.id}"></td>
-            <td th:text="${p.nome}"></td>
-            <td th:text="${p.especialidade}"></td>
-            <td th:text="${p.email}"></td>
-            <td th:text="${p.telefone}"></td>
-            <td class="actions">
-                <a th:href="@{/web/profissionais/{id}/editar(id=${p.id})}" class="btn btn-warning">Editar</a>
-                <a th:href="@{/web/profissionais/{id}/deletar(id=${p.id})}" class="btn btn-danger"
-                   onclick="return confirm('Deseja realmente remover este profissional?')">Remover</a>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(profissionais)}">
-            <td colspan="6" style="text-align: center; padding: 2rem;">Nenhum profissional cadastrado.</td>
-        </tr>
-        </tbody>
-    </table>
+
+    <!-- Barra de busca -->
+    <div class="card mb-3 p-3">
+        <input type="text" id="searchInput" class="form-control"
+               placeholder="Buscar por nome, especialidade ou e-mail..."
+               oninput="filtrarTabela(this.value)">
+    </div>
+
+    <!-- Tabela -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tabelaProfissionais">
+                <thead class="table-light">
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Nome</th>
+                    <th>Especialidade</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th class="text-center" style="width:120px;">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${profissionais}">
+                    <td class="text-muted small fw-semibold" th:text="${p.id}"></td>
+                    <td class="fw-semibold" th:text="${p.nome}"></td>
+                    <td>
+                        <span class="badge rounded-pill"
+                              style="background:#e0e7ff; color:#3730a3;"
+                              th:text="${p.especialidade}"></span>
+                    </td>
+                    <td class="small" th:text="${p.email}"></td>
+                    <td class="small" th:text="${p.telefone}"></td>
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a th:href="@{/web/profissionais/{id}/editar(id=${p.id})}"
+                               class="btn btn-outline-warning btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm"
+                                    title="Remover"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalDeletar"
+                                    th:attr="data-id=${p.id}, data-nome=${p.nome}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(profissionais)}" id="emptyRow">
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-person-badge display-6 d-block mb-2"></i>
+                        Nenhum profissional cadastrado.
+                        <div class="mt-2">
+                            <a th:href="@{/web/profissionais/novo}" class="btn btn-success btn-sm">
+                                <i class="bi bi-person-plus me-1"></i>Cadastrar primeiro profissional
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mensagem sem resultados na busca -->
+    <div id="noResults" class="text-center py-4 text-muted d-none">
+        <i class="bi bi-search me-1"></i>Nenhum resultado encontrado para a busca.
+    </div>
+
+    <!-- Modal de confirmação de exclusão -->
+    <div class="modal fade" id="modalDeletar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        Confirmar exclusão
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-1">Profissional a ser removido:</p>
+                    <p class="fw-semibold fs-6 mb-0" id="modalNomeProfissional"></p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancelar
+                    </button>
+                    <button type="button" id="btnConfirmarDeletar" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Confirmar exclusão
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    document.getElementById('modalDeletar').addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        document.getElementById('modalNomeProfissional').textContent = btn.getAttribute('data-nome');
+        document.getElementById('btnConfirmarDeletar').setAttribute('data-id', btn.getAttribute('data-id'));
+    });
+
+    document.getElementById('btnConfirmarDeletar').addEventListener('click', function () {
+        window.location.href = '/web/profissionais/' + this.getAttribute('data-id') + '/deletar';
+    });
+
+    function filtrarTabela(query) {
+        var rows = document.querySelectorAll('#tabelaProfissionais tbody tr:not(#emptyRow)');
+        var q = query.trim().toLowerCase();
+        var visiveis = 0;
+        rows.forEach(function (row) {
+            var match = row.textContent.toLowerCase().includes(q);
+            row.style.display = match ? '' : 'none';
+            if (match) visiveis++;
+        });
+        document.getElementById('noResults').classList.toggle('d-none', q === '' || visiveis > 0);
+    }
+</script>
 </body>
 </html>
