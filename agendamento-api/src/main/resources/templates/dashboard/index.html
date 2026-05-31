@@ -207,40 +207,41 @@
 
     </div>
 
+    <!-- Chart.js e inicialização do gráfico — dentro do fragmento para o Thymeleaf processar -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script th:inline="javascript">
+        const agendamentosPorStatus = {
+            agendado:   [[${totalAgendado}]],
+            confirmado: [[${totalConfirmado}]],
+            concluido:  [[${totalConcluido}]],
+            cancelado:  [[${totalCancelado}]]
+        };
+
+        new Chart(document.getElementById('graficoAgendamentosStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
+                datasets: [{
+                    data: [
+                        agendamentosPorStatus.agendado,
+                        agendamentosPorStatus.confirmado,
+                        agendamentosPorStatus.concluido,
+                        agendamentosPorStatus.cancelado
+                    ],
+                    backgroundColor: ['#667eea', '#28a745', '#6c757d', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                cutout: '65%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script th:inline="javascript">
-    const agendamentosPorStatus = {
-        agendado:   [[${totalAgendado}]],
-        confirmado: [[${totalConfirmado}]],
-        concluido:  [[${totalConcluido}]],
-        cancelado:  [[${totalCancelado}]]
-    };
-
-    new Chart(document.getElementById('graficoAgendamentosStatus'), {
-        type: 'doughnut',
-        data: {
-            labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
-            datasets: [{
-                data: [
-                    agendamentosPorStatus.agendado,
-                    agendamentosPorStatus.confirmado,
-                    agendamentosPorStatus.concluido,
-                    agendamentosPorStatus.cancelado
-                ],
-                backgroundColor: ['#667eea', '#28a745', '#6c757d', '#dc3545'],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            cutout: '65%',
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-</script>
 </body>
 </html>
