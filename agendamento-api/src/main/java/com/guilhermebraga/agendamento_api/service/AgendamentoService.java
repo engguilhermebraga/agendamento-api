@@ -172,13 +172,13 @@ public class AgendamentoService {
                     .orElseThrow(() -> new ResourceNotFoundException("Serviço", request.getServicoId()));
 
             // Calcula o novo horário de término
-            LocalDateTime dataHoraFim = request.getDataHora()
-                    .plusMinutes(servico.getDuracaoMinutos());
+            LocalDateTime dataHora = Objects.requireNonNull(request.getDataHora(), "dataHora é obrigatória");
+            LocalDateTime dataHoraFim = dataHora.plusMinutes(servico.getDuracaoMinutos());
 
             // Verifica conflito ignorando o próprio agendamento
             List<Agendamento> conflitos = agendamentoRepository.findConflitosHorarioExcluindoId(
                     profissional.getId(),
-                    request.getDataHora(),
+                    dataHora,
                     dataHoraFim,
                     STATUS_ATIVOS,
                     id
@@ -186,7 +186,7 @@ public class AgendamentoService {
 
             if (!conflitos.isEmpty()) {
                 log.warn("Conflito ao atualizar agendamento id={}: profissional {} já tem horário ocupado em {}",
-                        id, profissional.getId(), request.getDataHora());
+                        id, profissional.getId(), dataHora);
                 throw new BusinessException(
                         "O profissional já possui um agendamento neste horário. " +
                                 "Por favor, escolha outro horário ou profissional.");
