@@ -70,9 +70,8 @@ public class DashboardWebController {
         // Distribuição por status — mapa ordenado com todos os status
         Map<String, Long> porStatus = Arrays.stream(StatusAgendamento.values())
                 .collect(Collectors.toMap(StatusAgendamento::name, s -> 0L, (a, b) -> a, LinkedHashMap::new));
-        todos.stream()
-                .collect(Collectors.groupingBy(a -> a.getStatus().name(), Collectors.counting()))
-                .forEach(porStatus::put);
+        porStatus.putAll(todos.stream()
+                .collect(Collectors.groupingBy(a -> a.getStatus().name(), Collectors.counting())));
 
         // Próximos 3 agendamentos futuros (AGENDADO ou CONFIRMADO), em ordem cronológica
         List<AgendamentoResponse> proximosAgendamentos = todos.stream()
