@@ -79,17 +79,34 @@
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between">
 
-                    <!-- Gráfico doughnut — Canvas com dados via data-* (Thymeleaf th:attr) -->
+                    <!-- Gráfico doughnut CSS puro — conic-gradient, zero JS, zero CDN -->
                     <div class="d-flex justify-content-center align-items-center" style="min-height:220px;">
-                        <canvas id="graficoAgendamentosStatus"
-                                th:attr="data-agendado=${totalAgendado},
-                                         data-confirmado=${totalConfirmado},
-                                         data-concluido=${totalConcluido},
-                                         data-cancelado=${totalCancelado}"
-                                style="max-height:220px;"></canvas>
+
+                        <div th:if="${totalAgendamentos == 0}" class="text-center text-muted small py-3">
+                            <i class="bi bi-pie-chart d-block mb-2 fs-2 text-secondary"></i>
+                            Nenhum agendamento registrado ainda.
+                        </div>
+
+                        <div th:if="${totalAgendamentos > 0}"
+                             th:with="p1=${totalAgendado * 100 / totalAgendamentos},
+                                      p2=${totalConfirmado * 100 / totalAgendamentos},
+                                      p3=${totalConcluido * 100 / totalAgendamentos}"
+                             class="position-relative flex-shrink-0"
+                             style="width:200px; height:200px;">
+                            <!-- Anel colorido -->
+                            <div th:style="'width:200px;height:200px;border-radius:50%;background:conic-gradient(#667eea 0% '+${p1}+'%,#28a745 '+${p1}+'% '+${p1+p2}+'%,#6c757d '+${p1+p2}+'% '+${p1+p2+p3}+'%,#dc3545 '+${p1+p2+p3}+'% 100%);'"></div>
+                            <!-- Buraco central -->
+                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                                        width:116px;height:116px;border-radius:50%;background:#fff;
+                                        display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                <div class="fw-bold fs-4 lh-1" th:text="${totalAgendamentos}">0</div>
+                                <div class="text-muted" style="font-size:.65rem;letter-spacing:.05em;">TOTAL</div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- Barras de progresso Bootstrap — visualização alternativa sem JS -->
+                    <!-- Barras de progresso Bootstrap com legenda de cores -->
                     <div class="mt-3">
                         <div class="mb-2">
                             <div class="d-flex justify-content-between small mb-1">
@@ -246,49 +263,6 @@
 
     </div>
 
-    <!-- Chart.js — carregado de forma síncrona para garantir disponibilidade no script seguinte -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script>
-        (function () {
-            var canvas = document.getElementById('graficoAgendamentosStatus');
-            if (!canvas) return;
-
-            var agendado   = parseInt(canvas.dataset.agendado   || '0', 10);
-            var confirmado = parseInt(canvas.dataset.confirmado || '0', 10);
-            var concluido  = parseInt(canvas.dataset.concluido  || '0', 10);
-            var cancelado  = parseInt(canvas.dataset.cancelado  || '0', 10);
-            var total = agendado + confirmado + concluido + cancelado;
-
-            /* sem dados: oculta canvas e exibe mensagem */
-            if (total === 0) {
-                canvas.style.display = 'none';
-                var msg = document.createElement('div');
-                msg.className = 'text-center text-muted small py-4';
-                msg.innerHTML = '<i class="bi bi-pie-chart d-block mb-2 fs-3"></i>Nenhum agendamento registrado ainda.';
-                canvas.parentNode.appendChild(msg);
-                return;
-            }
-
-            new Chart(canvas, {
-                type: 'doughnut',
-                data: {
-                    labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
-                    datasets: [{
-                        data: [agendado, confirmado, concluido, cancelado],
-                        backgroundColor: ['#667eea', '#28a745', '#6c757d', '#dc3545'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    cutout: '65%',
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        })();
-    </script>
 
 </div>
 </body>
