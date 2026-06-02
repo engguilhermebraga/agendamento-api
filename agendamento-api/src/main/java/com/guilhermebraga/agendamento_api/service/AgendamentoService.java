@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Camada de serviço com as regras de negócio do Agendamento.
@@ -80,20 +81,20 @@ public class AgendamentoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Serviço", request.getServicoId()));
 
         // Calcula o horário de término com base na duração do serviço
-        LocalDateTime dataHoraFim = request.getDataHora()
-                .plusMinutes(servico.getDuracaoMinutos());
+        LocalDateTime dataHora = Objects.requireNonNull(request.getDataHora(), "dataHora é obrigatória");
+        LocalDateTime dataHoraFim = dataHora.plusMinutes(servico.getDuracaoMinutos());
 
         // Verifica conflito de horário para o profissional
         List<Agendamento> conflitos = agendamentoRepository.findConflitosHorario(
                 profissional.getId(),
-                request.getDataHora(),
+                dataHora,
                 dataHoraFim,
                 STATUS_ATIVOS
         );
 
         if (!conflitos.isEmpty()) {
             log.warn("Conflito ao criar agendamento: profissional {} já tem horário ocupado em {}",
-                    profissional.getId(), request.getDataHora());
+                    profissional.getId(), dataHora);
             throw new BusinessException(
                     "O profissional já possui um agendamento neste horário. " +
                             "Por favor, escolha outro horário ou profissional.");
