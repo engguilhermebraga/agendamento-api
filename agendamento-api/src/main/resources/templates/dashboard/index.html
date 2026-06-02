@@ -67,34 +67,72 @@
 
     </div>
 
-    <!-- ── Linha 2: Gráfico + Próximos agendamentos ──────────────── -->
+    <!-- ── Linha 2: Status por cards + Próximos agendamentos ────────── -->
     <div class="row g-3 mb-4">
 
         <div class="col-lg-5">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
                     <h6 class="mb-0 fw-semibold">
-                        <i class="bi bi-pie-chart-fill me-2 text-primary"></i>Agendamentos por Status
+                        <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Distribuição por Status
                     </h6>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-center align-items-center" style="min-height:220px;">
-                        <canvas id="graficoAgendamentosStatus" style="max-height:220px;"></canvas>
+
+                    <!-- 4 mini-cards de status — zero JS, zero CDN -->
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:#eef0ff; border-left:4px solid #667eea;">
+                                <div class="fw-bold fs-3 lh-1" style="color:#667eea;" th:text="${totalAgendado}">0</div>
+                                <div class="small fw-semibold mt-1" style="color:#667eea;">AGENDADO</div>
+                                <div class="text-muted" style="font-size:.7rem;"
+                                     th:text="${totalAgendamentos > 0} ? (${totalAgendado * 100 / totalAgendamentos} + '%') : '-'">-</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:#d1f5dc; border-left:4px solid #28a745;">
+                                <div class="fw-bold fs-3 lh-1 text-success" th:text="${totalConfirmado}">0</div>
+                                <div class="small fw-semibold mt-1 text-success">CONFIRMADO</div>
+                                <div class="text-muted" style="font-size:.7rem;"
+                                     th:text="${totalAgendamentos > 0} ? (${totalConfirmado * 100 / totalAgendamentos} + '%') : '-'">-</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:#e9ecef; border-left:4px solid #6c757d;">
+                                <div class="fw-bold fs-3 lh-1 text-secondary" th:text="${totalConcluido}">0</div>
+                                <div class="small fw-semibold mt-1 text-secondary">CONCLUÍDO</div>
+                                <div class="text-muted" style="font-size:.7rem;"
+                                     th:text="${totalAgendamentos > 0} ? (${totalConcluido * 100 / totalAgendamentos} + '%') : '-'">-</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:#fde8e8; border-left:4px solid #dc3545;">
+                                <div class="fw-bold fs-3 lh-1 text-danger" th:text="${totalCancelado}">0</div>
+                                <div class="small fw-semibold mt-1 text-danger">CANCELADO</div>
+                                <div class="text-muted" style="font-size:.7rem;"
+                                     th:text="${totalAgendamentos > 0} ? (${totalCancelado * 100 / totalAgendamentos} + '%') : '-'">-</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-                        <span class="badge badge-status badge-agendado">
-                            AGENDADO: <span th:text="${totalAgendado}">0</span>
-                        </span>
-                        <span class="badge badge-status badge-confirmado">
-                            CONFIRMADO: <span th:text="${totalConfirmado}">0</span>
-                        </span>
-                        <span class="badge badge-status badge-concluido">
-                            CONCLUIDO: <span th:text="${totalConcluido}">0</span>
-                        </span>
-                        <span class="badge badge-status badge-cancelado">
-                            CANCELADO: <span th:text="${totalCancelado}">0</span>
-                        </span>
+
+                    <!-- Barra empilhada Bootstrap — proporcional por status -->
+                    <div class="mt-3">
+                        <div class="progress" style="height:12px; border-radius:6px;">
+                            <div class="progress-bar" role="progressbar" style="background:#667eea;"
+                                 th:style="'background:#667eea; width:' + (${totalAgendamentos > 0 ? totalAgendado * 100 / totalAgendamentos : 0}) + '%'"></div>
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 th:style="'width:' + (${totalAgendamentos > 0 ? totalConfirmado * 100 / totalAgendamentos : 0}) + '%'"></div>
+                            <div class="progress-bar bg-secondary" role="progressbar"
+                                 th:style="'width:' + (${totalAgendamentos > 0 ? totalConcluido * 100 / totalAgendamentos : 0}) + '%'"></div>
+                            <div class="progress-bar bg-danger" role="progressbar"
+                                 th:style="'width:' + (${totalAgendamentos > 0 ? totalCancelado * 100 / totalAgendamentos : 0}) + '%'"></div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-1">
+                            <span class="text-muted" style="font-size:.7rem;"
+                                  th:text="${totalAgendamentos} + ' agendamento(s) no total'">0 agendamento(s) no total</span>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -207,40 +245,7 @@
 
     </div>
 
+
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script th:inline="javascript">
-    const agendamentosPorStatus = {
-        agendado:   [[${totalAgendado}]],
-        confirmado: [[${totalConfirmado}]],
-        concluido:  [[${totalConcluido}]],
-        cancelado:  [[${totalCancelado}]]
-    };
-
-    new Chart(document.getElementById('graficoAgendamentosStatus'), {
-        type: 'doughnut',
-        data: {
-            labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
-            datasets: [{
-                data: [
-                    agendamentosPorStatus.agendado,
-                    agendamentosPorStatus.confirmado,
-                    agendamentosPorStatus.concluido,
-                    agendamentosPorStatus.cancelado
-                ],
-                backgroundColor: ['#667eea', '#28a745', '#6c757d', '#dc3545'],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            cutout: '65%',
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-</script>
 </body>
 </html>
