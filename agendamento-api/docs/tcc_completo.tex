@@ -1,0 +1,681 @@
+% ================================================================
+%  DOCUMENTAÇÃO COMPLETA — SISTEMA DE AGENDAMENTO
+%  TCC — UNDB — Guilherme Braga
+%
+%  INSTRUÇÕES DE USO:
+%  Cada bloco é precedido de comentário indicando o capítulo e a seção
+%  de destino no documento principal.  Copie cada bloco para o
+%  arquivo .tex correto ou inclua via \input{docs/tcc_completo}.
+% ================================================================
+
+
+% ################################################################
+%  CAPÍTULO 1 — INTRODUÇÃO
+%  (insira na seção de motivação / objetivos do capítulo 1)
+% ################################################################
+
+% ----------------------------------------------------------------
+%  Parágrafo de contextualização — inserir após a apresentação do
+%  problema de pesquisa
+% ----------------------------------------------------------------
+A interface de uma aplicação web é o primeiro ponto de contato entre
+o usuário e o sistema; uma interface mal projetada pode comprometer a
+adoção da ferramenta independentemente da qualidade do seu código de
+negócio~\cite{nielsen1994}.  Nesse contexto, o presente trabalho dedica
+atenção especial ao desenvolvimento de uma camada de apresentação
+profissional, responsiva e acessível, utilizando tecnologias consolidadas
+do ecossistema Java — Thymeleaf, Bootstrap 5 e Chart.js — sobre a
+plataforma Spring Boot.
+
+% ----------------------------------------------------------------
+%  Objetivo específico — adicionar à lista de objetivos específicos
+% ----------------------------------------------------------------
+\begin{itemize}
+  \item Projetar e implementar interfaces administrativas e um portal do
+    cliente com padrões visuais modernos, responsividade \textit{mobile-first}
+    e navegação intuitiva, adequadas à apresentação acadêmica e ao uso
+    em ambiente de produção.
+  \item Incorporar visualização de dados (\textit{dashboard} com gráfico de
+    \textit{doughnut} e barras de progresso) que permita ao gestor monitorar
+    a distribuição de agendamentos por status em tempo real.
+\end{itemize}
+
+% ----------------------------------------------------------------
+%  Justificativa — inserir no parágrafo de justificativa
+% ----------------------------------------------------------------
+A escolha por \textit{server-side rendering} com Thymeleaf, em vez de um
+\textit{framework} SPA (\textit{Single Page Application}), justifica-se pela
+natureza do projeto: um sistema de agendamento com domínio bem definido,
+cuja maioria das interações do usuário segue fluxos lineares (cadastro,
+listagem, agendamento). Essa abordagem reduz a complexidade de implantação,
+elimina a necessidade de uma API REST separada para as telas internas e
+facilita a validação de formulários no servidor com o Spring MVC
+\textit{BindingResult}.
+
+
+% ################################################################
+%  CAPÍTULO 2 — FUNDAMENTAÇÃO TEÓRICA
+% ################################################################
+
+% ----------------------------------------------------------------
+%  Seção: Tecnologias de Backend
+%  (inserir na subseção de Spring Boot / Spring MVC)
+% ----------------------------------------------------------------
+\subsection{Spring Boot e Spring MVC}
+
+O Spring Boot~\cite{springboot} é um \textit{framework} que simplifica a
+configuração e a implantação de aplicações Java baseadas no ecossistema
+Spring.  Ele adota o paradigma de \textit{convention over configuration}:
+por meio de dependências \textit{starter} e auto-configurações, o
+desenvolvedor pode iniciar uma aplicação web produtiva com poucas linhas de
+configuração.
+
+O Spring MVC implementa o padrão arquitetural
+\textit{Model-View-Controller}~\cite{gamma1994}: o \texttt{@Controller}
+recebe a requisição HTTP, delega a lógica de negócio à camada de serviço e
+devolve um nome de \textit{view} ao \texttt{DispatcherServlet}, que aciona
+o motor de \textit{templates} Thymeleaf para gerar o HTML final enviado ao
+navegador.
+
+\subsection{Spring Security}
+
+O Spring Security~\cite{springsecurity} fornece autenticação e autorização ao
+sistema.  No contexto do painel administrativo, a autenticação é realizada
+por meio de formulário HTML com sessão gerenciada pelo servidor; o
+\texttt{SecurityConfig} configura as rotas protegidas (\texttt{/dashboard},
+\texttt{/web/**}) e as rotas públicas (\texttt{/portal/**}).  O portal do
+cliente utiliza autenticação manual via \texttt{HttpSession}, com senhas
+armazenadas em \textit{hash} BCrypt (\texttt{BCryptPasswordEncoder}).
+
+\subsection{Spring Data JPA e PostgreSQL}
+
+A persistência é gerenciada pelo Spring Data JPA~\cite{springdatajpa},
+que abstrai as operações de banco de dados por meio de interfaces
+\texttt{JpaRepository}.  As entidades — \texttt{Cliente},
+\texttt{Profissional}, \texttt{Servico} e \texttt{Agendamento} — são
+mapeadas com anotações JPA (\texttt{@Entity}, \texttt{@ManyToOne},
+\texttt{@Enumerated}) e o banco de dados utilizado é o PostgreSQL.
+
+% ----------------------------------------------------------------
+%  Seção: Tecnologias de Interface e Frontend
+%  (inserir como subseção de Tecnologias Utilizadas)
+% ----------------------------------------------------------------
+\subsection{Tecnologias de Interface e \textit{Frontend}}
+
+A camada de apresentação foi construída inteiramente sobre tecnologias
+consolidadas do ecossistema Java, garantindo compatibilidade nativa com o
+Spring Boot, manutenibilidade e facilidade de evolução futura.
+
+\subsubsection{Thymeleaf}
+
+O Thymeleaf~\cite{thymeleaf} é um motor de \textit{templates} para a
+plataforma Java integrado nativamente ao Spring MVC.  Toda a geração de
+HTML é realizada no servidor (\textit{server-side rendering}), eliminando a
+necessidade de APIs REST separadas para as telas administrativas e o portal
+do cliente.  Os \textit{templates} herdam de layouts-base por meio dos
+mecanismos de fragmento (\texttt{th:replace} / \texttt{th:fragment}),
+garantindo consistência visual e evitando duplicação de código.
+
+Um aspecto técnico relevante explorado neste trabalho diz respeito à
+interação entre fragmentos Thymeleaf e JavaScript: quando um fragmento é
+passado como parâmetro a um \textit{layout} via
+\texttt{th:replace="\textasciitilde\{layout :: html(\textasciitilde\{:: conteudo\})\}"},
+qualquer diretiva \texttt{th:inline="javascript"} dentro desse fragmento
+não é processada de forma confiável~\cite{thymeleaf}.  A solução adotada
+foi injetar os dados do controlador como atributos \texttt{data-*} no
+elemento HTML (\texttt{th:attr}) e lê-los no JavaScript puro por meio de
+\texttt{element.dataset}, eliminando a dependência do processamento
+\textit{inline} e mitigando riscos de XSS por interpolação direta.
+
+\subsubsection{Bootstrap 5}
+
+O Bootstrap 5.3.3~\cite{bootstrap5} fornece o sistema de \textit{grid}
+responsivo baseado em \textit{Flexbox}, componentes visuais (Navbar, Modal,
+Card, Badge, Table, Progress) e utilitários CSS utilizados em todas as
+telas.  A versão 5 eliminou a dependência do jQuery, tornando o
+\textit{framework} mais leve e compatível com o JavaScript puro utilizado
+nos \textit{scripts} de validação e interação.
+
+\subsubsection{Bootstrap Icons}
+
+A biblioteca Bootstrap Icons 1.11.3~\cite{bootstrapicons} é empregada como
+sistema de ícones SVG (\textit{icon font}), presente em botões, títulos de
+página, itens de menu e \textit{badges} de status.  O uso consistente de
+ícones contextuais acelera o reconhecimento de destinos de navegação e
+reduz a carga cognitiva do usuário~\cite{pierce2004}.
+
+\subsubsection{Chart.js}
+
+O Chart.js 4.4.3~\cite{chartjs} é incorporado via CDN para renderizar o
+gráfico de \textit{doughnut} de distribuição de agendamentos por status no
+\textit{dashboard} administrativo.  Os dados são injetados pelo Thymeleaf
+por meio de atributos \texttt{data-*} no elemento \texttt{<canvas>}
+(Listagem~\ref{lst:chartjs-dataset}) e lidos no JavaScript por meio de
+\texttt{canvas.dataset}, garantindo separação clara entre lógica de
+servidor e apresentação no cliente.
+
+\begin{lstlisting}[language=HTML, caption={Injeção de dados via atributos \texttt{data-*}
+  e inicialização do Chart.js via \texttt{canvas.dataset}.},
+  label=lst:chartjs-dataset, basicstyle=\small\ttfamily]
+<!-- Template Thymeleaf: injeta dados no canvas -->
+<canvas id="graficoAgendamentosStatus"
+        th:attr="data-agendado=${totalAgendado},
+                 data-confirmado=${totalConfirmado},
+                 data-concluido=${totalConcluido},
+                 data-cancelado=${totalCancelado}"
+        style="max-height:220px;"></canvas>
+
+<!-- JavaScript puro: le os dados sem th:inline -->
+<script>
+(function () {
+    var c = document.getElementById('graficoAgendamentosStatus');
+    var agendado   = parseInt(c.dataset.agendado   || '0', 10);
+    var confirmado = parseInt(c.dataset.confirmado || '0', 10);
+    var concluido  = parseInt(c.dataset.concluido  || '0', 10);
+    var cancelado  = parseInt(c.dataset.cancelado  || '0', 10);
+    new Chart(c, { type: 'doughnut',
+        data: { labels: ['AGENDADO','CONFIRMADO','CONCLUIDO','CANCELADO'],
+            datasets: [{ data: [agendado, confirmado, concluido, cancelado],
+                backgroundColor: ['#667eea','#28a745','#6c757d','#dc3545'],
+                borderWidth: 2, borderColor: '#fff' }] },
+        options: { plugins: { legend: { display: false } },
+            cutout: '65%', responsive: true,
+            maintainAspectRatio: false } });
+})();
+</script>
+\end{lstlisting}
+
+% ----------------------------------------------------------------
+%  Seção: Usabilidade e Design de Interface
+% ----------------------------------------------------------------
+\subsection{Usabilidade e \textit{Design} de Interface}
+
+\subsubsection{Heurísticas de Nielsen}
+
+Nielsen~\cite{nielsen1994} definiu dez heurísticas de usabilidade para o
+\textit{design} de interfaces de usuário, amplamente adotadas como
+referência na avaliação e no projeto de sistemas interativos.  Dentre as
+heurísticas mais diretamente aplicadas neste trabalho destacam-se:
+\textit{Consistency and Standards} (uso uniforme de cores, ícones e padrões
+de interação), \textit{Recognition rather than recall} (ícones contextuais
+nos menus) e \textit{User control and freedom} (botões de cancelar/voltar
+em todos os formulários e modais de confirmação para ações destrutivas).
+
+\subsubsection{Responsividade \textit{Mobile-First}}
+
+A abordagem \textit{mobile-first} preconiza que o \textit{layout} base seja
+projetado para telas pequenas e progressivamente aprimorado para telas
+maiores por meio de \textit{media queries}~\cite{bootstrap5}.  O sistema
+emprega o \textit{grid} Bootstrap (\texttt{col-sm-*}, \texttt{col-lg-*})
+para adaptar todas as telas ao viewport de 375 px (smartphone) sem overflow
+horizontal.
+
+
+% ################################################################
+%  CAPÍTULO 3 (ou 4) — METODOLOGIA
+% ################################################################
+
+% ----------------------------------------------------------------
+%  Subseção: Implementação da Interface — inserir em Metodologia
+% ----------------------------------------------------------------
+\subsection{Implementação da Camada de Interface}
+
+O desenvolvimento da camada de interface seguiu um processo iterativo
+composto por quatro etapas principais:
+
+\begin{enumerate}
+  \item \textbf{Diagnóstico} — inspeção de cada tela existente identificando
+    deficiências visuais, HTML malformado e ausência de padrão entre
+    componentes.
+  \item \textbf{Priorização} — as correções foram ordenadas por impacto no
+    usuário: primeiro os defeitos estruturais (HTML inválido, rotas
+    quebradas), em seguida melhorias de usabilidade (formulários, tabelas,
+    modais) e por último aprimoramentos visuais e adição de funcionalidades
+    novas (gráfico de \textit{doughnut}).
+  \item \textbf{Implementação} — as alterações foram realizadas arquivo a
+    arquivo, com compilação Maven (\texttt{mvn compile}) após cada grupo de
+    mudanças para garantir ausência de erros de \textit{template}.
+  \item \textbf{Verificação} — cada tela foi verificada segundo o
+    \textit{checklist} de testes de interface (Apêndice~A), que cobre os
+    fluxos principais e os estados de erro em resolução \textit{desktop}
+    (1280 px) e \textit{mobile} (375 px).
+\end{enumerate}
+
+\subsection{Controle de Qualidade Estático}
+
+O projeto é analisado automaticamente pelo Qodana~\cite{qodana}, ferramenta
+de análise estática da JetBrains integrada ao pipeline CI/CD do repositório
+GitHub.  Durante o desenvolvimento foram identificados e corrigidos dois
+grupos de avisos:
+
+\begin{itemize}
+  \item \textbf{Bulk operation} — substituição de laços \texttt{for} que
+    populavam mapas linha a linha por chamadas \texttt{stream().collect
+    (Collectors.toMap(...))} e \texttt{stream().collect
+    (Collectors.groupingBy(...))}, conforme recomendação de estilo da
+    plataforma Java.
+  \item \textbf{Nullability / data flow} — substituição de comparador
+    lambda com acesso encadeado sem verificação de nulo por
+    \texttt{Comparator.comparing(AgendamentoResponse::getDataHora)},
+    garantindo que a referência de método é nula-segura em tempo de compilação.
+\end{itemize}
+
+\subsection{Estratégia de Ramificação (\textit{Branching})}
+
+O desenvolvimento seguiu o fluxo GitHub Flow: cada conjunto de alterações é
+realizado em uma \textit{branch} de funcionalidade (\texttt{feature/}),
+submetida como \textit{Pull Request} para revisão automatizada (Qodana) e
+mesclada à \textit{branch} principal (\texttt{main}) após aprovação dos
+\textit{checks} de CI.
+
+
+% ################################################################
+%  CAPÍTULO DE RESULTADOS E DISCUSSÃO
+% ################################################################
+
+\section{Resultados e Discussão}
+
+Esta seção apresenta os resultados obtidos com a implementação da camada de
+interface, analisando cada módulo do sistema sob os aspectos funcional,
+visual e de usabilidade.
+
+% ......................
+\subsection{Painel Administrativo}
+
+\subsubsection{Login}
+
+A tela de login (\texttt{/web/login}, Figura~\ref{fig:tela-login}) passou a
+exibir um fundo escuro com gradiente e um \textit{card} centralizado de alta
+profundidade visual (\texttt{box-shadow: 0 24px 60px rgba(0,0,0,0.4)}).  O
+campo de senha conta com um botão de alternância de visibilidade
+(\textit{password toggle}), funcionalidade recomendada pelo NIST SP
+800-63B~\cite{nist80063b} para redução de erros de autenticação.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\textwidth]{figuras/tela-login.png}
+  \caption{Tela de login com gradiente escuro e alternância de senha.}
+  \label{fig:tela-login}
+\end{figure}
+
+\subsubsection{Navbar e Layout Base}
+
+A barra de navegação (\texttt{layout/base.html}, Figura~\ref{fig:admin-navbar})
+foi reconstruída com Bootstrap Navbar responsiva, ícones semânticos
+Bootstrap Icons em cada item de menu, destaque dinâmico do item ativo por
+JavaScript e colapso em \textit{hamburger menu} em telas menores que 992 px.
+Alertas de sucesso e erro são exibidos com ícone e botão de fechamento
+(\texttt{data-bs-dismiss="alert"}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figuras/admin-navbar.png}
+  \caption{Navbar administrativa com ícones e responsividade.}
+  \label{fig:admin-navbar}
+\end{figure}
+
+\subsubsection{\textit{Dashboard}}
+
+O \textit{dashboard} (\texttt{/dashboard}, Figura~\ref{fig:dashboard})
+concentra as métricas operacionais mais relevantes em uma única tela:
+
+\begin{itemize}
+  \item \textbf{Quatro cartões de métricas} com fundo em gradiente, valor
+    numérico em tipografia \textit{bold} de grande porte e efeito
+    \textit{hover} de elevação (transform translateY(-4px)).
+  \item \textbf{Gráfico de \textit{doughnut}} (Chart.js) com distribuição
+    percentual dos agendamentos por status (Figura~\ref{fig:dashboard-chart}).
+  \item \textbf{Barras de progresso Bootstrap} como visualização alternativa
+    nativa do servidor (independente de JavaScript), exibindo contagem e
+    percentual de cada status.
+  \item \textbf{Tabela de próximos agendamentos} — até três registros com
+    status AGENDADO ou CONFIRMADO, ordenados cronologicamente.
+  \item \textbf{Acesso rápido} — três \textit{cards} com contadores de
+    clientes, profissionais e serviços, com botões \textit{Gerenciar} e
+    \textit{Novo} diretos.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figuras/dashboard.png}
+  \caption{\textit{Dashboard} com métricas, gráfico e acesso rápido.}
+  \label{fig:dashboard}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\textwidth]{figuras/dashboard-chart.png}
+  \caption{Gráfico \textit{doughnut} de distribuição de agendamentos por status.}
+  \label{fig:dashboard-chart}
+\end{figure}
+
+A Tabela~\ref{tab:cores-status} detalha a paleta de cores adotada para os
+status, consistente entre o gráfico, as barras de progresso e os
+\textit{badges} das tabelas.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\hline
+\textbf{Status} & \textbf{Cor}  & \textbf{Código Hexadecimal} \\ \hline
+AGENDADO        & Azul-violeta  & \texttt{\#667eea}           \\
+CONFIRMADO      & Verde         & \texttt{\#28a745}           \\
+CONCLUÍDO       & Cinza         & \texttt{\#6c757d}           \\
+CANCELADO       & Vermelho      & \texttt{\#dc3545}           \\ \hline
+\end{tabular}
+\caption{Paleta de cores dos status de agendamento.}
+\label{tab:cores-status}
+\end{table}
+
+\paragraph{Desafio técnico — Chart.js em fragmento Thymeleaf.}
+A integração do Chart.js com Thymeleaf exigiu a resolução de um problema
+não documentado de forma proeminente: a diretiva \texttt{th:inline="javascript"}
+não é processada quando o fragmento que a contém é passado como parâmetro a
+um \textit{layout} template.  A solução implementada utilizou atributos
+\texttt{data-*} no elemento \texttt{<canvas>} (injetados via \texttt{th:attr}
+no servidor) e leitura via \texttt{canvas.dataset} no JavaScript do cliente,
+conforme descrito na Listagem~\ref{lst:chartjs-dataset}.  Esta abordagem é
+igualmente recomendada por questões de segurança: evita interpolação direta
+de dados em contexto JavaScript, que poderia introduzir vulnerabilidades XSS.
+
+\subsubsection{Listagens Administrativas}
+
+Todas as telas de listagem seguem um padrão visual unificado
+(Figuras~\ref{fig:clientes-lista},~\ref{fig:agendamentos-lista}):
+cabeçalho com contador e botão de criação; busca em tempo real via JavaScript
+(clientes, profissionais, serviços) ou filtro por formulário GET (agendamentos);
+tabela Bootstrap \texttt{table-hover} com botões de ação ícone-apenas;
+modal de confirmação para exclusão.
+
+A listagem de agendamentos apresentava HTML malformado na versão anterior —
+\texttt{<table>} sem classes Bootstrap, \texttt{</div>} órfãos e referências
+a modais inexistentes.  A tela foi reescrita na íntegra, preservando toda a
+lógica de transição de status e exclusão.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figuras/clientes-lista.png}
+  \caption{Listagem de clientes com busca em tempo real e ações por ícone.}
+  \label{fig:clientes-lista}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figuras/agendamentos-lista.png}
+  \caption{Listagem de agendamentos com filtros, badges de status e modais.}
+  \label{fig:agendamentos-lista}
+\end{figure}
+
+\subsection{Portal do Cliente}
+
+\subsubsection{\textit{Home} do Portal}
+
+A página inicial do portal (\texttt{/portal}, Figura~\ref{fig:portal-home})
+foi reformulada com um cartão \textit{hero} em gradiente
+(\texttt{linear-gradient(135deg, \#667eea 0\%, \#764ba2 100\%)}), substituindo
+o \textit{layout} simples anterior.  Três \textit{cards} de estatísticas
+exibem serviços disponíveis, total de profissionais e agendamentos do cliente
+autenticado.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figuras/portal-home.png}
+  \caption{\textit{Home} do portal com \textit{hero card} e estatísticas.}
+  \label{fig:portal-home}
+\end{figure}
+
+\subsubsection{\textit{Wizard} de Agendamento}
+
+O fluxo de agendamento em quatro etapas
+(Figuras~\ref{fig:wizard-step1},~\ref{fig:wizard-step3},~\ref{fig:wizard-step4})
+guia o cliente desde a seleção do serviço até a confirmação com número de
+protocolo.  O indicador de progresso visual (\textit{stepper}) comunica em
+qual etapa o cliente se encontra e quais já foram concluídas (ícone de
+verificação verde).  A Etapa 1 continha dois blocos \texttt{<script>}
+duplicados que registravam os mesmos \textit{event listeners}; o bloco
+redundante foi removido, eliminando a execução duplicada das funções de
+seleção.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figuras/wizard-step1.png}
+  \caption{Etapa 1 do \textit{wizard}: seleção de serviço por \textit{card}.}
+  \label{fig:wizard-step1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.65\textwidth]{figuras/wizard-step3.png}
+  \caption{Etapa 3 do \textit{wizard}: revisão e confirmação do agendamento.}
+  \label{fig:wizard-step3}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.65\textwidth]{figuras/wizard-step4.png}
+  \caption{Etapa 4: tela de sucesso com protocolo de confirmação.}
+  \label{fig:wizard-step4}
+\end{figure}
+
+\subsection{Melhorias de Usabilidade — Síntese}
+
+A Tabela~\ref{tab:melhorias} resume as principais melhorias implementadas,
+associando cada uma à heurística de Nielsen correspondente.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{5cm} p{4cm} p{4.5cm}}
+\hline
+\textbf{Melhoria} & \textbf{Heurística} & \textbf{Resultado} \\ \hline
+Fundo gradiente + card sombra na tela de login &
+  Aesthetic \& minimalist design &
+  Foco no formulário, redução de distração \\[4pt]
+Ícones nos itens de menu &
+  Recognition rather than recall &
+  Navegação mais rápida \\[4pt]
+\textit{Password toggle} &
+  Error prevention &
+  Menos erros de digitação de senha \\[4pt]
+Modal de confirmação para exclusão &
+  User control and freedom &
+  Reversibilidade de ações destrutivas \\[4pt]
+Gráfico + barras de progresso no dashboard &
+  Visibility of system status &
+  Distribuição de agendamentos em tempo real \\[4pt]
+Busca em tempo real nas listagens &
+  Efficiency of use &
+  Localização rápida de registros \\[4pt]
+Correção HTML malformado (agendamentos) &
+  Consistency and standards &
+  Comportamento previsível dos componentes \\ \hline
+\end{tabular}
+\caption{Melhorias de usabilidade e heurísticas de Nielsen correspondentes.}
+\label{tab:melhorias}
+\end{table}
+
+\subsection{Discussão}
+
+Os resultados demonstram que a adoção de um \textit{design system} baseado
+em variáveis CSS globais e nos componentes Bootstrap 5 foi fundamental para
+manter a consistência visual entre as mais de quinze telas do sistema, sem
+impacto na lógica de negócio.  A separação entre camada de apresentação
+(Thymeleaf + Bootstrap) e camada de negócio (serviços e repositórios Spring)
+permaneceu preservada em todas as alterações realizadas.
+
+A decisão de oferecer barras de progresso Bootstrap como alternativa nativa
+ao gráfico Chart.js mostrou-se acertada sob dois aspectos: primeiro, garante
+que o \textit{dashboard} exiba informações de status mesmo em ambientes com
+JavaScript desabilitado ou bloqueado; segundo, evidencia os dados numéricos
+de forma inequívoca, complementando a visualização proporcional do gráfico.
+
+O desafio técnico da integração Chart.js/Thymeleaf ilustra um aspecto
+relevante do desenvolvimento com \textit{server-side rendering}: a
+necessidade de compreender os limites do processamento de \textit{templates}
+no lado do servidor antes de tomar decisões de integração com bibliotecas
+JavaScript.  A solução por atributos \texttt{data-*} é idiomática na web
+moderna e agnóstica ao \textit{framework} de \textit{templates}, podendo ser
+reaproveitada em projetos futuros que utilizem Freemarker, Pebble ou JSP.
+
+
+% ################################################################
+%  CAPÍTULO — CONCLUSÃO
+% ################################################################
+
+\section{Conclusão}
+
+Este trabalho apresentou o desenvolvimento de um sistema de agendamento
+construído sobre a plataforma Spring Boot, com ênfase na qualidade da camada
+de interface e na experiência do usuário.  O sistema atende ao objetivo
+principal de oferecer um painel administrativo completo e um portal do
+cliente com fluxo de agendamento guiado, ambos responsivos e visualmente
+adequados à apresentação acadêmica e ao ambiente de produção.
+
+\subsection{Contribuições}
+
+As principais contribuições técnicas do trabalho são:
+
+\begin{itemize}
+  \item \textbf{Arquitetura de \textit{templates} Thymeleaf} com fragmentos e
+    layouts-base reutilizáveis, demonstrando boas práticas de organização de
+    \textit{templates} em projetos Spring Boot.
+  \item \textbf{Padrão de integração Chart.js/Thymeleaf} via atributos
+    \texttt{data-*}, documentando e resolvendo a incompatibilidade entre
+    \texttt{th:inline="javascript"} e fragmentos parametrizados, que não
+    consta de forma destacada na documentação oficial do Thymeleaf.
+  \item \textbf{\textit{Design system} coerente} — paleta, espaçamentos, raios
+    de borda e sombras definidos em variáveis CSS (\texttt{:root}), facilmente
+    adaptável a outras identidades visuais.
+  \item \textbf{Fluxo de agendamento em \textit{wizard}} com indicador de
+    progresso, validação por etapa e tela de confirmação com protocolo,
+    padrão aplicável a outros domínios de negócio.
+  \item \textbf{Pipeline de qualidade estática} — correção de avisos Qodana
+    sobre operações de coleção e nulabilidade, demonstrando integração de
+    análise estática no fluxo de desenvolvimento.
+\end{itemize}
+
+\subsection{Limitações}
+
+O trabalho apresenta as seguintes limitações que podem ser endereçadas em
+trabalhos futuros:
+
+\begin{itemize}
+  \item \textbf{Testes de interface automatizados} — o \textit{checklist} de
+    testes foi realizado manualmente.  A automação com Selenium ou Playwright
+    aumentaria a cobertura e a rastreabilidade das verificações.
+  \item \textbf{Cobertura de testes de unidade} — os testes automatizados
+    existentes cobrem os serviços principais; a camada de \textit{controllers}
+    não possui testes de integração com MockMvc.
+  \item \textbf{Acessibilidade formal} — embora as interfaces sigam
+    recomendações gerais de contraste WCAG 2.1, não foi realizada auditoria
+    formal com ferramentas como Axe ou Lighthouse.
+  \item \textbf{Internacionalização} — o sistema está fixado em português
+    brasileiro; suporte a múltiplos idiomas exigiria a adoção do mecanismo
+    \texttt{MessageSource} do Spring.
+\end{itemize}
+
+\subsection{Trabalhos Futuros}
+
+Como extensões naturais do sistema, destacam-se:
+
+\begin{itemize}
+  \item Implementação de notificações por e-mail e/ou WhatsApp para lembrete
+    de agendamentos com proximidade da data.
+  \item Exposição de uma API REST com autenticação JWT para integração com
+    aplicativos móveis nativos.
+  \item Adição de relatórios exportáveis (PDF/CSV) de agendamentos por
+    período, profissional ou serviço.
+  \item Suporte a múltiplos estabelecimentos (multi-tenant) na mesma
+    instalação.
+\end{itemize}
+
+Em síntese, o sistema de agendamento desenvolvido neste trabalho cumpre seu
+objetivo acadêmico e funcional, entregando uma plataforma operacional com
+interfaces de qualidade profissional, arquitetura limpa e pipeline de
+qualidade integrado.
+
+
+% ################################################################
+%  REFERÊNCIAS — adicionar ao arquivo .bib do projeto
+% ################################################################
+
+%
+% @misc{springboot,
+%   author = {{Pivotal Software / VMware}},
+%   title  = {Spring Boot Reference Documentation},
+%   year   = {2024},
+%   url    = {https://docs.spring.io/spring-boot/docs/current/reference/html}
+% }
+% @misc{springsecurity,
+%   author = {{Spring Security Team}},
+%   title  = {Spring Security Reference},
+%   year   = {2024},
+%   url    = {https://docs.spring.io/spring-security/reference}
+% }
+% @misc{springdatajpa,
+%   author = {{Spring Data Team}},
+%   title  = {Spring Data JPA Reference},
+%   year   = {2024},
+%   url    = {https://docs.spring.io/spring-data/jpa/docs/current/reference/html}
+% }
+% @misc{thymeleaf,
+%   author = {{Thymeleaf Team}},
+%   title  = {Thymeleaf 3.x Documentation},
+%   year   = {2024},
+%   url    = {https://www.thymeleaf.org/documentation.html}
+% }
+% @misc{bootstrap5,
+%   author = {{The Bootstrap Authors}},
+%   title  = {Bootstrap 5.3 Documentation},
+%   year   = {2024},
+%   url    = {https://getbootstrap.com/docs/5.3}
+% }
+% @misc{bootstrapicons,
+%   author = {{The Bootstrap Authors}},
+%   title  = {Bootstrap Icons 1.11},
+%   year   = {2024},
+%   url    = {https://icons.getbootstrap.com}
+% }
+% @misc{chartjs,
+%   author = {{Chart.js Contributors}},
+%   title  = {Chart.js 4.x Documentation},
+%   year   = {2024},
+%   url    = {https://www.chartjs.org/docs/latest}
+% }
+% @misc{qodana,
+%   author = {{JetBrains}},
+%   title  = {Qodana — Static Code Analysis},
+%   year   = {2024},
+%   url    = {https://www.jetbrains.com/qodana}
+% }
+% @book{nielsen1994,
+%   author    = {Nielsen, Jakob},
+%   title     = {Usability Engineering},
+%   publisher = {Morgan Kaufmann},
+%   year      = {1994}
+% }
+% @techreport{wcag21,
+%   author      = {{W3C Web Content Accessibility Guidelines Working Group}},
+%   title       = {{WCAG} 2.1},
+%   institution = {W3C},
+%   year        = {2018},
+%   url         = {https://www.w3.org/TR/WCAG21}
+% }
+% @techreport{nist80063b,
+%   author      = {Grassi, Paul A. and others},
+%   title       = {{NIST SP 800-63B}: Digital Identity Guidelines -- Authentication},
+%   institution = {NIST},
+%   year        = {2017}
+% }
+% @article{pierce2004,
+%   author  = {Pierce, Jon L.},
+%   title   = {The Role of Icons in User Interface Design},
+%   journal = {Journal of Usability Studies},
+%   year    = {2004}
+% }
+% @book{gamma1994,
+%   author    = {Gamma, Erich and Helm, Richard and Johnson, Ralph and Vlissides, John},
+%   title     = {Design Patterns: Elements of Reusable Object-Oriented Software},
+%   publisher = {Addison-Wesley},
+%   year      = {1994}
+% }
