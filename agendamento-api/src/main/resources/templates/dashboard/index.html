@@ -246,16 +246,28 @@
 
     </div>
 
-    <!-- Chart.js — lê os valores do canvas via data-* (injetados pelo Thymeleaf com th:attr) -->
+    <!-- Chart.js — carregado de forma síncrona para garantir disponibilidade no script seguinte -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script>
         (function () {
             var canvas = document.getElementById('graficoAgendamentosStatus');
             if (!canvas) return;
+
             var agendado   = parseInt(canvas.dataset.agendado   || '0', 10);
             var confirmado = parseInt(canvas.dataset.confirmado || '0', 10);
             var concluido  = parseInt(canvas.dataset.concluido  || '0', 10);
             var cancelado  = parseInt(canvas.dataset.cancelado  || '0', 10);
+            var total = agendado + confirmado + concluido + cancelado;
+
+            /* sem dados: oculta canvas e exibe mensagem */
+            if (total === 0) {
+                canvas.style.display = 'none';
+                var msg = document.createElement('div');
+                msg.className = 'text-center text-muted small py-4';
+                msg.innerHTML = '<i class="bi bi-pie-chart d-block mb-2 fs-3"></i>Nenhum agendamento registrado ainda.';
+                canvas.parentNode.appendChild(msg);
+                return;
+            }
 
             new Chart(canvas, {
                 type: 'doughnut',
