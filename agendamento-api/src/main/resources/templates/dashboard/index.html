@@ -78,62 +78,23 @@
                     </h6>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between">
-
-                    <!-- Gráfico doughnut — Canvas com dados via data-* (Thymeleaf th:attr) -->
                     <div class="d-flex justify-content-center align-items-center" style="min-height:220px;">
-                        <canvas id="graficoAgendamentosStatus"
-                                th:attr="data-agendado=${totalAgendado},
-                                         data-confirmado=${totalConfirmado},
-                                         data-concluido=${totalConcluido},
-                                         data-cancelado=${totalCancelado}"
-                                style="max-height:220px;"></canvas>
+                        <canvas id="graficoAgendamentosStatus" style="max-height:220px;"></canvas>
                     </div>
-
-                    <!-- Barras de progresso Bootstrap — visualização alternativa sem JS -->
-                    <div class="mt-3">
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="badge badge-status badge-agendado">AGENDADO</span>
-                                <span class="fw-semibold small" th:text="${totalAgendado}">0</span>
-                            </div>
-                            <div class="progress" style="height:10px; border-radius:6px;">
-                                <div class="progress-bar" role="progressbar"
-                                     style="background:#667eea;"
-                                     th:style="'background:#667eea; width:' + (${totalAgendamentos > 0 ? totalAgendado * 100 / totalAgendamentos : 0}) + '%'"></div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="badge badge-status badge-confirmado">CONFIRMADO</span>
-                                <span class="fw-semibold small" th:text="${totalConfirmado}">0</span>
-                            </div>
-                            <div class="progress" style="height:10px; border-radius:6px;">
-                                <div class="progress-bar bg-success" role="progressbar"
-                                     th:style="'width:' + (${totalAgendamentos > 0 ? totalConfirmado * 100 / totalAgendamentos : 0}) + '%'"></div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="badge badge-status badge-concluido">CONCLUIDO</span>
-                                <span class="fw-semibold small" th:text="${totalConcluido}">0</span>
-                            </div>
-                            <div class="progress" style="height:10px; border-radius:6px;">
-                                <div class="progress-bar bg-secondary" role="progressbar"
-                                     th:style="'width:' + (${totalAgendamentos > 0 ? totalConcluido * 100 / totalAgendamentos : 0}) + '%'"></div>
-                            </div>
-                        </div>
-                        <div class="mb-1">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="badge badge-status badge-cancelado">CANCELADO</span>
-                                <span class="fw-semibold small" th:text="${totalCancelado}">0</span>
-                            </div>
-                            <div class="progress" style="height:10px; border-radius:6px;">
-                                <div class="progress-bar bg-danger" role="progressbar"
-                                     th:style="'width:' + (${totalAgendamentos > 0 ? totalCancelado * 100 / totalAgendamentos : 0}) + '%'"></div>
-                            </div>
-                        </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                        <span class="badge badge-status badge-agendado">
+                            AGENDADO: <span th:text="${totalAgendado}">0</span>
+                        </span>
+                        <span class="badge badge-status badge-confirmado">
+                            CONFIRMADO: <span th:text="${totalConfirmado}">0</span>
+                        </span>
+                        <span class="badge badge-status badge-concluido">
+                            CONCLUIDO: <span th:text="${totalConcluido}">0</span>
+                        </span>
+                        <span class="badge badge-status badge-cancelado">
+                            CANCELADO: <span th:text="${totalCancelado}">0</span>
+                        </span>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -246,50 +207,40 @@
 
     </div>
 
-    <!-- Chart.js — carregado de forma síncrona para garantir disponibilidade no script seguinte -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script>
-        (function () {
-            var canvas = document.getElementById('graficoAgendamentosStatus');
-            if (!canvas) return;
-
-            var agendado   = parseInt(canvas.dataset.agendado   || '0', 10);
-            var confirmado = parseInt(canvas.dataset.confirmado || '0', 10);
-            var concluido  = parseInt(canvas.dataset.concluido  || '0', 10);
-            var cancelado  = parseInt(canvas.dataset.cancelado  || '0', 10);
-            var total = agendado + confirmado + concluido + cancelado;
-
-            /* sem dados: oculta canvas e exibe mensagem */
-            if (total === 0) {
-                canvas.style.display = 'none';
-                var msg = document.createElement('div');
-                msg.className = 'text-center text-muted small py-4';
-                msg.innerHTML = '<i class="bi bi-pie-chart d-block mb-2 fs-3"></i>Nenhum agendamento registrado ainda.';
-                canvas.parentNode.appendChild(msg);
-                return;
-            }
-
-            new Chart(canvas, {
-                type: 'doughnut',
-                data: {
-                    labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
-                    datasets: [{
-                        data: [agendado, confirmado, concluido, cancelado],
-                        backgroundColor: ['#667eea', '#28a745', '#6c757d', '#dc3545'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    cutout: '65%',
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        })();
-    </script>
-
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    const agendamentosPorStatus = {
+        agendado:   [[${totalAgendado}]],
+        confirmado: [[${totalConfirmado}]],
+        concluido:  [[${totalConcluido}]],
+        cancelado:  [[${totalCancelado}]]
+    };
+
+    new Chart(document.getElementById('graficoAgendamentosStatus'), {
+        type: 'doughnut',
+        data: {
+            labels: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'],
+            datasets: [{
+                data: [
+                    agendamentosPorStatus.agendado,
+                    agendamentosPorStatus.confirmado,
+                    agendamentosPorStatus.concluido,
+                    agendamentosPorStatus.cancelado
+                ],
+                backgroundColor: ['#667eea', '#28a745', '#6c757d', '#dc3545'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            cutout: '65%',
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
 </body>
 </html>
