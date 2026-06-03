@@ -1,6 +1,7 @@
 package com.guilhermebraga.agendamento_api.config;
 
 import com.guilhermebraga.agendamento_api.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -80,6 +81,15 @@ public class SecurityConfig {
             )
             // JWT filter runs before form login filter so Bearer tokens are validated first
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/web/login");
+                    }
+                })
+            )
             .formLogin(form -> form
                 .loginPage("/web/login")
                 .defaultSuccessUrl("/dashboard", true)
