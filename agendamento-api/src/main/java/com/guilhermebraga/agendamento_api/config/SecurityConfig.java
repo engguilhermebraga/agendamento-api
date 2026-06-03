@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
-import java.util.Objects;
 
 
 /**
@@ -111,7 +110,11 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return Objects.requireNonNull(config.getAuthenticationManager(), "AuthenticationManager must not be null");
+        AuthenticationManager manager = config.getAuthenticationManager();
+        if (manager == null) {
+            throw new IllegalStateException("No AuthenticationManager configured");
+        }
+        return manager;
     }
 
     @Bean
