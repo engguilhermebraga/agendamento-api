@@ -1,64 +1,86 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head><title>Confirmar Agendamento</title></head>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
 <body>
-<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Confirmar Agendamento', menuAtivo='agendar'">
-    <div th:fragment="conteudoPortal">
+<section>
 
-        <!-- Steps indicator -->
-        <div class="steps">
-            <div class="step completed">
-                <div class="step-number">1</div>
-                <div>Serviço</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step completed">
-                <div class="step-number">2</div>
-                <div>Profissional</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step completed">
-                <div class="step-number">3</div>
-                <div>Horário</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step active">
-                <div class="step-number">4</div>
-                <div>Confirmar</div>
-            </div>
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
         </div>
-
-        <div class="card">
-            <h2>Revise e confirme seu agendamento</h2>
-
-            <div style="margin-top: 20px;">
-                <div class="summary-item">
-                    <span class="summary-label">Serviço</span>
-                    <span class="summary-value" th:text="${novoAgendamento.servicoNome}">Serviço</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Profissional</span>
-                    <span class="summary-value" th:text="${novoAgendamento.profissionalNome}">Profissional</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Data</span>
-                    <span class="summary-value" th:text="${#temporals.format(novoAgendamento.data, 'dd/MM/yyyy')}">01/01/2026</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Horário</span>
-                    <span class="summary-value" th:text="${#temporals.format(novoAgendamento.horario, 'HH:mm')}">08:00</span>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 30px;">
-                <a th:href="@{/portal/agendar/horario}" class="btn btn-secondary">Voltar</a>
-                <form th:action="@{/portal/agendar/confirmar}" method="post" style="flex: 1;">
-                    <button type="submit" class="btn btn-success" style="width: 100%;">Confirmar Agendamento</button>
-                </form>
-            </div>
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Profissional</div>
         </div>
-
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Horário</div>
+        </div>
+        <div class="step active">
+            <div class="step-number">4</div>
+            <div>Confirmar</div>
+        </div>
     </div>
-</div>
+
+    <div class="card p-4">
+        <h4 class="mb-1">Confirmar Agendamento</h4>
+        <p class="text-muted small mb-4">Revise os dados antes de confirmar. Após a confirmação o agendamento será criado.</p>
+
+        <!-- Resumo -->
+        <div class="mb-4">
+            <div class="summary-item">
+                <span class="summary-label">
+                    <i class="bi bi-scissors me-2 text-muted"></i>Serviço
+                </span>
+                <span class="summary-value" th:text="${novoAgendamento.servicoNome}">—</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">
+                    <i class="bi bi-person-badge me-2 text-muted"></i>Profissional
+                </span>
+                <span class="summary-value" th:text="${novoAgendamento.profissionalNome}">—</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">
+                    <i class="bi bi-calendar3 me-2 text-muted"></i>Data
+                </span>
+                <span class="summary-value"
+                      th:text="${#temporals.format(novoAgendamento.data, 'dd/MM/yyyy (EEEE)', new java.util.Locale('pt','BR'))}">—</span>
+            </div>
+            <div class="summary-item" style="border-bottom: none;">
+                <span class="summary-label">
+                    <i class="bi bi-clock me-2 text-muted"></i>Horário
+                </span>
+                <span class="summary-value fw-semibold"
+                      th:text="${#temporals.format(novoAgendamento.horario, 'HH:mm')}">—</span>
+            </div>
+        </div>
+
+        <!-- Aviso -->
+        <div class="alert alert-info d-flex gap-2 py-2 mb-4">
+            <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+            <span class="small">
+                Ao confirmar, o agendamento será criado com status <strong>AGENDADO</strong>.
+                Você pode acompanhá-lo em <em>Meus Agendamentos</em>.
+            </span>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a th:href="@{/portal/agendar/horario}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+            <form th:action="@{/portal/agendar/confirmar}" method="post">
+                <button type="submit" class="btn btn-portal px-4">
+                    <i class="bi bi-calendar-check me-1"></i>Confirmar Agendamento
+                </button>
+            </form>
+        </div>
+    </div>
+
+</section>
 </body>
 </html>
