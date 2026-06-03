@@ -4,6 +4,7 @@ import com.guilhermebraga.agendamento_api.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -77,6 +79,13 @@ public class SecurityConfig {
                 .requestMatchers("/dashboard/**", "/web/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated()
+            )
+            // REST API: unauthenticated → 401; web routes: unauthenticated → redirect to login
+            .exceptionHandling(ex -> ex
+                .defaultAuthenticationEntryPointFor(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    request -> request.getRequestURI().startsWith("/api/v1/")
+                )
             )
             // JWT filter runs before form login filter so Bearer tokens are validated first
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
