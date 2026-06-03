@@ -1,71 +1,92 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head><title>Escolher Horário</title></head>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
 <body>
-<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Escolher Horário', menuAtivo='agendar'">
-    <div th:fragment="conteudoPortal">
+<section>
 
-        <!-- Steps indicator -->
-        <div class="steps">
-            <div class="step completed">
-                <div class="step-number">1</div>
-                <div>Serviço</div>
-                <div class="step-line"></div>
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number"><i class="bi bi-check-lg"></i></div>
+            <div class="step-line"></div>
+            <div>Profissional</div>
+        </div>
+        <div class="step active">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+            <div>Horário</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Confirmar</div>
+        </div>
+    </div>
+
+    <!-- Badge do profissional selecionado -->
+    <div class="alert d-flex align-items-center gap-2 mb-4"
+         style="background: #f8f7ff; border: 1px solid #667eea; color: #444;">
+        <i class="bi bi-person-badge flex-shrink-0"></i>
+        <div>
+            <strong th:text="${novoAgendamento.servicoNome}">Serviço</strong>
+            com <strong th:text="${novoAgendamento.profissionalNome}">Profissional</strong>
+            &nbsp;·&nbsp;
+            <a th:href="@{/portal/agendar/profissional}" class="text-decoration-none"
+               style="color: #667eea; font-size: 0.85rem;">Alterar profissional</a>
+        </div>
+    </div>
+
+    <!-- Seleção de data -->
+    <div class="card p-4 mb-4">
+        <h4 class="mb-1">Selecione a Data</h4>
+        <p class="text-muted small mb-3">Escolha uma data para ver os horários disponíveis.</p>
+        <form th:action="@{/portal/agendar/horario}" method="get"
+              class="d-flex gap-3 align-items-end">
+            <div class="flex-grow-1">
+                <label for="data" class="form-label">Data <span class="text-danger">*</span></label>
+                <input type="date" id="data" name="data" class="form-control"
+                       th:value="${dataSelecionada}" th:min="${dataMinima}" required />
             </div>
-            <div class="step completed">
-                <div class="step-number">2</div>
-                <div>Profissional</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step active">
-                <div class="step-number">3</div>
-                <div>Horário</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <div>Confirmar</div>
-            </div>
+            <button type="submit" class="btn btn-portal px-4">
+                <i class="bi bi-search me-1"></i>Buscar Horários
+            </button>
+        </form>
+    </div>
+
+    <!-- Horários disponíveis (apenas após selecionar data) -->
+    <div class="card p-4" th:if="${dataSelecionada != null}">
+        <h4 class="mb-1">
+            Horários disponíveis em
+            <span th:text="${#temporals.format(dataSelecionada, 'dd/MM/yyyy')}">01/01/2026</span>
+        </h4>
+        <p class="text-muted small mb-4">Clique em um horário para avançar.</p>
+
+        <div th:if="${#lists.isEmpty(horarios)}" class="text-center py-4 text-muted">
+            <i class="bi bi-calendar-x d-block mb-2" style="font-size: 2rem;"></i>
+            Nenhum horário disponível nesta data. Tente outra data.
         </div>
 
-        <div class="card">
-            <h2>Escolha a data e o horário</h2>
-            <p style="color: #888; margin-bottom: 5px;">
-                <strong th:text="${novoAgendamento.servicoNome}">Serviço</strong> com
-                <strong th:text="${novoAgendamento.profissionalNome}">Profissional</strong>
-            </p>
-            <a th:href="@{/portal/agendar/profissional}" style="color: #667eea; font-size: 0.85rem; text-decoration: none;">Alterar profissional</a>
-        </div>
-
-        <!-- Seleção de data -->
-        <div class="card" style="margin-top: 20px;">
-            <h3>Selecione a data</h3>
-            <form th:action="@{/portal/agendar/horario}" method="get" style="display: flex; gap: 10px; margin-top: 10px; align-items: end;">
-                <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <input type="date" name="data" class="form-control" th:value="${dataSelecionada}" th:min="${dataMinima}" required />
-                </div>
-                <button type="submit" class="btn btn-primary">Buscar horários</button>
+        <div class="time-slots" th:if="${!#lists.isEmpty(horarios)}">
+            <form th:each="horario : ${horarios}"
+                  th:action="@{/portal/agendar/horario}" method="post"
+                  style="display: inline;">
+                <input type="hidden" name="data" th:value="${dataSelecionada}" />
+                <input type="hidden" name="horario" th:value="${horario}" />
+                <button type="submit" class="time-slot"
+                        th:text="${#temporals.format(horario, 'HH:mm')}">08:00</button>
             </form>
         </div>
-
-        <!-- Horários disponíveis -->
-        <div class="card" style="margin-top: 20px;" th:if="${dataSelecionada != null}">
-            <h3>Horários disponíveis em <span th:text="${#temporals.format(dataSelecionada, 'dd/MM/yyyy')}">01/01/2026</span></h3>
-
-            <div th:if="${#lists.isEmpty(horarios)}" style="text-align: center; color: #888; padding: 20px;">
-                <p>Nenhum horário disponível nesta data. Tente outra data.</p>
-            </div>
-
-            <div class="time-slots" th:if="${!#lists.isEmpty(horarios)}">
-                <form th:each="horario : ${horarios}" th:action="@{/portal/agendar/horario}" method="post" style="display: inline;">
-                    <input type="hidden" name="data" th:value="${dataSelecionada}" />
-                    <input type="hidden" name="horario" th:value="${horario}" />
-                    <button type="submit" class="time-slot" th:text="${#temporals.format(horario, 'HH:mm')}">08:00</button>
-                </form>
-            </div>
-        </div>
-
     </div>
-</div>
+
+    <div class="mt-3">
+        <a th:href="@{/portal/agendar/profissional}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+</section>
 </body>
 </html>

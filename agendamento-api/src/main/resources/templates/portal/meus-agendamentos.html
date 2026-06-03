@@ -32,6 +32,7 @@
                 </thead>
                 <tbody>
                     <tr th:each="ag : ${agendamentos}">
+                        <td th:text="${ag.servicoNome}">Serviço</td>
                         <td>
                             <span th:text="${ag.profissionalNome}">Profissional</span><br/>
                             <small class="text-muted" th:text="${ag.profissionalEspecialidade}">Especialidade</small>

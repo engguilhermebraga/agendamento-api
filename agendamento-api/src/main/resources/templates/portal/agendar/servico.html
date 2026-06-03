@@ -1,55 +1,65 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head><title>Escolher Serviço</title></head>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{portal/layout :: html(~{:: section})}">
 <body>
-<div th:replace="~{portal/layout :: *}" th:with="conteudo=~{::conteudoPortal}, titulo='Escolher Serviço', menuAtivo='agendar'">
-    <div th:fragment="conteudoPortal">
+<section>
 
-        <!-- Steps indicator -->
-        <div class="steps">
-            <div class="step active">
-                <div class="step-number">1</div>
-                <div>Serviço</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <div>Profissional</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <div>Horário</div>
-                <div class="step-line"></div>
-            </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <div>Confirmar</div>
-            </div>
+    <!-- Indicador de etapas -->
+    <div class="steps mb-4">
+        <div class="step active">
+            <div class="step-number">1</div>
+            <div class="step-line"></div>
+            <div>Serviço</div>
         </div>
-
-        <div class="card">
-            <h2>Escolha o serviço desejado</h2>
-            <p style="color: #888; margin-bottom: 20px;">Selecione o serviço que deseja agendar.</p>
-
-            <div class="grid grid-2">
-                <div th:each="servico : ${servicos}">
-                    <form th:action="@{/portal/agendar/servico}" method="post">
-                        <input type="hidden" name="servicoId" th:value="${servico.id}" />
-                        <button type="submit" class="service-card" style="width: 100%; text-align: left; border: 2px solid transparent; font-family: inherit;">
-                            <h3 th:text="${servico.nome}">Serviço</h3>
-                            <p class="description" th:text="${servico.descricao}" th:if="${servico.descricao}">Descrição</p>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
-                                <span class="duration" th:text="${servico.duracaoMinutos} + ' min'">30 min</span>
-                            </div>
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-line"></div>
+            <div>Profissional</div>
         </div>
-
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+            <div>Horário</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Confirmar</div>
+        </div>
     </div>
-</div>
+
+    <div class="card p-4">
+        <h4 class="mb-1">Escolha o Serviço</h4>
+        <p class="text-muted small mb-4">Selecione o serviço que deseja agendar.</p>
+
+        <div class="row g-3">
+            <div class="col-md-6" th:each="servico : ${servicos}">
+                <form th:action="@{/portal/agendar/servico}" method="post">
+                    <input type="hidden" name="servicoId" th:value="${servico.id}" />
+                    <button type="submit" class="service-card w-100 text-start"
+                            style="font-family: inherit; border: 2px solid transparent;">
+                        <h6 class="mb-1 fw-semibold" th:text="${servico.nome}">Serviço</h6>
+                        <p class="text-muted small mb-auto"
+                           th:text="${servico.descricao}"
+                           th:if="${servico.descricao != null}"></p>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2"
+                             style="border-top: 1px solid #eee;">
+                            <span class="price"
+                                  th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                            <span class="duration">
+                                <i class="bi bi-clock me-1"></i>
+                                <span th:text="${servico.duracaoMinutos}"></span> min
+                            </span>
+                        </div>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(servicos)}" class="text-center py-5 text-muted">
+            <i class="bi bi-scissors d-block mb-2" style="font-size: 2.5rem;"></i>
+            Nenhum serviço disponível no momento.
+        </div>
+    </div>
+
+</section>
 </body>
 </html>
