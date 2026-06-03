@@ -21,20 +21,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * Configuração central de segurança da aplicação.
  *
  * Autenticação suportada:
- *   1. JWT Bearer token  — para a API REST (/api/v1/**)
- *   2. HTTP Basic auth   — alternativa para Swagger UI e testes
+ *   1. JWT Bearer token — para a API REST (/api/v1/**)
+ *   2. Form login       — para o painel admin (/dashboard/**, /web/**)
  *
  * Regras de autorização da API REST:
- *   GET           → ROLE_USER ou ROLE_ADMIN
- *   POST/PUT/PATCH/DELETE → apenas ROLE_ADMIN
+ *   GET                      → ROLE_USER ou ROLE_ADMIN
+ *   POST/PUT/PATCH/DELETE     → apenas ROLE_ADMIN
  *
- * Caminhos públicos: dashboard, portal, views web (/web/**), Swagger UI,
+ * Caminhos públicos: portal (sessão própria), Swagger UI,
  * recursos estáticos e endpoint de login JWT.
  *
  * @author Guilherme Braga
@@ -53,52 +52,41 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
 
-                // --- Páginas públicas, dashboard e handler de erros ---
-                .requestMatchers("/", "/dashboard", "/dashboard/**", "/error", "/portal/**", "/web/**").permitAll()
-
-                // --- Recursos estáticos ---
-                .requestMatchers(
-                    "/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico"
-                ).permitAll()
+                // --- Login e recursos estáticos ---
+                .requestMatchers("/web/login", "/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll()
 
                 // --- Swagger UI e OpenAPI ---
-                .requestMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/api-docs/**",
-                    "/v3/api-docs/**"
-                ).permitAll()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
 
                 // --- H2 Console ---
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/error").permitAll()
 
-                // --- Portal do cliente (sessão própria, sem Spring Security) ---
+                // --- Portal do cliente (sessão própria) ---
                 .requestMatchers("/portal/**").permitAll()
 
                 // --- Endpoint de autenticação JWT ---
-                .requestMatchers("/api/v1/auth/**").permitAll()
-
-                // --- Login do painel admin (a própria página de login é pública) ---
-                .requestMatchers("/web/login").permitAll()
-
-                // --- Endpoint de login (JWT) ---
                 .requestMatchers("/api/v1/auth/**").permitAll()
 
                 // --- API REST: leitura → USER ou ADMIN ---
                 .requestMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("USER", "ADMIN")
 
                 // --- API REST: escrita → somente ADMIN ---
-                .requestMatchers(HttpMethod.POST,   "/api/v1/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT,    "/api/v1/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH,  "/api/v1/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/**").hasRole("ADMIN")
+
+                // --- Painel admin protegido ---
+                .requestMatchers("/dashboard/**", "/web/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated()
             )
-            // JWT filter runs before the Basic auth filter so Bearer tokens are validated first
+            // JWT filter runs before form login filter so Bearer tokens are validated first
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            .httpBasic(withDefaults());
+            .formLogin(form -> form
+                .loginPage("/web/login")
+                .defaultSuccessUrl("/dashboard", true)
+                .permitAll())
+            .logout(logout -> logout
+                .logoutUrl("/web/logout")
+                .logoutSuccessUrl("/web/login?logout"));
 
         return http.build();
     }
