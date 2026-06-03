@@ -80,13 +80,6 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
             )
-            // REST API: unauthenticated → 401; web routes: unauthenticated → redirect to login
-            .exceptionHandling(ex -> ex
-                .defaultAuthenticationEntryPointFor(
-                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                    request -> request.getRequestURI().startsWith("/api/v1/")
-                )
-            )
             // JWT filter runs before form login filter so Bearer tokens are validated first
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .formLogin(form -> form
