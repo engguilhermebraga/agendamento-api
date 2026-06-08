@@ -19,8 +19,6 @@ para o cliente final, com autenticação JWT, documentação Swagger UI e 138 te
 
 ## Capturas de tela
 
-> **Adicione as capturas de tela do sistema abaixo.**  
-> Tire as capturas com o servidor rodando em `http://localhost:8081`.
 
 ### Login Administrativo
 <!-- Captura: http://localhost:8081/web/login -->
