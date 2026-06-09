@@ -95,8 +95,9 @@
                                     title="Alterar status"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalStatus"
-                                    th:attr="data-id=${a.id}, data-status=${a.status.name()}, data-cliente=${a.clienteNome}">
-                                <i class="bi bi-arrow-repeat"></i>
+                                    th:attr="data-id=${a.id},data-status=${a.status.name()},data-cliente=${a.clienteNome}"
+                                    onclick="prepararStatus(this)">
+                                <i class="bi bi-arrow-repeat" style="pointer-events:none;"></i>
                             </button>
                             <!-- Deletar -->
                             <button type="button"
@@ -229,33 +230,31 @@
         'CANCELADO':  'badge-cancelado'
     };
 
-    document.querySelectorAll('[data-bs-target="#modalStatus"]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var id      = this.getAttribute('data-id');
-            var status  = this.getAttribute('data-status');
-            var cliente = this.getAttribute('data-cliente');
+    function prepararStatus(btn) {
+        var id      = btn.getAttribute('data-id');
+        var status  = btn.getAttribute('data-status');
+        var cliente = btn.getAttribute('data-cliente');
 
-            document.getElementById('modalClienteNome').textContent = cliente;
-            document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
+        document.getElementById('modalClienteNome').textContent = cliente;
+        document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
 
-            var badgeEl = document.getElementById('modalStatusAtualBadge');
-            badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
+        var badgeEl = document.getElementById('modalStatusAtualBadge');
+        badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
 
-            var select = document.getElementById('novoStatusSelect');
-            select.innerHTML = '<option value="">— Selecione —</option>';
-            (transicoes[status] || []).forEach(function (op) {
-                var opt = document.createElement('option');
-                opt.value = op.value;
-                opt.textContent = op.label;
-                select.appendChild(opt);
-            });
-
-            document.getElementById('cancelarAviso').classList.add('d-none');
-            select.onchange = function () {
-                document.getElementById('cancelarAviso').classList.toggle('d-none', this.value !== 'CANCELADO');
-            };
+        var select = document.getElementById('novoStatusSelect');
+        select.innerHTML = '<option value="">— Selecione —</option>';
+        (transicoes[status] || []).forEach(function (op) {
+            var opt = document.createElement('option');
+            opt.value = op.value;
+            opt.textContent = op.label;
+            select.appendChild(opt);
         });
-    });
+
+        document.getElementById('cancelarAviso').classList.add('d-none');
+        select.onchange = function () {
+            document.getElementById('cancelarAviso').classList.toggle('d-none', this.value !== 'CANCELADO');
+        };
+    }
 
     document.querySelectorAll('[data-bs-target="#modalDeletar"]').forEach(function (btn) {
         btn.addEventListener('click', function () {
