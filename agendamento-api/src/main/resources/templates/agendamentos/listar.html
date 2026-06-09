@@ -98,7 +98,7 @@
                             <!-- Deletar -->
                             <form th:action="@{/web/agendamentos/deletar/{id}(id=${a.id})}"
                                   method="post" class="d-inline"
-                                  th:onsubmit="'return confirm(\'Excluir agendamento de ' + ${a.clienteNome} + '? Esta ação não pode ser desfeita.\')'">
+                                  onsubmit="return confirm('Confirmar exclusão? Esta ação não pode ser desfeita.')">
                                 <button type="submit" class="btn btn-outline-danger btn-sm" title="Deletar">
                                     <i class="bi bi-trash"></i>
                                 </button>

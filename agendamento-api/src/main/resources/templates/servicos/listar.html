@@ -59,7 +59,7 @@
                             </a>
                             <form th:action="@{/web/servicos/{id}/deletar(id=${s.id})}"
                                   method="post" class="d-inline"
-                                  th:onsubmit="'return confirm(\'Excluir o serviço ' + ${s.nome} + '? Esta ação não pode ser desfeita.\')'">
+                                  onsubmit="return confirm('Confirmar exclusão? Esta ação não pode ser desfeita.')">
                                 <button type="submit" class="btn btn-outline-danger btn-sm" title="Remover">
                                     <i class="bi bi-trash"></i>
                                 </button>
