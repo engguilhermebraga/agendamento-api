@@ -230,31 +230,33 @@
         'CANCELADO':  'badge-cancelado'
     };
 
-    function prepararStatus(btn) {
-        var id      = btn.getAttribute('data-id');
-        var status  = btn.getAttribute('data-status');
-        var cliente = btn.getAttribute('data-cliente');
+    document.querySelectorAll('[data-bs-target="#modalStatus"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id      = this.getAttribute('data-id');
+            var status  = this.getAttribute('data-status');
+            var cliente = this.getAttribute('data-cliente');
 
-        document.getElementById('modalClienteNome').textContent = cliente;
-        document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
+            document.getElementById('modalClienteNome').textContent = cliente;
+            document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
 
-        var badgeEl = document.getElementById('modalStatusAtualBadge');
-        badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
+            var badgeEl = document.getElementById('modalStatusAtualBadge');
+            badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
 
-        var select = document.getElementById('novoStatusSelect');
-        select.innerHTML = '<option value="">— Selecione —</option>';
-        (transicoes[status] || []).forEach(function (op) {
-            var opt = document.createElement('option');
-            opt.value = op.value;
-            opt.textContent = op.label;
-            select.appendChild(opt);
+            var select = document.getElementById('novoStatusSelect');
+            select.innerHTML = '<option value="">— Selecione —</option>';
+            (transicoes[status] || []).forEach(function (op) {
+                var opt = document.createElement('option');
+                opt.value = op.value;
+                opt.textContent = op.label;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('cancelarAviso').classList.add('d-none');
+            select.onchange = function () {
+                document.getElementById('cancelarAviso').classList.toggle('d-none', this.value !== 'CANCELADO');
+            };
         });
-
-        document.getElementById('cancelarAviso').classList.add('d-none');
-        select.onchange = function () {
-            document.getElementById('cancelarAviso').classList.toggle('d-none', this.value !== 'CANCELADO');
-        };
-    }
+    });
 
     document.querySelectorAll('[data-bs-target="#modalDeletar"]').forEach(function (btn) {
         btn.addEventListener('click', function () {
