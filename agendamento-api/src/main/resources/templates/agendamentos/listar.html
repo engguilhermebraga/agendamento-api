@@ -95,8 +95,9 @@
                                     title="Alterar status"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalStatus"
-                                    th:attr="data-id=${a.id}, data-status=${a.status.name()}, data-cliente=${a.clienteNome}">
-                                <i class="bi bi-arrow-repeat"></i>
+                                    th:attr="data-id=${a.id},data-status=${a.status.name()},data-cliente=${a.clienteNome}"
+                                    onclick="prepararStatus(this)">
+                                <i class="bi bi-arrow-repeat" style="pointer-events:none;"></i>
                             </button>
                             <!-- Deletar -->
                             <button type="button"
