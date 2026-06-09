@@ -89,12 +89,16 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <!-- Alterar status -->
-                            <a th:if="${a.status.name() == 'AGENDADO' or a.status.name() == 'CONFIRMADO'}"
-                               th:href="@{/web/agendamentos/{id}/status(id=${a.id})}"
-                               class="btn btn-outline-primary btn-sm"
-                               title="Alterar status">
-                                <i class="bi bi-arrow-repeat"></i>
-                            </a>
+                            <button type="button"
+                                    th:if="${a.status.name() == 'AGENDADO' or a.status.name() == 'CONFIRMADO'}"
+                                    class="btn btn-outline-primary btn-sm"
+                                    title="Alterar status"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalStatus"
+                                    th:attr="data-id=${a.id},data-status=${a.status.name()},data-cliente=${a.clienteNome}"
+                                    onclick="prepararStatus(this)">
+                                <i class="bi bi-arrow-repeat" style="pointer-events:none;"></i>
+                            </button>
                             <!-- Deletar -->
                             <button type="button"
                                     class="btn btn-outline-danger btn-sm"
@@ -171,16 +175,47 @@
         'CANCELADO':  'badge-cancelado'
     };
 
-    function prepararDeletar(btn) {
-        document.getElementById('formDeletar').action = '/web/agendamentos/deletar/' + btn.getAttribute('data-id');
-        document.getElementById('deletarClienteNome').textContent = btn.getAttribute('data-cliente');
-        document.getElementById('deletarServico').textContent     = btn.getAttribute('data-servico');
-        document.getElementById('deletarDataHora').textContent    = btn.getAttribute('data-datahora');
-        var status  = btn.getAttribute('data-status');
-        var badgeEl = document.getElementById('deletarStatusBadge');
-        badgeEl.className   = 'badge badge-status ' + (badgeClasses[status] || '');
-        badgeEl.textContent = status;
-    }
+    document.querySelectorAll('[data-bs-target="#modalStatus"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id      = this.getAttribute('data-id');
+            var status  = this.getAttribute('data-status');
+            var cliente = this.getAttribute('data-cliente');
+
+            document.getElementById('modalClienteNome').textContent = cliente;
+            document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
+
+            var badgeEl = document.getElementById('modalStatusAtualBadge');
+            badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
+
+            var select = document.getElementById('novoStatusSelect');
+            select.innerHTML = '<option value="">— Selecione —</option>';
+            (transicoes[status] || []).forEach(function (op) {
+                var opt = document.createElement('option');
+                opt.value = op.value;
+                opt.textContent = op.label;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('cancelarAviso').classList.add('d-none');
+            select.onchange = function () {
+                document.getElementById('cancelarAviso').classList.toggle('d-none', this.value !== 'CANCELADO');
+            };
+        });
+    });
+
+    document.querySelectorAll('[data-bs-target="#modalDeletar"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('formDeletar').action = '/web/agendamentos/deletar/' + this.getAttribute('data-id');
+            document.getElementById('deletarClienteNome').textContent = this.getAttribute('data-cliente');
+            document.getElementById('deletarServico').textContent     = this.getAttribute('data-servico');
+            document.getElementById('deletarDataHora').textContent    = this.getAttribute('data-datahora');
+
+            var status  = this.getAttribute('data-status');
+            var badgeEl = document.getElementById('deletarStatusBadge');
+            badgeEl.className = 'badge badge-status ' + (badgeClasses[status] || '');
+            badgeEl.textContent = status;
+        });
+    });
 </script>
 </body>
 </html>
