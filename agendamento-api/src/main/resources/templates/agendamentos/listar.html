@@ -89,20 +89,26 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <!-- Alterar status -->
-                            <a th:if="${a.status.name() == 'AGENDADO' or a.status.name() == 'CONFIRMADO'}"
-                               th:href="@{/web/agendamentos/{id}/status(id=${a.id})}"
-                               class="btn btn-outline-primary btn-sm"
-                               title="Alterar status">
-                                <i class="bi bi-arrow-repeat"></i>
-                            </a>
+                            <button type="button"
+                                    th:if="${a.status.name() == 'AGENDADO' or a.status.name() == 'CONFIRMADO'}"
+                                    class="btn btn-outline-primary btn-sm"
+                                    title="Alterar status"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalStatus"
+                                    th:attr="data-id=${a.id},data-status=${a.status.name()},data-cliente=${a.clienteNome}"
+                                    onclick="prepararStatus(this)">
+                                <i class="bi bi-arrow-repeat" style="pointer-events:none;"></i>
+                            </button>
                             <!-- Deletar -->
-                            <form th:action="@{/web/agendamentos/deletar/{id}(id=${a.id})}"
-                                  method="post" class="d-inline"
-                                  th:onsubmit="'return confirm(\'Excluir agendamento de ' + ${a.clienteNome} + '? Esta ação não pode ser desfeita.\')'">
-                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Deletar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm"
+                                    title="Deletar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalDeletar"
+                                    th:attr="data-id=${a.id},data-cliente=${a.clienteNome},data-servico=${a.servicoNome},data-datahora=${#temporals.format(a.dataHora,'dd/MM/yyyy HH:mm')},data-status=${a.status.name()}"
+                                    onclick="prepararDeletar(this)">
+                                <i class="bi bi-trash" style="pointer-events:none;"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -117,6 +123,99 @@
         </div>
     </div>
 
+    <!-- ── Modal: Deletar Agendamento ───────────────────────────── -->
+    <div class="modal fade" id="modalDeletar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formDeletar" method="post">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title">
+                            <i class="bi bi-trash me-2 text-danger"></i>Deletar Agendamento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 p-3 rounded bg-light border">
+                            <div class="row g-2 small">
+                                <div class="col-5 text-muted">Cliente</div>
+                                <div class="col-7 fw-semibold" id="deletarClienteNome">—</div>
+                                <div class="col-5 text-muted">Serviço</div>
+                                <div class="col-7" id="deletarServico">—</div>
+                                <div class="col-5 text-muted">Data/Hora</div>
+                                <div class="col-7" id="deletarDataHora">—</div>
+                                <div class="col-5 text-muted">Status</div>
+                                <div class="col-7"><span id="deletarStatusBadge"></span></div>
+                            </div>
+                        </div>
+                        <div class="alert alert-danger d-flex gap-2 py-2 mb-0 small">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                            <div><strong>Tem certeza?</strong> Essa ação é <strong>irreversível</strong>.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Deletar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    var badgeClasses = {
+        'AGENDADO':   'badge-agendado',
+        'CONFIRMADO': 'badge-confirmado',
+        'CONCLUIDO':  'badge-concluido',
+        'CANCELADO':  'badge-cancelado'
+    };
+
+    document.querySelectorAll('[data-bs-target="#modalStatus"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id      = this.getAttribute('data-id');
+            var status  = this.getAttribute('data-status');
+            var cliente = this.getAttribute('data-cliente');
+
+            document.getElementById('modalClienteNome').textContent = cliente;
+            document.getElementById('formStatus').action = '/web/agendamentos/status/' + id;
+
+            var badgeEl = document.getElementById('modalStatusAtualBadge');
+            badgeEl.innerHTML = '<span class="badge badge-status ' + (badgeClasses[status] || '') + '">' + status + '</span>';
+
+            var select = document.getElementById('novoStatusSelect');
+            select.innerHTML = '<option value="">— Selecione —</option>';
+            (transicoes[status] || []).forEach(function (op) {
+                var opt = document.createElement('option');
+                opt.value = op.value;
+                opt.textContent = op.label;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('cancelarAviso').classList.add('d-none');
+            select.onchange = function () {
+                document.getElementById('cancelarAviso').classList.toggle('d-none', this.value !== 'CANCELADO');
+            };
+        });
+    });
+
+    document.querySelectorAll('[data-bs-target="#modalDeletar"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('formDeletar').action = '/web/agendamentos/deletar/' + this.getAttribute('data-id');
+            document.getElementById('deletarClienteNome').textContent = this.getAttribute('data-cliente');
+            document.getElementById('deletarServico').textContent     = this.getAttribute('data-servico');
+            document.getElementById('deletarDataHora').textContent    = this.getAttribute('data-datahora');
+
+            var status  = this.getAttribute('data-status');
+            var badgeEl = document.getElementById('deletarStatusBadge');
+            badgeEl.className = 'badge badge-status ' + (badgeClasses[status] || '');
+            badgeEl.textContent = status;
+        });
+    });
+</script>
 </body>
 </html>

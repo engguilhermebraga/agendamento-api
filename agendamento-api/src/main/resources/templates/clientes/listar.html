@@ -58,13 +58,15 @@
                                title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form th:action="@{/web/clientes/{id}/deletar(id=${c.id})}"
-                                  method="post" class="d-inline"
-                                  th:onsubmit="'return confirm(\'Excluir o cliente ' + ${c.nome} + ' e todos os seus agendamentos? Esta ação não pode ser desfeita.\')'">
-                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Deletar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm"
+                                    title="Deletar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalDeletar"
+                                    th:attr="data-id=${c.id},data-nome=${c.nome}"
+                                    onclick="prepararDeletar(this)">
+                                <i class="bi bi-trash" style="pointer-events:none;"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -92,6 +94,11 @@
 </div>
 
 <script>
+    function prepararDeletar(btn) {
+        document.getElementById('modalClienteNome').textContent = btn.getAttribute('data-nome');
+        document.getElementById('formDeletar').action = '/web/clientes/' + btn.getAttribute('data-id') + '/deletar';
+    }
+
     function filtrarTabela(query) {
         const rows = document.querySelectorAll('#tabelaClientes tbody tr:not(#emptyRow)');
         const q = query.trim().toLowerCase();
