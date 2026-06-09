@@ -63,8 +63,9 @@
                                     title="Deletar"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalDeletar"
-                                    th:attr="data-id=${c.id}, data-nome=${c.nome}">
-                                <i class="bi bi-trash"></i>
+                                    th:attr="data-id=${c.id},data-nome=${c.nome}"
+                                    onclick="prepararDeletar(this)">
+                                <i class="bi bi-trash" style="pointer-events:none;"></i>
                             </button>
                         </div>
                     </td>
@@ -134,11 +135,10 @@
 </div>
 
 <script>
-    document.getElementById('modalDeletar').addEventListener('show.bs.modal', function (event) {
-        const btn = event.relatedTarget;
+    function prepararDeletar(btn) {
         document.getElementById('modalClienteNome').textContent = btn.getAttribute('data-nome');
         document.getElementById('formDeletar').action = '/web/clientes/' + btn.getAttribute('data-id') + '/deletar';
-    });
+    }
 
     function filtrarTabela(query) {
         const rows = document.querySelectorAll('#tabelaClientes tbody tr:not(#emptyRow)');

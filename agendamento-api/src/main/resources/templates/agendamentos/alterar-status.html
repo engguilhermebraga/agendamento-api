@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: html(~{:: conteudo})}">
+<body>
+<div th:fragment="conteudo">
+
+    <div class="d-flex align-items-center mb-4 gap-2">
+        <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+        <h2 class="mb-0 fw-bold">
+            <i class="bi bi-arrow-repeat me-2 text-primary"></i>Alterar Status
+        </h2>
+    </div>
+
+    <div class="card" style="max-width:520px;">
+        <div class="card-body p-4">
+
+            <!-- Dados do agendamento -->
+            <div class="mb-4 p-3 bg-light rounded border small">
+                <div class="row g-1">
+                    <div class="col-5 text-muted">Cliente</div>
+                    <div class="col-7 fw-semibold" th:text="${agendamento.clienteNome}"></div>
+                    <div class="col-5 text-muted">Profissional</div>
+                    <div class="col-7" th:text="${agendamento.profissionalNome}"></div>
+                    <div class="col-5 text-muted">Serviço</div>
+                    <div class="col-7" th:text="${agendamento.servicoNome}"></div>
+                    <div class="col-5 text-muted">Data/Hora</div>
+                    <div class="col-7"
+                         th:text="${#temporals.format(agendamento.dataHora, 'dd/MM/yyyy HH:mm')}"></div>
+                    <div class="col-5 text-muted">Status atual</div>
+                    <div class="col-7">
+                        <span th:text="${agendamento.status}"
+                              th:class="${'badge badge-status badge-' + agendamento.status.name().toLowerCase()}">
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sem transições disponíveis -->
+            <div th:if="${#lists.isEmpty(transicoes)}"
+                 class="alert alert-warning d-flex gap-2 align-items-center">
+                <i class="bi bi-lock-fill"></i>
+                Este agendamento está em estado final e não pode ser alterado.
+            </div>
+
+            <!-- Formulário de mudança de status -->
+            <form th:if="${!#lists.isEmpty(transicoes)}"
+                  th:action="@{/web/agendamentos/status/{id}(id=${agendamento.id})}"
+                  method="post">
+                <div class="mb-3">
+                    <label for="novoStatus" class="form-label fw-semibold">Novo status</label>
+                    <select id="novoStatus" name="novoStatus" class="form-select" required>
+                        <option value="">— Selecione —</option>
+                        <option th:each="t : ${transicoes}"
+                                th:value="${t.name()}"
+                                th:text="${t.name()}"></option>
+                    </select>
+                </div>
+                <div id="avisoCancel" class="alert alert-warning small d-none py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Esta ação cancelará o agendamento e não poderá ser desfeita.
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <a th:href="@{/web/agendamentos/listar}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Confirmar
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    var sel = document.getElementById('novoStatus');
+    if (sel) {
+        sel.addEventListener('change', function () {
+            var aviso = document.getElementById('avisoCancel');
+            if (this.value === 'CANCELADO') {
+                aviso.classList.remove('d-none');
+            } else {
+                aviso.classList.add('d-none');
+            }
+        });
+    }
+</script>
+</body>
+</html>
