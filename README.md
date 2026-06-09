@@ -7,8 +7,11 @@
 ![Tests](https://img.shields.io/badge/Tests-138%20passing-brightgreen)
 ![Build](https://img.shields.io/badge/Build-passing-brightgreen?logo=githubactions)
 
-> Trabalho de Conclusão de Curso — Engenharia de Software — UNDB 2026  
-> **Autor:** Guilherme Braga  
+> **Trabalho de Conclusão de Curso** — Engenharia de Software — UNDB 2026
+> **Título:** Desenvolvimento de uma API REST para Gestão de Agendamentos de Serviços: aplicação de arquitetura em camadas, padrões de projeto e documentação OpenAPI
+> **Autor:** Guilherme Braga
+> **Orientador:** Prof. Rodrigo Justino
+> **Instituição:** Unidade de Ensino Superior Dom Bosco — UNDB, São Luís, 2026
 > **Repositório:** [github.com/engguilhermebraga/agendamento-api](https://github.com/engguilhermebraga/agendamento-api)
 
 API REST para gestão de agendamentos de serviços, desenvolvida com Spring Boot e Java 21.
@@ -17,36 +20,51 @@ para o cliente final, com autenticação JWT, documentação Swagger UI e 138 te
 
 ---
 
+## Resumo
+
+O crescimento do setor de serviços e a dependência de processos manuais no agendamento de atendimentos geram conflitos de horário, perda de registros e dificuldade de acompanhamento operacional. Este trabalho desenvolve a **Agendamento API** — uma aplicação web composta por uma API REST, um painel administrativo e um portal de autoatendimento do cliente, com aplicação de arquitetura em camadas, padrões de projeto e documentação OpenAPI.
+
+O desenvolvimento seguiu uma abordagem **iterativa e incremental**, com controle de versão pelo GitHub Flow, integração contínua por GitHub Actions e verificação sistemática por testes automatizados. O sistema disponibiliza **22 endpoints REST** organizados em cinco grupos de recursos, com autenticação JWT e controle de acesso por papel, documentados no Swagger UI. Foi validado por **138 testes automatizados** (zero falhas, zero erros) e análise estática com Qodana sem problemas ativos.
+
+**Palavras-chave:** API REST · Agendamentos · Spring Boot · Engenharia de Software · Arquitetura em camadas.
+
+---
+
 ## Capturas de tela
 
-
-### Login Administrativo
-<!-- Captura: http://localhost:8081/web/login -->
-![Login Administrativo](docs/screenshots/login-administrativo.png)
+> Prints localizados em [`docs/screenshots/`](docs/screenshots/)
 
 ### Dashboard Administrativo
-<!-- Captura: http://localhost:8081/dashboard -->
-![Dashboard](docs/screenshots/dashboard-administrativo.png)
+<!-- Figura 7 – Dashboard administrativo com métricas e distribuição por status -->
+![Dashboard Administrativo](docs/screenshots/dashboard-administrativo.png)
 
 ### Listagem de Agendamentos
-<!-- Captura: http://localhost:8081/web/agendamentos/listar -->
-![Agendamentos](docs/screenshots/listagem-agendamentos.png)
+<!-- Figura 8 – Tela de listagem de agendamentos com filtros e badges de status -->
+![Listagem de Agendamentos](docs/screenshots/listagem-agendamentos.png)
 
-### Portal do Cliente — Seleção de Serviço
-<!-- Captura: http://localhost:8081/portal/step1 (logado) -->
+### Portal do Cliente — Seleção de Serviço (Etapa 1 de 4)
+<!-- Figura 9 – Portal do cliente — seleção de serviço (etapa 1 de 4) -->
 ![Portal Step 1](docs/screenshots/portal-cliente-step1.png)
 
-### Portal do Cliente — Confirmação
-<!-- Captura: http://localhost:8081/portal/step4 (após wizard) -->
+### Portal do Cliente — Confirmação (Etapa 4 de 4)
+<!-- Figura 10 – Portal do cliente — confirmação do agendamento (etapa 4 de 4) -->
 ![Portal Confirmação](docs/screenshots/portal-cliente-confirmacao.png)
 
-### Swagger UI
-<!-- Captura: http://localhost:8081/swagger-ui.html -->
+### Tela de Autenticação do Painel Administrativo
+<!-- Figura 11 – Tela de autenticação do painel administrativo -->
+![Login Administrativo](docs/screenshots/login-administrativo.png)
+
+### Swagger UI — Documentação Interativa dos Endpoints
+<!-- Figura 6 – Documentação interativa dos endpoints da API no Swagger UI -->
 ![Swagger UI](docs/screenshots/swagger-ui-endpoints.png)
 
-### Execução dos Testes
-<!-- Captura: terminal após ./mvnw test -->
+### Execução dos Testes Automatizados
+<!-- Figura 12 – Resultado da execução dos testes automatizados -->
 ![Testes](docs/screenshots/execucao-testes.png)
+
+### Workflow Qodana no GitHub Actions
+<!-- Figura 13 – Workflow de análise de qualidade com Qodana no GitHub Actions -->
+![Qodana](docs/screenshots/qodana-github-actions.png)
 
 ---
 
@@ -56,7 +74,7 @@ para o cliente final, com autenticação JWT, documentação Swagger UI e 138 te
 - **Painel Administrativo** — CRUD completo de clientes, profissionais, serviços e agendamentos com Thymeleaf
 - **Portal do Cliente** — fluxo guiado de autoatendimento em 4 etapas com verificação de disponibilidade
 - **Dashboard** — métricas em tempo real e distribuição de agendamentos por status
-- **Detecção de conflito** — algoritmo de sobreposição de intervalos para bloquear horários em uso
+- **Detecção de conflito** — algoritmo de sobreposição de intervalos (JPQL) para bloquear horários em uso
 - **Máquina de estados** — controle de transições AGENDADO → CONFIRMADO → CONCLUIDO / CANCELADO
 - **Segurança** — Spring Security com JWT (HS512, 24h) e senhas com hash BCrypt
 - **Documentação** — Swagger UI gerado automaticamente via SpringDoc OpenAPI 2.8.6
@@ -84,7 +102,7 @@ para o cliente final, com autenticação JWT, documentação Swagger UI e 138 te
 | Lombok | — | Redução de código boilerplate |
 | JUnit 5 + Mockito | — | Testes unitários e de integração |
 | Maven | 3.9.x | Build e dependências |
-| Git / GitHub | — | Controle de versão |
+| Git / GitHub | — | Controle de versão (GitHub Flow) |
 | GitHub Actions | — | Integração contínua |
 | Qodana | — | Análise estática de código |
 
@@ -162,25 +180,48 @@ Base URL: `http://localhost:8081/api/v1`
 
 | Método | Rota | Descrição | Acesso |
 |---|---|---|---|
-| POST | `/auth/login` | Gera token JWT | Público |
+| POST | `/auth/login` | Autentica e retorna token JWT | Público |
 
-### Clientes, Profissionais, Serviços
+### Clientes
 
-Cada recurso expõe: `GET /` · `GET /{id}` · `POST /` · `PUT /{id}` · `DELETE /{id}`
+| Método | Rota | Descrição | Acesso |
+|---|---|---|---|
+| GET | `/clientes` | Lista todos os clientes | USER/ADMIN |
+| GET | `/clientes/{id}` | Busca cliente por ID | USER/ADMIN |
+| POST | `/clientes` | Cadastra novo cliente | ADMIN |
+| PUT | `/clientes/{id}` | Atualiza cliente | ADMIN |
+| DELETE | `/clientes/{id}` | Remove cliente | ADMIN |
 
-- Leitura: `ROLE_USER` ou `ROLE_ADMIN`
-- Escrita: `ROLE_ADMIN`
+### Profissionais
+
+| Método | Rota | Descrição | Acesso |
+|---|---|---|---|
+| GET | `/profissionais` | Lista todos os profissionais | USER/ADMIN |
+| GET | `/profissionais/{id}` | Busca profissional por ID | USER/ADMIN |
+| POST | `/profissionais` | Cadastra profissional | ADMIN |
+| PUT | `/profissionais/{id}` | Atualiza profissional | ADMIN |
+| DELETE | `/profissionais/{id}` | Remove profissional | ADMIN |
+
+### Serviços
+
+| Método | Rota | Descrição | Acesso |
+|---|---|---|---|
+| GET | `/servicos` | Lista todos os serviços | USER/ADMIN |
+| GET | `/servicos/{id}` | Busca serviço por ID | USER/ADMIN |
+| POST | `/servicos` | Cadastra serviço | ADMIN |
+| PUT | `/servicos/{id}` | Atualiza serviço | ADMIN |
+| DELETE | `/servicos/{id}` | Remove serviço | ADMIN |
 
 ### Agendamentos
 
-| Método | Rota | Descrição | Papel |
+| Método | Rota | Descrição | Acesso |
 |---|---|---|---|
-| GET | `/agendamentos` | Lista todos | USER/ADMIN |
+| GET | `/agendamentos` | Lista agendamentos | USER/ADMIN |
 | GET | `/agendamentos/{id}` | Busca por ID | USER/ADMIN |
 | POST | `/agendamentos` | Cria com detecção de conflito | ADMIN |
-| PUT | `/agendamentos/{id}` | Atualiza | ADMIN |
-| PATCH | `/agendamentos/{id}/status` | Muda status | ADMIN |
-| DELETE | `/agendamentos/{id}` | Cancela | ADMIN |
+| PUT | `/agendamentos/{id}` | Atualiza agendamento | ADMIN |
+| PATCH | `/agendamentos/{id}/status` | Atualiza status | ADMIN |
+| DELETE | `/agendamentos/{id}` | Cancela agendamento | ADMIN |
 
 > Documentação completa e interativa em `http://localhost:8081/swagger-ui.html`
 
@@ -237,23 +278,34 @@ Resultado esperado: `Tests run: 138, Failures: 0, Errors: 0, Skipped: 0`
 
 ```
 agendamento-api/
-├── src/main/java/com/guilhermebraga/agendamento_api/
-│   ├── config/          # SecurityConfig, OpenApiConfig, DataInitializer
-│   ├── controller/      # REST controllers (/api/v1/**)
-│   ├── controller/web/  # MVC controllers do painel admin
-│   ├── controller/portal/ # MVC controllers do portal do cliente
-│   ├── dto/             # Request, Response e Form DTOs
-│   ├── entity/          # Entidades JPA (Cliente, Profissional, Servico, Agendamento)
-│   ├── exception/       # GlobalExceptionHandler, BusinessException
-│   ├── mapper/          # Conversão entidade ↔ DTO
-│   ├── repository/      # Spring Data JPA com queries JPQL
-│   └── security/        # JwtAuthenticationFilter, JwtTokenProvider
-├── src/main/resources/
-│   ├── templates/       # Templates Thymeleaf (admin + portal)
-│   ├── static/css/      # style.css (Bootstrap complementar)
-│   └── application.properties
-├── src/test/            # 138 testes (unit + repository + controller + integration)
-└── .github/workflows/   # CI: build + testes + Qodana
+├── docs/
+│   └── screenshots/              # Capturas de tela do sistema
+│       ├── dashboard-administrativo.png
+│       ├── listagem-agendamentos.png
+│       ├── portal-cliente-step1.png
+│       ├── portal-cliente-confirmacao.png
+│       ├── login-administrativo.png
+│       ├── swagger-ui-endpoints.png
+│       ├── execucao-testes.png
+│       └── qodana-github-actions.png
+├── agendamento-api/
+│   └── src/main/java/com/guilhermebraga/agendamento_api/
+│       ├── config/          # SecurityConfig, OpenApiConfig, DataInitializer
+│       ├── controller/      # REST controllers (/api/v1/**)
+│       ├── controller/web/  # MVC controllers do painel admin
+│       ├── controller/portal/ # MVC controllers do portal do cliente
+│       ├── dto/             # Request, Response e Form DTOs
+│       ├── entity/          # Entidades JPA (Cliente, Profissional, Servico, Agendamento)
+│       ├── exception/       # GlobalExceptionHandler, BusinessException
+│       ├── mapper/          # Conversão entidade ↔ DTO
+│       ├── repository/      # Spring Data JPA com queries JPQL
+│       └── security/        # JwtAuthenticationFilter, JwtTokenProvider
+│   └── src/main/resources/
+│       ├── templates/       # Templates Thymeleaf (admin + portal)
+│       ├── static/css/      # style.css (Bootstrap complementar)
+│       └── application.properties
+│   └── src/test/            # 138 testes (unit + repository + controller + integration)
+│   └── .github/workflows/   # CI: build + testes + Qodana
 ```
 
 ---
@@ -282,7 +334,8 @@ java -jar agendamento-api-1.0.0.jar \
 ## Contexto acadêmico
 
 Este projeto é o Trabalho de Conclusão de Curso de **Guilherme Braga** para o
-Curso de **Engenharia de Software** da **UNDB** (turma 2026).
+Curso de **Engenharia de Software** da **UNDB — Unidade de Ensino Superior Dom Bosco** (turma 2026),
+sob orientação do **Prof. Rodrigo Justino**.
 
 O sistema demonstra a aplicação prática de:
 - Arquitetura em camadas (Controller → Service → Repository)
@@ -292,6 +345,7 @@ O sistema demonstra a aplicação prática de:
 - Testes automatizados em 4 camadas: unitários, repositório, controller e integração
 - Server-Side Rendering com Thymeleaf + Bootstrap 5
 - Integração contínua com GitHub Actions e análise estática com Qodana
+- Abordagem iterativa e incremental com GitHub Flow
 
 ---
 
