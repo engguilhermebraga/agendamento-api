@@ -96,15 +96,13 @@
                                 <i class="bi bi-arrow-repeat"></i>
                             </a>
                             <!-- Deletar -->
-                            <button type="button"
-                                    class="btn btn-outline-danger btn-sm"
-                                    title="Deletar"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#modalDeletar"
-                                    th:attr="data-id=${a.id},data-cliente=${a.clienteNome},data-servico=${a.servicoNome},data-datahora=${#temporals.format(a.dataHora,'dd/MM/yyyy HH:mm')},data-status=${a.status.name()}"
-                                    onclick="prepararDeletar(this)">
-                                <i class="bi bi-trash" style="pointer-events:none;"></i>
-                            </button>
+                            <form th:action="@{/web/agendamentos/deletar/{id}(id=${a.id})}"
+                                  method="post" class="d-inline"
+                                  th:onsubmit="'return confirm(\'Excluir agendamento de ' + ${a.clienteNome} + '? Esta ação não pode ser desfeita.\')'">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Deletar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -119,68 +117,6 @@
         </div>
     </div>
 
-    <!-- ── Modal: Deletar Agendamento ───────────────────────────── -->
-    <div class="modal fade" id="modalDeletar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="formDeletar" method="post">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title">
-                            <i class="bi bi-trash me-2 text-danger"></i>Deletar Agendamento
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3 p-3 rounded bg-light border">
-                            <div class="row g-2 small">
-                                <div class="col-5 text-muted">Cliente</div>
-                                <div class="col-7 fw-semibold" id="deletarClienteNome">—</div>
-                                <div class="col-5 text-muted">Serviço</div>
-                                <div class="col-7" id="deletarServico">—</div>
-                                <div class="col-5 text-muted">Data/Hora</div>
-                                <div class="col-7" id="deletarDataHora">—</div>
-                                <div class="col-5 text-muted">Status</div>
-                                <div class="col-7"><span id="deletarStatusBadge"></span></div>
-                            </div>
-                        </div>
-                        <div class="alert alert-danger d-flex gap-2 py-2 mb-0 small">
-                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                            <div><strong>Tem certeza?</strong> Essa ação é <strong>irreversível</strong>.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-lg me-1"></i>Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i>Deletar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 </div>
-
-<script>
-    var badgeClasses = {
-        'AGENDADO':   'badge-agendado',
-        'CONFIRMADO': 'badge-confirmado',
-        'CONCLUIDO':  'badge-concluido',
-        'CANCELADO':  'badge-cancelado'
-    };
-
-    function prepararDeletar(btn) {
-        document.getElementById('formDeletar').action = '/web/agendamentos/deletar/' + btn.getAttribute('data-id');
-        document.getElementById('deletarClienteNome').textContent = btn.getAttribute('data-cliente');
-        document.getElementById('deletarServico').textContent     = btn.getAttribute('data-servico');
-        document.getElementById('deletarDataHora').textContent    = btn.getAttribute('data-datahora');
-        var status  = btn.getAttribute('data-status');
-        var badgeEl = document.getElementById('deletarStatusBadge');
-        badgeEl.className   = 'badge badge-status ' + (badgeClasses[status] || '');
-        badgeEl.textContent = status;
-    }
-</script>
 </body>
 </html>
