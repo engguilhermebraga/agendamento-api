@@ -6,6 +6,7 @@ import com.guilhermebraga.agendamento_api.entity.Cliente;
 import com.guilhermebraga.agendamento_api.exception.BusinessException;
 import com.guilhermebraga.agendamento_api.exception.ResourceNotFoundException;
 import com.guilhermebraga.agendamento_api.mapper.ClienteMapper;
+import com.guilhermebraga.agendamento_api.repository.AgendamentoRepository;
 import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +43,9 @@ class ClienteServiceTest {
     // ----------------------------------------------------------------
     @Mock
     private ClienteRepository clienteRepository;
+
+    @Mock
+    private AgendamentoRepository agendamentoRepository;
 
     @Mock
     private ClienteMapper clienteMapper;
@@ -267,6 +271,7 @@ class ClienteServiceTest {
     @DisplayName("deve deletar cliente existente sem lançar exceção")
     void deveDeletarClienteComSucesso() {
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(clienteSalvo));
+        when(agendamentoRepository.findByClienteId(1L)).thenReturn(List.of());
 
         // Act — não deve lançar nenhuma exceção
         assertThatCode(() -> clienteService.deletar(1L))
