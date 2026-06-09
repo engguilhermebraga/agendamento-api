@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Controller do fluxo de agendamento em etapas no portal.
@@ -166,7 +167,7 @@ public class PortalAgendamentoController {
                                        SessionStatus sessionStatus) {
         if (!isLogado(session)) return "redirect:/portal";
 
-        Cliente cliente = (Cliente) session.getAttribute("clienteLogado");
+        Cliente cliente = Objects.requireNonNull((Cliente) session.getAttribute("clienteLogado"));
         LocalDateTime dataHora = LocalDateTime.of(form.getData(), form.getHorario());
 
         try {
