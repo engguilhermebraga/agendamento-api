@@ -54,14 +54,13 @@
                                class="btn btn-outline-warning btn-sm" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <button type="button"
-                                    class="btn btn-outline-danger btn-sm"
-                                    title="Remover"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#modalDeletar"
-                                    th:attr="data-id=${p.id}, data-nome=${p.nome}">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <form th:action="@{/web/profissionais/{id}/deletar(id=${p.id})}"
+                                  method="post" class="d-inline"
+                                  th:onsubmit="'return confirm(\'Excluir o profissional ' + ${p.nome} + '? Esta ação não pode ser desfeita.\')'">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remover">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -86,46 +85,9 @@
         <i class="bi bi-search me-1"></i>Nenhum resultado encontrado para a busca.
     </div>
 
-    <!-- Modal de confirmação de exclusão -->
-    <div class="modal fade" id="modalDeletar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                        Confirmar exclusão
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small mb-1">Profissional a ser removido:</p>
-                    <p class="fw-semibold fs-6 mb-0" id="modalNomeProfissional"></p>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-1"></i>Cancelar
-                    </button>
-                    <button type="button" id="btnConfirmarDeletar" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i>Confirmar exclusão
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <script>
-    document.getElementById('modalDeletar').addEventListener('show.bs.modal', function (event) {
-        var btn = event.relatedTarget;
-        document.getElementById('modalNomeProfissional').textContent = btn.getAttribute('data-nome');
-        document.getElementById('btnConfirmarDeletar').setAttribute('data-id', btn.getAttribute('data-id'));
-    });
-
-    document.getElementById('btnConfirmarDeletar').addEventListener('click', function () {
-        window.location.href = '/web/profissionais/' + this.getAttribute('data-id') + '/deletar';
-    });
-
     function filtrarTabela(query) {
         var rows = document.querySelectorAll('#tabelaProfissionais tbody tr:not(#emptyRow)');
         var q = query.trim().toLowerCase();

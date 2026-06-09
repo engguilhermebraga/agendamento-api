@@ -91,47 +91,6 @@
         <i class="bi bi-search me-1"></i>Nenhum resultado encontrado para a busca.
     </div>
 
-    <!-- ── Modal de confirmação de exclusão ─────────────────────── -->
-    <div class="modal fade" id="modalDeletar" tabindex="-1"
-         aria-labelledby="modalDeletarLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="modalDeletarLabel">
-                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                        Confirmar exclusão
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="alert alert-warning d-flex gap-2 align-items-start mb-3">
-                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                        <div>
-                            <strong>Atenção:</strong> Deletar este cliente também removerá
-                            <strong>todos os seus agendamentos</strong>. Esta ação não pode ser desfeita.
-                        </div>
-                    </div>
-                    <p class="mb-1 text-muted small">Cliente a ser excluído:</p>
-                    <p class="fw-semibold fs-6 mb-0" id="modalClienteNome"></p>
-                </div>
-
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-1"></i>Cancelar
-                    </button>
-                    <form id="formDeletar" method="post">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i>Confirmar exclusão
-                        </button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <script>
