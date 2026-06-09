@@ -6,6 +6,7 @@ import com.guilhermebraga.agendamento_api.entity.Cliente;
 import com.guilhermebraga.agendamento_api.exception.BusinessException;
 import com.guilhermebraga.agendamento_api.exception.ResourceNotFoundException;
 import com.guilhermebraga.agendamento_api.mapper.ClienteMapper;
+import com.guilhermebraga.agendamento_api.repository.AgendamentoRepository;
 import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final AgendamentoRepository agendamentoRepository;
     private final ClienteMapper clienteMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -112,6 +114,7 @@ public class ClienteService {
     public void deletar(Long id) {
         log.info("Deletando cliente: id={}", id);
         buscarOuLancarExcecao(id);
+        agendamentoRepository.deleteAll(agendamentoRepository.findByClienteId(id));
         clienteRepository.deleteById(id);
         log.info("Cliente deletado: id={}", id);
     }

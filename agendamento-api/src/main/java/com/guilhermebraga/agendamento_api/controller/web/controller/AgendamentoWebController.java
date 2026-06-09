@@ -161,6 +161,28 @@ public class AgendamentoWebController {
         }
     }
 
+    @GetMapping("/{id}/status")
+    public String formularioStatus(@PathVariable Long id, Model model,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            AgendamentoResponse agendamento = agendamentoService.buscarPorId(id);
+            StatusAgendamento statusAtual = agendamento.getStatus();
+            List<StatusAgendamento> transicoes = switch (statusAtual) {
+                case AGENDADO   -> List.of(StatusAgendamento.CONFIRMADO, StatusAgendamento.CANCELADO);
+                case CONFIRMADO -> List.of(StatusAgendamento.CONCLUIDO,  StatusAgendamento.CANCELADO);
+                default         -> List.of();
+            };
+            model.addAttribute("titulo", "Alterar Status");
+            model.addAttribute("menuAtivo", "agendamentos");
+            model.addAttribute("agendamento", agendamento);
+            model.addAttribute("transicoes", transicoes);
+            return "agendamentos/alterar-status";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagemErro", "Agendamento não encontrado.");
+            return "redirect:/web/agendamentos/listar";
+        }
+    }
+
     @PostMapping("/status/{id}")
     public String mudarStatus(@PathVariable Long id,
                               @RequestParam StatusAgendamento novoStatus,
