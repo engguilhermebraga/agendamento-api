@@ -1,12 +1,60 @@
-# Agendamento API
+# Sistema de Agendamento de Serviços
 
-Aplicação web para gestão de agendamentos de serviços, desenvolvida como Trabalho de Conclusão de Curso em Engenharia de Software — UNDB 2026.
+> Trabalho de Conclusão de Curso — Engenharia de Software, UNDB 2026  
+> **Autor:** Guilherme Braga · **Orientador:** Prof. Rodrigo Justino
 
-O sistema é composto por uma **API REST**, um **painel administrativo** e um **portal de autoatendimento do cliente**, todos compartilhando a mesma base de regras de negócio e persistência.
+Aplicação web full-stack para gestão de agendamentos de serviços, composta por uma **API REST**, um **painel administrativo** e um **portal de autoatendimento do cliente**, todos compartilhando a mesma base de regras de negócio e persistência.
 
 ---
 
-## Stack
+## Sumário
+
+- [Visão Geral](#visão-geral)
+- [Funcionalidades](#funcionalidades)
+- [Stack Tecnológica](#stack-tecnológica)
+- [Arquitetura](#arquitetura)
+- [Telas do Sistema](#telas-do-sistema)
+- [Diagramas](#diagramas)
+- [Como Executar](#como-executar)
+- [URLs Disponíveis](#urls-disponíveis)
+- [Credenciais de Desenvolvimento](#credenciais-de-desenvolvimento)
+- [API REST](#api-rest)
+- [Testes](#testes)
+- [Qualidade de Código](#qualidade-de-código)
+- [Licença](#licença)
+
+---
+
+## Visão Geral
+
+O sistema resolve o problema de gestão manual de agendamentos em negócios de prestação de serviços (salões, clínicas, estúdios, etc.). Permite que gestores administrem clientes, profissionais e serviços por um painel web, enquanto os próprios clientes podem agendar e acompanhar atendimentos pelo portal de autoatendimento, sem necessidade de ligação ou presença física.
+
+---
+
+## Funcionalidades
+
+### Painel Administrativo (`/dashboard`)
+- Cadastro, edição e remoção de **clientes**, **profissionais** e **serviços**
+- Criação e gestão de **agendamentos** com validação de conflito de horário
+- Transição de status: `AGENDADO → CONFIRMADO → CONCLUIDO` (ou `CANCELADO`)
+- Busca e filtragem em todas as listagens
+- Dashboard com métricas em tempo real (totais, agendamentos do dia, gráficos)
+
+### Portal do Cliente (`/portal`)
+- Cadastro e login com autenticação por sessão
+- Agendamento em fluxo guiado: escolha de serviço → profissional → data/hora
+- Histórico de agendamentos com status atualizado
+- Cancelamento de agendamentos futuros
+
+### API REST (`/api/v1/`)
+- Autenticação via JWT
+- CRUD completo de todas as entidades
+- Controle de acesso por papel (`ROLE_USER`, `ROLE_ADMIN`)
+- Documentação automática via Swagger UI
+
+---
+
+## Stack Tecnológica
 
 | Tecnologia | Versão | Papel |
 |---|---|---|
@@ -20,30 +68,157 @@ O sistema é composto por uma **API REST**, um **painel administrativo** e um **
 | Bootstrap | 5.3.3 | Estilização das interfaces |
 | SpringDoc OpenAPI | 2.8.6 | Documentação automática (Swagger UI) |
 | H2 Database | — | Banco em memória (dev/testes) |
-| MySQL Connector | — | Driver para banco persistente (prod) |
+| MySQL Connector | — | Driver para banco persistente (produção) |
 | Lombok | — | Redução de boilerplate |
 | JUnit 5 + Mockito | — | Testes unitários e de integração |
 | Maven | 3.9.x | Build e dependências |
-| GitHub Actions + Qodana | — | Análise estática de qualidade |
+| GitHub Actions + Qodana | — | CI e análise estática de qualidade |
 
 ---
 
-## Pré-requisitos
+## Arquitetura
 
-- Java 21 ou superior — [Adoptium](https://adoptium.net/)
-- Git
-- Maven Wrapper incluído (não requer instalação separada)
+O projeto segue arquitetura em camadas dentro de um único módulo Spring Boot:
+
+```
+com.guilhermebraga.agendamento_api/
+├── controller/          # Controllers REST (@RestController) — respostas JSON
+├── controller/web/      # Controllers MVC do painel administrativo
+├── controller/portal/   # Controllers MVC do portal do cliente
+├── service/             # Regras de negócio (validações, transições de estado)
+├── repository/          # Interfaces Spring Data JPA + consultas JPQL
+├── entity/              # Entidades JPA mapeadas para as tabelas
+├── dto/request/         # Objetos de entrada com Bean Validation
+├── dto/response/        # Objetos de saída serializados para JSON/template
+├── dto/form/            # Formulários de agendamento multi-etapa (@SessionAttributes)
+├── mapper/              # Conversão entidade ↔ DTO
+├── security/            # Filtro JWT, provedor de tokens e configurações
+├── exception/           # Exceções de domínio e GlobalExceptionHandler
+└── config/              # SecurityConfig, OpenApiConfig, configurações MVC
+```
+
+### Modelo de Domínio
+
+| Entidade | Descrição |
+|---|---|
+| `Cliente` | Pessoa que realiza agendamentos; possui e-mail, CPF e senha (BCrypt) |
+| `Profissional` | Prestador do serviço com especialidade |
+| `Servico` | Tipo de atendimento com nome, duração em minutos e preço |
+| `Agendamento` | Associa cliente + profissional + serviço + data/hora; controla o ciclo de vida |
+
+### Ciclo de Vida do Agendamento
+
+```
+        criar
+          ↓
+      AGENDADO ──────────────────────→ CANCELADO
+          │
+   admin confirma
+          ↓
+     CONFIRMADO ────────────────────→ CANCELADO
+          │
+    admin conclui
+          ↓
+      CONCLUIDO  (estado terminal)
+```
+
+> A verificação de conflito de horário usa JPQL com algoritmo de overlap de intervalos (`dataHoraFim` calculado e persistido). Apenas agendamentos `AGENDADO` ou `CONFIRMADO` bloqueiam o horário.
 
 ---
 
-## Executar localmente
+## Telas do Sistema
+
+### Painel Administrativo
+
+#### Dashboard
+![Dashboard](screenshots/admin/dashboard.png)
+
+#### Listagem de Agendamentos
+![Agendamentos](screenshots/admin/agendamentos-listar.png)
+
+#### Novo Agendamento
+![Novo Agendamento](screenshots/admin/agendamentos-novo.png)
+
+#### Alterar Status do Agendamento
+![Alterar Status](screenshots/admin/agendamentos-status.png)
+
+#### Listagem de Clientes
+![Clientes](screenshots/admin/clientes-listar.png)
+
+#### Listagem de Profissionais
+![Profissionais](screenshots/admin/profissionais-listar.png)
+
+#### Listagem de Serviços
+![Serviços](screenshots/admin/servicos-listar.png)
+
+#### Documentação — Swagger UI
+![Swagger UI](screenshots/admin/swagger-ui.png)
+
+---
+
+### Portal do Cliente
+
+#### Tela de Identificação / Login
+![Portal Login](screenshots/portal/portal-login.png)
+
+#### Cadastro de Cliente
+![Portal Cadastro](screenshots/portal/portal-cadastro.png)
+
+#### Home do Portal
+![Portal Home](screenshots/portal/portal-home.png)
+
+#### Fluxo de Agendamento — Escolha do Serviço
+![Portal Agendamento Serviço](screenshots/portal/portal-agendamento-servico.png)
+
+#### Fluxo de Agendamento — Escolha do Profissional
+![Portal Agendamento Profissional](screenshots/portal/portal-agendamento-profissional.png)
+
+#### Fluxo de Agendamento — Escolha da Data/Hora
+![Portal Agendamento Data](screenshots/portal/portal-agendamento-data.png)
+
+#### Confirmação do Agendamento
+![Portal Confirmação](screenshots/portal/portal-agendamento-confirmacao.png)
+
+#### Meus Agendamentos
+![Portal Meus Agendamentos](screenshots/portal/portal-meus-agendamentos.png)
+
+---
+
+## Diagramas
+
+#### Diagrama de Classes
+![Diagrama de Classes](screenshots/diagramas/diagrama-classes.png)
+
+#### Diagrama Entidade-Relacionamento (ER)
+![Diagrama ER](screenshots/diagramas/diagrama-er.png)
+
+#### Diagrama de Casos de Uso
+![Casos de Uso](screenshots/diagramas/diagrama-casos-de-uso.png)
+
+#### Diagrama de Sequência — Fluxo de Agendamento
+![Diagrama de Sequência](screenshots/diagramas/diagrama-sequencia-agendamento.png)
+
+#### Arquitetura do Sistema
+![Arquitetura](screenshots/diagramas/diagrama-arquitetura.png)
+
+---
+
+## Como Executar
+
+### Pré-requisitos
+
+- **Java 21** ou superior — [Adoptium](https://adoptium.net/)
+- **Git**
+- Maven Wrapper incluído (não requer instalação separada do Maven)
+
+### Passos
 
 ```bash
 # 1. Clonar o repositório
 git clone https://github.com/engguilhermebraga/agendamento-api.git
 cd agendamento-api/agendamento-api
 
-# 2. Executar no perfil de desenvolvimento (H2 em memória)
+# 2. Executar no perfil de desenvolvimento (banco H2 em memória)
 ./mvnw spring-boot:run
 
 # 3. Executar os testes
@@ -51,9 +226,11 @@ cd agendamento-api/agendamento-api
 # Esperado: Tests run: 138, Failures: 0, Errors: 0, Skipped: 0
 ```
 
+> O `DataInitializer` popula automaticamente o banco com clientes, profissionais, serviços e agendamentos de exemplo ao subir o servidor.
+
 ---
 
-## URLs disponíveis após inicialização
+## URLs Disponíveis
 
 | Recurso | URL |
 |---|---|
@@ -65,18 +242,20 @@ cd agendamento-api/agendamento-api
 
 ---
 
-## Credenciais de desenvolvimento
+## Credenciais de Desenvolvimento
 
-**Painel administrativo (Form Login):**
+### Painel Administrativo (Form Login)
 
 | Usuário | Senha | Papel |
 |---|---|---|
 | `admin` | `admin123` | ROLE_ADMIN |
 | `user` | `user123` | ROLE_USER |
 
-**Portal do cliente:** qualquer e-mail dos clientes criados pelo `DataInitializer` com senha `cliente123`.
+### Portal do Cliente
 
-**API REST — obter token JWT:**
+Qualquer cliente criado pelo `DataInitializer` com senha `cliente123`.
+
+### API REST — Obter Token JWT
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/login \
@@ -84,77 +263,41 @@ curl -X POST http://localhost:8081/api/v1/auth/login \
   -d '{"username":"admin","password":"admin123"}'
 ```
 
-Usar o token retornado no header `Authorization: Bearer <token>`.
-
----
-
-## Estrutura de pacotes
+Usar o token retornado no header de todas as requisições protegidas:
 
 ```
-com.guilhermebraga.agendamento_api/
-├── controller/          # Controllers REST (@RestController) — JSON
-├── controller/web/      # Controllers MVC do painel administrativo
-├── controller/portal/   # Controllers MVC do portal do cliente
-├── service/             # Regras de negócio
-├── repository/          # Interfaces Spring Data JPA + queries JPQL
-├── entity/              # Entidades JPA
-├── dto/request/         # Objetos de entrada (Bean Validation)
-├── dto/response/        # Objetos de saída
-├── dto/form/            # Formulários multi-etapa (@SessionAttributes)
-├── mapper/              # Conversão entidade ↔ DTO
-├── security/            # Filtro JWT e provedor de tokens
-├── exception/           # Exceções de domínio e GlobalExceptionHandler
-└── config/              # SecurityConfig, OpenApiConfig, MVC config
+Authorization: Bearer <token>
 ```
 
 ---
 
-## API REST — Endpoints
+## API REST
 
 Base: `/api/v1/`
 
-| Grupo | Métodos | Acesso |
+| Recurso | Operações | Acesso mínimo |
 |---|---|---|
 | `POST /auth/login` | Autenticar, obter JWT | Público |
-| `/clientes` | GET, POST, PUT, DELETE | USER/ADMIN |
-| `/profissionais` | GET, POST, PUT, DELETE | USER/ADMIN |
-| `/servicos` | GET, POST, PUT, DELETE | USER/ADMIN |
-| `/agendamentos` | GET, POST, PUT, PATCH /status, DELETE | USER/ADMIN |
+| `GET /clientes` | Listar todos | USER |
+| `POST /clientes` | Cadastrar | ADMIN |
+| `GET /clientes/{id}` | Buscar por ID | USER |
+| `PUT /clientes/{id}` | Atualizar | ADMIN |
+| `DELETE /clientes/{id}` | Remover | ADMIN |
+| `GET /profissionais` | Listar todos | USER |
+| `POST /profissionais` | Cadastrar | ADMIN |
+| `PUT /profissionais/{id}` | Atualizar | ADMIN |
+| `DELETE /profissionais/{id}` | Remover | ADMIN |
+| `GET /servicos` | Listar todos | USER |
+| `POST /servicos` | Cadastrar | ADMIN |
+| `PUT /servicos/{id}` | Atualizar | ADMIN |
+| `DELETE /servicos/{id}` | Remover | ADMIN |
+| `GET /agendamentos` | Listar (filtros: status, data) | USER |
+| `POST /agendamentos` | Criar | USER |
+| `PUT /agendamentos/{id}` | Atualizar | ADMIN |
+| `PATCH /agendamentos/{id}/status` | Transição de status | ADMIN |
+| `DELETE /agendamentos/{id}` | Remover | ADMIN |
 
-Operações de escrita (POST, PUT, PATCH, DELETE) exigem `ROLE_ADMIN`.
-
----
-
-## Domínio
-
-### Entidades
-
-| Entidade | Descrição |
-|---|---|
-| `Cliente` | Pessoa que realiza agendamentos |
-| `Profissional` | Prestador do serviço |
-| `Servico` | Tipo de atendimento com duração e preço |
-| `Agendamento` | Relaciona cliente + profissional + serviço + data/hora |
-
-### Ciclo de vida do Agendamento
-
-```
-          criar
-            ↓
-        AGENDADO ──────────────────→ CANCELADO
-            │
-     admin confirma
-            ↓
-       CONFIRMADO ─────────────────→ CANCELADO
-            │
-      admin conclui
-            ↓
-        CONCLUIDO  (estado final)
-```
-
-### Regra de conflito de horário
-
-O campo `dataHoraFim` é calculado como `dataHora + duracaoMinutos` e persistido na tabela `agendamento`. A verificação de sobreposição usa consulta JPQL com o algoritmo padrão de overlap de intervalos, portável entre H2 e MySQL. Apenas agendamentos com status `AGENDADO` ou `CONFIRMADO` bloqueiam horários.
+> Documentação interativa completa disponível em `/swagger-ui.html`.
 
 ---
 
@@ -164,26 +307,26 @@ O campo `dataHoraFim` é calculado como `dataHora + duracaoMinutos` e persistido
 ./mvnw test
 ```
 
-138 testes organizados em 4 camadas:
+**138 testes** distribuídos em 4 camadas:
 
 | Camada | Ferramenta | Escopo |
 |---|---|---|
-| Unitária | JUnit 5 + Mockito | Serviços em isolamento (sem infraestrutura) |
+| Unitária | JUnit 5 + Mockito | Serviços em isolamento total |
 | Repositório | JUnit 5 + H2 real | Consultas JPQL com rollback automático |
-| Controlador | MockMvc + @WithMockUser | Status HTTP, serialização, controle de acesso |
+| Controlador | MockMvc + @WithMockUser | Status HTTP, serialização e controle de acesso |
 | Integração | MockMvc + H2 real | Fluxo completo criação → transições de status |
 
 ---
 
-## Qualidade de código
+## Qualidade de Código
 
-O projeto usa [Qodana](https://www.jetbrains.com/qodana/) via GitHub Actions para análise estática a cada push. O workflow está em `.github/workflows/qodana_code_quality.yml`.
+O projeto usa [Qodana](https://www.jetbrains.com/qodana/) via GitHub Actions para análise estática automatizada a cada push e pull request. O workflow está em `.github/workflows/qodana_code_quality.yml`.
 
 ---
 
-## Configuração de banco para produção
+## Configuração para Produção (MySQL)
 
-Criar um arquivo `application-prod.properties` (não versionar) com:
+Criar `application-prod.properties` (não versionar):
 
 ```properties
 spring.datasource.url=jdbc:mysql://host:3306/agendamento_db
@@ -195,17 +338,6 @@ jwt.secret=${JWT_SECRET}
 
 ---
 
-## Autor
-
-**Guilherme Braga**
-Engenharia de Software — UNDB 2026
-Orientador: Prof. Rodrigo Justino
-
----
-
-## Licença
-
-MIT License
 ## Licença
 
 MIT License — Copyright (c) 2026 Guilherme Braga
