@@ -10,6 +10,7 @@ import com.guilhermebraga.agendamento_api.repository.AgendamentoRepository;
 import com.guilhermebraga.agendamento_api.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -122,6 +123,7 @@ public class ClienteService {
     /**
      * Autentica por e-mail + senha (BCrypt). Retorna null se inválido.
      */
+    @Nullable
     @Transactional(readOnly = true)
     public Cliente autenticarPorEmailESenha(String email, String senha) {
         return clienteRepository.findByEmail(email)
