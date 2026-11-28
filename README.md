@@ -333,7 +333,21 @@ spring.datasource.url=jdbc:mysql://host:3306/agendamento_db
 spring.datasource.username=${DB_USER}
 spring.datasource.password=${DB_PASSWORD}
 spring.jpa.hibernate.ddl-auto=validate
-jwt.secret=${JWT_SECRET}
+```
+
+### Variáveis de ambiente do JWT
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `JWT_SECRET` | Sim, fora dos perfis `dev`/`test` | Segredo HS512 com **pelo menos 64 bytes**. Sem ela (ou com menos de 64 bytes), a aplicação não sobe. |
+| `JWT_EXPIRATION_MS` | Não | Validade do token em milissegundos, de 1 a 30 dias. Padrão: `86400000` (24 h). |
+
+Nos perfis `dev` e `test` (sem `prod` junto), sem `JWT_SECRET`, a aplicação gera uma chave aleatória a cada inicialização (os tokens deixam de valer quando ela reinicia). Os testes (`./mvnw test`) ignoram o `JWT_SECRET` da máquina.
+
+Gere o segredo numa linha só (o `tr` remove a quebra de linha que o base64 insere e que atrapalha arquivos `.env`):
+
+```bash
+export JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')"
 ```
 
 ---

@@ -156,6 +156,18 @@
                 </configuration>
             </plugin>
 
+            <!-- Testes não herdam o JWT_SECRET da máquina: o perfil test usa chave aleatória -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludedEnvironmentVariables>
+                        <excludedEnvironmentVariable>JWT_SECRET</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>JWT_EXPIRATION_MS</excludedEnvironmentVariable>
+                    </excludedEnvironmentVariables>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
