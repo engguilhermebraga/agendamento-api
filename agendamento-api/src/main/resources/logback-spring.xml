@@ -30,24 +30,35 @@
         </encoder>
     </appender>
 
-    <!-- Silencia o barulho do Hibernate SQL em INFO (deixa só no console via DEBUG) -->
-    <logger name="org.hibernate.SQL"                         level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-    </logger>
-    <logger name="org.hibernate.orm.jdbc.bind"               level="TRACE" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-    </logger>
+    <!-- SQL e valores dos parâmetros só no perfil dev: o bind em TRACE mostra
+         e-mails, CPFs e hashes de senha, que não podem ir para o log de produção -->
+    <springProfile name="dev">
+        <logger name="org.hibernate.SQL"                     level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+        <logger name="org.hibernate.orm.jdbc.bind"           level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+    </springProfile>
 
     <!-- Spring Security: WARN no arquivo, INFO no console -->
     <logger name="org.springframework.security"              level="INFO"  additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <!-- Pacote da aplicação: DEBUG completo -->
-    <logger name="com.guilhermebraga.agendamento_api"        level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </logger>
+    <!-- Pacote da aplicação: DEBUG completo em dev, INFO nos demais perfis -->
+    <springProfile name="dev">
+        <logger name="com.guilhermebraga.agendamento_api"    level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+    </springProfile>
+    <springProfile name="!dev">
+        <logger name="com.guilhermebraga.agendamento_api"    level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+    </springProfile>
 
     <!-- Root: INFO para tudo que não foi explicitado acima -->
     <root level="INFO">

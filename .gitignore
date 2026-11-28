@@ -51,5 +51,7 @@ desktop.ini
 *.pem
 *.p12
 application-prod.properties
+# Exceção: o modelo versionado só tem variáveis de ambiente (${...}), sem segredos
+!agendamento-api/src/main/resources/application-prod.properties
 application-production.yml
 application-secret.properties
