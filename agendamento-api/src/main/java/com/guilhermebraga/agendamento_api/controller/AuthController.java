@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -35,7 +36,8 @@ public class AuthController {
         return ResponseEntity.ok(LoginResponse.builder()
             .token(token)
             .tipo("Bearer")
-            .expiracao(LocalDateTime.now().plusHours(24))
+            .expiracao(LocalDateTime.ofInstant(
+                jwtTokenProvider.getExpirationFromToken(token).toInstant(), ZoneId.systemDefault()))
             .build());
     }
 }
