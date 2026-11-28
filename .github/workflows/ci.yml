@@ -39,4 +39,4 @@ jobs:
 
       # 3. Compila o projeto e roda os testes
       - name: Build e Testes com Maven
-        run: mvn -B clean verify --no-transfer-progress
+        run: ./mvnw -B clean verify --no-transfer-progress
