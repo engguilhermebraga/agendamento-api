@@ -219,14 +219,27 @@ git clone https://github.com/engguilhermebraga/agendamento-api.git
 cd agendamento-api/agendamento-api
 
 # 2. Executar no perfil de desenvolvimento (banco H2 em memória)
+#    O spring-boot:run já ativa o perfil dev
 ./mvnw spring-boot:run
 
 # 3. Executar os testes
 ./mvnw test
-# Esperado: Tests run: 138, Failures: 0, Errors: 0, Skipped: 0
+# Esperado: Tests run: 154, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-> O `DataInitializer` popula automaticamente o banco com clientes, profissionais, serviços e agendamentos de exemplo ao subir o servidor.
+> No perfil `dev`, o `DataInitializer` popula automaticamente o banco com clientes, profissionais, serviços e agendamentos de exemplo ao subir o servidor.
+>
+> Rodando pela IDE (classe `AgendamentoApiApplication`), defina a variável `SPRING_PROFILES_ACTIVE=dev`. Sem perfil ativo vale o `prod`, que exige `DB_URL` e `JWT_SECRET`. Para usar outro perfil pelo Maven: `./mvnw spring-boot:run -Dspring-boot.run.profiles=prod`.
+
+### Perfis
+
+| Perfil | Como ativar | Banco | O que muda |
+|---|---|---|---|
+| `dev` | `./mvnw spring-boot:run` ou `SPRING_PROFILES_ACTIVE=dev` | H2 em memória | Console H2, dados de exemplo, SQL no log, templates sem cache |
+| `prod` | `SPRING_PROFILES_ACTIVE=prod`, ou nenhum perfil (padrão) | MySQL (variáveis de ambiente) | Sem dados de exemplo, sem console H2, sem SQL no log |
+| `test` | automático no `./mvnw test` | H2 em memória | Usado só pelos testes |
+
+A configuração comum fica em `application.properties`, e cada perfil tem o seu `application-<perfil>.properties`.
 
 ---
 
@@ -326,14 +339,27 @@ O projeto usa [Qodana](https://www.jetbrains.com/qodana/) via GitHub Actions par
 
 ## Configuração para Produção (MySQL)
 
-Criar `application-prod.properties` (não versionar):
+O `application-prod.properties` já vem no repositório e não contém segredos: tudo vem de variáveis de ambiente.
 
-```properties
-spring.datasource.url=jdbc:mysql://host:3306/agendamento_db
-spring.datasource.username=${DB_USER}
-spring.datasource.password=${DB_PASSWORD}
-spring.jpa.hibernate.ddl-auto=validate
+```bash
+cd agendamento-api && ./mvnw -DskipTests package
+
+SPRING_PROFILES_ACTIVE=prod \
+DB_URL="jdbc:mysql://host:3306/agendamento_db" \
+DB_USER="agendamento" \
+DB_PASSWORD="..." \
+JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')" \
+java -jar target/agendamento-api-1.0.0.jar
 ```
+
+### Variáveis de ambiente do banco
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `SPRING_PROFILES_ACTIVE` | Recomendada | `prod`. Sem nenhum perfil, o `prod` já é o padrão. |
+| `DB_URL` | Sim | JDBC do MySQL, ex.: `jdbc:mysql://host:3306/agendamento_db`. Sem ela, a aplicação não sobe (erro `'url' must start with "jdbc"`). |
+| `DB_USER` / `DB_PASSWORD` | Sim | Credenciais do banco. Sem elas, a aplicação falha ao conectar (`Access denied`). |
+| `JPA_DDL_AUTO` | Não | Padrão `update` (cria e ajusta as tabelas sem apagar dados). Passa a ser `validate` quando o projeto usar Flyway. |
 
 ### Variáveis de ambiente do JWT
 

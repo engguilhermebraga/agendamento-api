@@ -27,8 +27,8 @@ import java.time.LocalDateTime;
  * Popula o banco H2 em memória com dados realistas para demonstração
  * no Swagger UI e na interface Thymeleaf.
  * <p>
- * Para desativar: remova @Profile("dev") ou mude o perfil ativo em
- * application.properties para "prod".
+ * O perfil dev é ativado pelo {@code ./mvnw spring-boot:run} ou por
+ * {@code SPRING_PROFILES_ACTIVE=dev}. Em produção ({@code prod}) ele não roda.
  *
  * @author Guilherme Braga
  */

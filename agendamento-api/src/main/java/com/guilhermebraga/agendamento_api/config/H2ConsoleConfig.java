@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
  * ser registrado explicitamente quando a propriedade spring.h2.console.enabled=true.
  *
  * Ativo apenas no perfil "dev" para garantir que o console não seja exposto
- * em produção. O path padrão é /h2-console/*, conforme application.properties.
+ * em produção. O path padrão é /h2-console/*, conforme application-dev.properties.
  *
  * @author Guilherme Braga
  */
